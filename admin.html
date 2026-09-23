@@ -52,6 +52,13 @@
   #loginOverlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 100; }
   #loginCard { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 380px; max-width: 92vw; }
   .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--dark); color: var(--bg); padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; z-index: 200; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 150; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; width: 600px; max-width: 100%; max-height: 90vh; overflow: auto; }
+  .img-preview { width: 100%; height: 200px; border-radius: 12px; object-fit: cover; background: var(--subtle); border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+  .upload-progress { height: 4px; background: var(--subtle); border-radius: 999px; overflow: hidden; margin-top: 8px; display: none; }
+  .upload-progress.active { display: block; }
+  .upload-progress-bar { height: 100%; background: var(--gold); width: 0%; transition: width .2s; }
 </style>
 </head>
 <body>
@@ -108,43 +115,8 @@
       <div id="page-items" class="page">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <h2 style="font-size: 22px; font-weight: 900; margin: 0;">إدارة المنيو</h2>
-          <button class="btn btn-primary" onclick="document.getElementById('addFormCard').style.display='block'">+ إضافة عنصر</button>
+          <button class="btn btn-primary" onclick="openAddModal()">+ إضافة عنصر</button>
         </div>
-
-        <div id="addFormCard" class="card" style="display: none;">
-          <h3 style="font-size: 15px; font-weight: 900; margin: 0 0 16px;">➕ عنصر جديد</h3>
-          <div class="form-row">
-            <div><label>الاسم (عربي)</label><input id="f-nameAr"></div>
-            <div><label>الاسم (إنجليزي)</label><input id="f-nameEn" dir="ltr"></div>
-          </div>
-          <div class="form-row">
-            <div>
-              <label>القسم</label>
-              <select id="f-category">
-                <option>Hot Coffee</option><option>Specialty Coffee</option>
-                <option>Iced Coffee</option><option>Iced Frappe</option>
-                <option>Milkshake</option><option>Smoothie</option>
-                <option>Non-Coffee</option><option>Mojito</option>
-                <option>Soft Drink</option><option>Fresh Juice</option>
-                <option>Cookie & Cake</option><option>Bakery</option>
-              </select>
-            </div>
-            <div><label>السعر</label><input id="f-price" type="number"></div>
-          </div>
-          <div class="form-row">
-            <div><label>وصف عربي</label><input id="f-descAr"></div>
-            <div><label>وصف إنجليزي</label><input id="f-descEn" dir="ltr"></div>
-          </div>
-          <div style="margin-bottom: 12px;">
-            <label>رابط الصورة</label>
-            <input id="f-image" placeholder="images/hot-coffee/01.jpg">
-          </div>
-          <div style="display: flex; gap: 10px;">
-            <button class="btn btn-primary" onclick="addItem()">حفظ</button>
-            <button class="btn btn-ghost" onclick="document.getElementById('addFormCard').style.display='none'">إلغاء</button>
-          </div>
-        </div>
-
         <div class="card" style="padding: 0; overflow: hidden;">
           <table>
             <thead>
@@ -169,8 +141,64 @@
   </div>
 </div>
 
+<!-- Modal للإضافة / التعديل -->
+<div id="itemModal" class="modal-overlay">
+  <div class="modal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 id="modalTitle" style="font-size: 17px; font-weight: 900; margin: 0;">إضافة عنصر</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeItemModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="m-id">
+
+    <div style="margin-bottom: 12px;">
+      <label>صورة المنتج</label>
+      <img id="m-preview" class="img-preview" src="" alt="">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <input type="file" id="m-file" accept="image/*" style="flex: 1;">
+        <span style="font-size: 11px; color: var(--muted);">أو</span>
+        <input id="m-imageUrl" placeholder="رابط صورة" style="flex: 1; font-size: 11px;">
+      </div>
+      <div id="m-progress" class="upload-progress"><div id="m-progressBar" class="upload-progress-bar"></div></div>
+      <div style="font-size: 10px; color: var(--muted); margin-top: 6px;">💡 ارفع صورة من جهازك، أو الصق رابط صورة موجودة</div>
+    </div>
+
+    <div class="form-row">
+      <div><label>الاسم (عربي)</label><input id="m-nameAr"></div>
+      <div><label>الاسم (إنجليزي)</label><input id="m-nameEn" dir="ltr"></div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>القسم</label>
+        <select id="m-category">
+          <option>Hot Coffee</option><option>Specialty Coffee</option>
+          <option>Iced Coffee</option><option>Iced Frappe</option>
+          <option>Milkshake</option><option>Smoothie</option>
+          <option>Non-Coffee</option><option>Mojito</option>
+          <option>Soft Drink</option><option>Fresh Juice</option>
+          <option>Cookie & Cake</option><option>Bakery</option>
+        </select>
+      </div>
+      <div><label>السعر (جنيه)</label><input id="m-price" type="number"></div>
+    </div>
+    <div class="form-row">
+      <div><label>وصف عربي</label><input id="m-descAr"></div>
+      <div><label>وصف إنجليزي</label><input id="m-descEn" dir="ltr"></div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+      <button class="btn btn-ghost" onclick="closeItemModal()">إلغاء</button>
+      <button class="btn btn-primary" id="m-saveBtn" onclick="saveItem()">حفظ</button>
+    </div>
+  </div>
+</div>
+
 <script type="module" src="firebase-config.js"></script>
 <script>
+const CLOUDINARY_CLOUD = 'meiv47ul';
+const CLOUDINARY_PRESET = 'gharbawy_menu';
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
+
 let items = [], orders = [], currentUser = null;
 
 function onFbReady(cb) {
@@ -245,54 +273,190 @@ function renderItems() {
   if (!items.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">مفيش عناصر</td></tr>'; return; }
   tbody.innerHTML = items.map(it =>
     '<tr><td>' + it.id + '</td>' +
-    '<td><img class="thumb" src="' + it.image + '"></td>' +
+    '<td><img class="thumb" src="' + it.image + '" onerror="this.style.opacity=.2"></td>' +
     '<td><strong>' + it.nameAr + '</strong><br><span style="font-size:11px;color:var(--muted)">' + it.nameEn + '</span></td>' +
     '<td>' + it.category + '</td>' +
     '<td><strong style="color:var(--gold)">' + it.price + '</strong></td>' +
     '<td>' + (it.inStock !== false ? '<span class="badge badge-green">متوفر</span>' : '<span class="badge badge-red">نفد</span>') + '</td>' +
     '<td style="white-space:nowrap">' +
     '<button class="btn btn-ghost btn-sm" onclick="toggleStock(' + it.id + ')">' + (it.inStock !== false ? '🔴' : '🟢') + '</button> ' +
-    '<button class="btn btn-ghost btn-sm" onclick="editPrice(' + it.id + ')">💰</button> ' +
+    '<button class="btn btn-primary btn-sm" onclick="openEditModal(' + it.id + ')">✏️ تعديل</button> ' +
     '<button class="btn btn-danger btn-sm" onclick="deleteItem(' + it.id + ')">🗑️</button>' +
     '</td></tr>'
   ).join('');
 }
 
-async function addItem() {
-  const { db, doc, setDoc } = window.FB;
-  const maxId = items.reduce((m, i) => Math.max(m, i.id || 0), 0);
-  const id = String(maxId + 1);
-  const item = {
-    nameAr: document.getElementById('f-nameAr').value,
-    nameEn: document.getElementById('f-nameEn').value,
-    category: document.getElementById('f-category').value,
-    price: Number(document.getElementById('f-price').value),
-    image: document.getElementById('f-image').value || 'images/hot-coffee/01.jpg',
-    descAr: document.getElementById('f-descAr').value || '',
-    descEn: document.getElementById('f-descEn').value || '',
-    inStock: true
-  };
-  if (!item.nameAr || !item.nameEn || !item.price) { toast('كمل البيانات'); return; }
-  await setDoc(doc(db, 'menu', id), item);
-  document.getElementById('addFormCard').style.display = 'none';
-  ['nameAr','nameEn','price','descAr','descEn','image'].forEach(f => document.getElementById('f-'+f).value = '');
-  toast('✅ تم الإضافة');
+/* ═══════ MODAL ═══════ */
+function openAddModal() {
+  document.getElementById('modalTitle').innerText = '➕ إضافة عنصر';
+  document.getElementById('m-id').value = '';
+  document.getElementById('m-nameAr').value = '';
+  document.getElementById('m-nameEn').value = '';
+  document.getElementById('m-category').value = 'Hot Coffee';
+  document.getElementById('m-price').value = '';
+  document.getElementById('m-descAr').value = '';
+  document.getElementById('m-descEn').value = '';
+  document.getElementById('m-file').value = '';
+  document.getElementById('m-imageUrl').value = '';
+  document.getElementById('m-preview').src = '';
+  document.getElementById('m-preview').removeAttribute('src');
+  document.getElementById('itemModal').classList.add('open');
 }
+
+function openEditModal(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('modalTitle').innerText = '✏️ تعديل: ' + item.nameAr;
+  document.getElementById('m-id').value = item.id;
+  document.getElementById('m-nameAr').value = item.nameAr;
+  document.getElementById('m-nameEn').value = item.nameEn;
+  document.getElementById('m-category').value = item.category;
+  document.getElementById('m-price').value = item.price;
+  document.getElementById('m-descAr').value = item.descAr || '';
+  document.getElementById('m-descEn').value = item.descEn || '';
+  document.getElementById('m-file').value = '';
+  document.getElementById('m-imageUrl').value = item.image.startsWith('http') ? item.image : '';
+  document.getElementById('m-preview').src = item.image;
+  document.getElementById('itemModal').classList.add('open');
+}
+
+function closeItemModal() {
+  document.getElementById('itemModal').classList.remove('open');
+}
+
+/* ═══════ CLOUDINARY UPLOAD ═══════ */
+async function uploadToCloudinary(file, onProgress) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', CLOUDINARY_URL);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress((e.loaded / e.total) * 100);
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          resolve(res.secure_url);
+        } catch (e) { reject(e); }
+      } else {
+        reject(new Error('Upload failed: ' + xhr.status + ' ' + xhr.responseText));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.send(formData);
+  });
+}
+
+async function saveItem() {
+  const { db, doc, setDoc, updateDoc } = window.FB;
+  const id = document.getElementById('m-id').value;
+  const isEdit = !!id;
+
+  const nameAr = document.getElementById('m-nameAr').value.trim();
+  const nameEn = document.getElementById('m-nameEn').value.trim();
+  const price = Number(document.getElementById('m-price').value);
+  if (!nameAr || !nameEn || !price) { toast('⚠️ كمل البيانات الأساسية'); return; }
+
+  const fileInput = document.getElementById('m-file');
+  const file = fileInput.files[0];
+  let imageUrl = document.getElementById('m-imageUrl').value.trim();
+
+  // لو رفع صورة جديدة
+  if (file) {
+    try {
+      const bar = document.getElementById('m-progress');
+      const barInner = document.getElementById('m-progressBar');
+      bar.classList.add('active');
+      barInner.style.width = '0%';
+      document.getElementById('m-saveBtn').disabled = true;
+      document.getElementById('m-saveBtn').innerText = '⏳ جاري الرفع...';
+
+      imageUrl = await uploadToCloudinary(file, (p) => {
+        barInner.style.width = p + '%';
+      });
+
+      document.getElementById('m-saveBtn').disabled = false;
+      document.getElementById('m-saveBtn').innerText = 'حفظ';
+      bar.classList.remove('active');
+    } catch (err) {
+      console.error(err);
+      toast('❌ فشل رفع الصورة');
+      document.getElementById('m-saveBtn').disabled = false;
+      document.getElementById('m-saveBtn').innerText = 'حفظ';
+      document.getElementById('m-progress').classList.remove('active');
+      return;
+    }
+  }
+
+  // لو مفيش صورة (من ملف ولا رابط)
+  if (!imageUrl) {
+    if (isEdit) {
+      // سيب الصورة القديمة
+      const existing = items.find(i => i.id === Number(id));
+      imageUrl = existing ? existing.image : 'images/hot-coffee/01.jpg';
+    } else {
+      imageUrl = 'images/hot-coffee/01.jpg';
+    }
+  }
+
+  const data = {
+    nameAr, nameEn,
+    category: document.getElementById('m-category').value,
+    price,
+    image: imageUrl,
+    descAr: document.getElementById('m-descAr').value || '',
+    descEn: document.getElementById('m-descEn').value || ''
+  };
+
+  try {
+    if (isEdit) {
+      await updateDoc(doc(db, 'menu', String(id)), data);
+      toast('✅ تم التحديث');
+    } else {
+      const maxId = items.reduce((m, i) => Math.max(m, i.id || 0), 0);
+      const newId = String(maxId + 1);
+      data.inStock = true;
+      await setDoc(doc(db, 'menu', newId), data);
+      toast('✅ تم الإضافة');
+    }
+    closeItemModal();
+  } catch (err) {
+    console.error(err);
+    toast('❌ فشل الحفظ');
+  }
+}
+
+// معاينة الصورة عند اختيار ملف
+document.addEventListener('DOMContentLoaded', () => {
+  const fileInput = document.getElementById('m-file');
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('m-preview').src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const urlInput = document.getElementById('m-imageUrl');
+  urlInput.addEventListener('input', (e) => {
+    const url = e.target.value.trim();
+    if (url) document.getElementById('m-preview').src = url;
+  });
+});
 
 async function toggleStock(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
   const { db, doc, updateDoc } = window.FB;
   await updateDoc(doc(db, 'menu', String(id)), { inStock: item.inStock === false });
-  toast('✅ تم التحديث');
-}
-
-async function editPrice(id) {
-  const item = items.find(i => i.id === id);
-  const val = prompt('السعر الجديد:', item.price);
-  if (!val) return;
-  const { db, doc, updateDoc } = window.FB;
-  await updateDoc(doc(db, 'menu', String(id)), { price: Number(val) });
   toast('✅ تم التحديث');
 }
 
@@ -303,6 +467,7 @@ async function deleteItem(id) {
   toast('🗑️ تم الحذف');
 }
 
+/* ═══════ ORDERS ═══════ */
 function renderOrders() {
   const list = document.getElementById('ordersList');
   if (!orders.length) { list.innerHTML = '<div class="card" style="text-align:center;color:var(--muted)">مفيش أوردرات</div>'; return; }
