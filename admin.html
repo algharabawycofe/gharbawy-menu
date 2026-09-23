@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم الغرباوي</title>
+<style>
+  :root { --bg: #FAF6F0; --surface: #FFF; --subtle: #F5EEE5; --text: #1F1611; --muted: #A89080; --border: #E8DED2; --gold: #C89B5E; --dark: #2B1D14; --danger: #B33A3A; --success: #4A7C59; }
+  html.dark { --bg: #1A1310; --surface: #241B16; --subtle: #1F1712; --text: #FAF6F0; --muted: #8A7566; --border: #3A2A20; --gold: #D4A56A; --dark: #FAF6F0; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; min-height: 100vh; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+  .brand { font-weight: 900; font-size: 18px; }
+  .brand-sub { font-size: 11px; color: var(--muted); }
+  .layout { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 65px); }
+  .side { background: var(--surface); border-left: 1px solid var(--border); padding: 20px 12px; }
+  .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border-radius: 12px; background: transparent; border: none; cursor: pointer; color: var(--text); font-family: inherit; font-weight: 700; font-size: 13px; text-align: right; margin-bottom: 4px; transition: .2s; }
+  .nav-btn:hover { background: var(--subtle); }
+  .nav-btn.active { background: var(--gold); color: #1F1611; }
+  .main { padding: 24px; overflow: auto; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 900; color: var(--gold); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  input, select, textarea { width: 100%; padding: 10px 14px; background: var(--subtle); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; }
+  input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+  label { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .btn { padding: 10px 18px; border-radius: 10px; border: none; font-family: inherit; font-weight: 900; font-size: 13px; cursor: pointer; transition: .15s; }
+  .btn-primary { background: var(--dark); color: var(--bg); }
+  html.dark .btn-primary { background: var(--gold); color: #1F1611; }
+  .btn-ghost { background: var(--subtle); color: var(--text); border: 1px solid var(--border); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-sm { padding: 6px 10px; font-size: 11px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: right; padding: 10px 12px; font-size: 11px; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border); font-weight: 800; }
+  td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: var(--subtle); }
+  .thumb { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; background: var(--subtle); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: 900; }
+  .badge-green { background: rgba(74,124,89,.15); color: var(--success); }
+  .badge-red { background: rgba(179,58,58,.15); color: var(--danger); }
+  .badge-gold { background: rgba(200,155,94,.15); color: var(--gold); }
+  .page { display: none; }
+  .page.active { display: block; }
+  .order-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .order-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .order-items { font-size: 12px; color: var(--muted); line-height: 1.8; }
+  .order-total { font-size: 20px; font-weight: 900; color: var(--gold); }
+  #loginOverlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  #loginCard { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 380px; max-width: 92vw; }
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--dark); color: var(--bg); padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; z-index: 200; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+</style>
+</head>
+<body>
+
+<div id="loginOverlay">
+  <div id="loginCard">
+    <div style="font-size: 40px; text-align: center;">☕</div>
+    <h1 style="text-align: center; font-size: 20px; font-weight: 900; margin: 12px 0 4px;">لوحة تحكم الغرباوي</h1>
+    <p style="text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 24px;">دخول الأدمن</p>
+    <label>الإيميل</label>
+    <input id="email" type="email" dir="ltr" placeholder="admin@gharbawy.com" style="margin-bottom: 12px;">
+    <label>الباسورد</label>
+    <input id="password" type="password" dir="ltr" placeholder="••••••••" style="margin-bottom: 16px;">
+    <button class="btn btn-primary" style="width: 100%; padding: 14px;" onclick="doLogin()">دخول</button>
+    <p id="loginError" style="color: var(--danger); font-size: 12px; text-align: center; margin-top: 12px; min-height: 16px;"></p>
+  </div>
+</div>
+
+<div id="app" style="display: none;">
+  <div class="topbar">
+    <div>
+      <div class="brand">☕ الغرباوي — Admin</div>
+      <div class="brand-sub">لوحة التحكم</div>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <span style="font-size: 11px; color: var(--success); font-weight: 800;">● متصل مباشر</span>
+      <button class="btn btn-ghost btn-sm" onclick="document.documentElement.classList.toggle('dark')">🌓</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">خروج</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="side">
+      <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard')">📊 نظرة عامة</button>
+      <button class="nav-btn" data-page="items" onclick="showPage('items')">🍽️ المنيو</button>
+      <button class="nav-btn" data-page="orders" onclick="showPage('orders')">📋 الأوردرات</button>
+    </aside>
+
+    <main class="main">
+      <div id="page-dashboard" class="page active">
+        <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 20px;">نظرة عامة</h2>
+        <div class="stat-grid">
+          <div class="stat"><div class="stat-label">إجمالي العناصر</div><div class="stat-value" id="statTotal">—</div></div>
+          <div class="stat"><div class="stat-label">متوفر</div><div class="stat-value" id="statInStock">—</div></div>
+          <div class="stat"><div class="stat-label">نفد</div><div class="stat-value" id="statOutStock">—</div></div>
+          <div class="stat"><div class="stat-label">أوردرات النهاردة</div><div class="stat-value" id="statOrders">—</div></div>
+        </div>
+        <div class="card">
+          <h3 style="font-size: 14px; font-weight: 900; margin: 0 0 12px;">آخر الأوردرات</h3>
+          <div id="recentOrders"></div>
+        </div>
+      </div>
+
+      <div id="page-items" class="page">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="font-size: 22px; font-weight: 900; margin: 0;">إدارة المنيو</h2>
+          <button class="btn btn-primary" onclick="document.getElementById('addFormCard').style.display='block'">+ إضافة عنصر</button>
+        </div>
+
+        <div id="addFormCard" class="card" style="display: none;">
+          <h3 style="font-size: 15px; font-weight: 900; margin: 0 0 16px;">➕ عنصر جديد</h3>
+          <div class="form-row">
+            <div><label>الاسم (عربي)</label><input id="f-nameAr"></div>
+            <div><label>الاسم (إنجليزي)</label><input id="f-nameEn" dir="ltr"></div>
+          </div>
+          <div class="form-row">
+            <div>
+              <label>القسم</label>
+              <select id="f-category">
+                <option>Hot Coffee</option><option>Specialty Coffee</option>
+                <option>Iced Coffee</option><option>Iced Frappe</option>
+                <option>Milkshake</option><option>Smoothie</option>
+                <option>Non-Coffee</option><option>Mojito</option>
+                <option>Soft Drink</option><option>Fresh Juice</option>
+                <option>Cookie & Cake</option><option>Bakery</option>
+              </select>
+            </div>
+            <div><label>السعر</label><input id="f-price" type="number"></div>
+          </div>
+          <div class="form-row">
+            <div><label>وصف عربي</label><input id="f-descAr"></div>
+            <div><label>وصف إنجليزي</label><input id="f-descEn" dir="ltr"></div>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <label>رابط الصورة</label>
+            <input id="f-image" placeholder="images/hot-coffee/01.jpg">
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" onclick="addItem()">حفظ</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('addFormCard').style.display='none'">إلغاء</button>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>صورة</th><th>الاسم</th><th>القسم</th>
+                <th>السعر</th><th>الحالة</th><th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="page-orders" class="page">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="font-size: 22px; font-weight: 900; margin: 0;">الأوردرات</h2>
+          <button class="btn btn-ghost btn-sm" onclick="clearDoneOrders()">مسح المكتملة</button>
+        </div>
+        <div id="ordersList"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module" src="firebase-config.js"></script>
+<script>
+let items = [], orders = [], currentUser = null;
+
+function onFbReady(cb) {
+  if (window.FB_READY) cb();
+  else window.addEventListener('fb-ready', cb, { once: true });
+}
+
+onFbReady(() => {
+  const { auth, onAuthStateChanged } = window.FB;
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if (user) {
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      subscribeAll();
+    } else {
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+    }
+  });
+});
+
+async function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const pass = document.getElementById('password').value;
+  const { auth, signInWithEmailAndPassword } = window.FB;
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    document.getElementById('loginError').innerText = 'بيانات غلط';
+  }
+}
+
+async function doLogout() {
+  await window.FB.signOut(window.FB.auth);
+}
+
+let unsubMenu, unsubOrders;
+function subscribeAll() {
+  const { db, collection, onSnapshot, query, orderBy } = window.FB;
+  if (unsubMenu) unsubMenu();
+  if (unsubOrders) unsubOrders();
+  unsubMenu = onSnapshot(collection(db, 'menu'), (snap) => {
+    items = snap.docs.map(d => ({ ...d.data(), id: Number(d.id) })).sort((a,b)=>a.id-b.id);
+    renderItems();
+    updateStats();
+  });
+  unsubOrders = onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snap) => {
+    orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderOrders();
+    renderRecentOrders();
+    updateStats();
+  });
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelector('[data-page="' + name + '"]').classList.add('active');
+}
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.innerText = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+function renderItems() {
+  const tbody = document.getElementById('itemsTable');
+  if (!items.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">مفيش عناصر</td></tr>'; return; }
+  tbody.innerHTML = items.map(it =>
+    '<tr><td>' + it.id + '</td>' +
+    '<td><img class="thumb" src="' + it.image + '"></td>' +
+    '<td><strong>' + it.nameAr + '</strong><br><span style="font-size:11px;color:var(--muted)">' + it.nameEn + '</span></td>' +
+    '<td>' + it.category + '</td>' +
+    '<td><strong style="color:var(--gold)">' + it.price + '</strong></td>' +
+    '<td>' + (it.inStock !== false ? '<span class="badge badge-green">متوفر</span>' : '<span class="badge badge-red">نفد</span>') + '</td>' +
+    '<td style="white-space:nowrap">' +
+    '<button class="btn btn-ghost btn-sm" onclick="toggleStock(' + it.id + ')">' + (it.inStock !== false ? '🔴' : '🟢') + '</button> ' +
+    '<button class="btn btn-ghost btn-sm" onclick="editPrice(' + it.id + ')">💰</button> ' +
+    '<button class="btn btn-danger btn-sm" onclick="deleteItem(' + it.id + ')">🗑️</button>' +
+    '</td></tr>'
+  ).join('');
+}
+
+async function addItem() {
+  const { db, doc, setDoc } = window.FB;
+  const maxId = items.reduce((m, i) => Math.max(m, i.id || 0), 0);
+  const id = String(maxId + 1);
+  const item = {
+    nameAr: document.getElementById('f-nameAr').value,
+    nameEn: document.getElementById('f-nameEn').value,
+    category: document.getElementById('f-category').value,
+    price: Number(document.getElementById('f-price').value),
+    image: document.getElementById('f-image').value || 'images/hot-coffee/01.jpg',
+    descAr: document.getElementById('f-descAr').value || '',
+    descEn: document.getElementById('f-descEn').value || '',
+    inStock: true
+  };
+  if (!item.nameAr || !item.nameEn || !item.price) { toast('كمل البيانات'); return; }
+  await setDoc(doc(db, 'menu', id), item);
+  document.getElementById('addFormCard').style.display = 'none';
+  ['nameAr','nameEn','price','descAr','descEn','image'].forEach(f => document.getElementById('f-'+f).value = '');
+  toast('✅ تم الإضافة');
+}
+
+async function toggleStock(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const { db, doc, updateDoc } = window.FB;
+  await updateDoc(doc(db, 'menu', String(id)), { inStock: item.inStock === false });
+  toast('✅ تم التحديث');
+}
+
+async function editPrice(id) {
+  const item = items.find(i => i.id === id);
+  const val = prompt('السعر الجديد:', item.price);
+  if (!val) return;
+  const { db, doc, updateDoc } = window.FB;
+  await updateDoc(doc(db, 'menu', String(id)), { price: Number(val) });
+  toast('✅ تم التحديث');
+}
+
+async function deleteItem(id) {
+  if (!confirm('تأكيد الحذف؟')) return;
+  const { db, doc, deleteDoc } = window.FB;
+  await deleteDoc(doc(db, 'menu', String(id)));
+  toast('🗑️ تم الحذف');
+}
+
+function renderOrders() {
+  const list = document.getElementById('ordersList');
+  if (!orders.length) { list.innerHTML = '<div class="card" style="text-align:center;color:var(--muted)">مفيش أوردرات</div>'; return; }
+  list.innerHTML = orders.map(o => {
+    const time = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString('ar-EG') : '—';
+    const itemsHtml = (o.items || []).map(i => '• ' + i.nameAr + ' × ' + i.qty + ' = ' + (i.price * i.qty) + ' ج' + (i.notes ? ' <em style="color:var(--gold)">(' + i.notes + ')</em>' : '')).join('<br>');
+    return '<div class="order-card"><div class="order-head"><div><strong>' + time + '</strong><br>' +
+      '<span class="badge ' + (o.status === 'done' ? 'badge-green' : 'badge-gold') + '">' + (o.status === 'done' ? 'مكتمل' : 'جديد') + '</span></div>' +
+      '<div class="order-total">' + o.total + ' ج</div></div>' +
+      '<div class="order-items">' + itemsHtml + '</div>' +
+      (o.status !== 'done' ? '<button class="btn btn-success btn-sm" style="margin-top:12px" onclick="markDone(\'' + o.id + '\')">✓ تم التسليم</button>' : '') +
+      '</div>';
+  }).join('');
+}
+
+function renderRecentOrders() {
+  const el = document.getElementById('recentOrders');
+  const recent = orders.slice(0, 5);
+  if (!recent.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center">مفيش أوردرات</div>'; return; }
+  el.innerHTML = recent.map(o => {
+    const time = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleTimeString('ar-EG') : '—';
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">' +
+      '<span style="font-size:13px">' + time + ' — ' + (o.items?.length || 0) + ' عنصر</span>' +
+      '<strong style="color:var(--gold)">' + o.total + ' ج</strong></div>';
+  }).join('');
+}
+
+async function markDone(id) {
+  const { db, doc, updateDoc } = window.FB;
+  await updateDoc(doc(db, 'orders', id), { status: 'done' });
+  toast('✅ تم');
+}
+
+async function clearDoneOrders() {
+  if (!confirm('مسح الأوردرات المكتملة؟')) return;
+  const { db, doc, deleteDoc } = window.FB;
+  const done = orders.filter(o => o.status === 'done');
+  for (const o of done) await deleteDoc(doc(db, 'orders', o.id));
+  toast('🗑️ تم المسح');
+}
+
+function updateStats() {
+  document.getElementById('statTotal').innerText = items.length;
+  document.getElementById('statInStock').innerText = items.filter(i => i.inStock !== false).length;
+  document.getElementById('statOutStock').innerText = items.filter(i => i.inStock === false).length;
+  const today = new Date().toDateString();
+  document.getElementById('statOrders').innerText = orders.filter(o => {
+    const d = o.createdAt?.toDate ? o.createdAt.toDate() : null;
+    return d && d.toDateString() === today;
+  }).length;
+}
+</script>
+</body>
+</html>
