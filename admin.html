@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة تحكم الغرباوي</title>
+<title>لوحة التحكم </title>
 <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 <style>
 :root{--bg:#FAF6F0;--surface:#FFF;--subtle:#F5EEE5;--text:#1F1611;--muted:#A89080;--border:#E8DED2;--gold:#C89B5E;--dark:#2B1D14;--danger:#B33A3A;--success:#4A7C59}
@@ -71,6 +71,8 @@ tr:hover td{background:var(--subtle)}
 .danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
 .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
 .pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
+.section-header{font-size:15px;font-weight:900;margin:0 0 6px}
+.section-desc{font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -198,9 +200,48 @@ tr:hover td{background:var(--subtle)}
       <div id="page-settings" class="page">
         <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">الإعدادات</h2>
 
+        <!-- Company Info -->
         <div class="card">
-          <h3 style="font-size:15px;font-weight:900;margin:0 0 8px">🔴 منطقة الخطر — إيقاف النظام</h3>
-          <p style="font-size:13px;color:var(--muted);margin:0 0 14px">لو ضغطت على "إيقاف النظام"، الموقع هيتوقف فوراً وكل الزباين هيشوفوا رسالة "النظام متوقف مؤقتاً".</p>
+          <h3 class="section-header">🏢 بيانات الشركة</h3>
+          <p class="section-desc">البيانات دي بتظهر في الموقع للزباين (الـ Welcome + الفوتر)</p>
+
+          <div class="form-row">
+            <div><label>اسم الشركة (عربي)</label><input id="co-nameAr" placeholder="الغرباوي"></div>
+            <div><label>اسم الشركة (إنجليزي)</label><input id="co-nameEn" dir="ltr" placeholder="Al-Gharbawy"></div>
+          </div>
+          <div class="form-row">
+            <div><label>الهاتف</label><input id="co-phone" dir="ltr" placeholder="01123456789"></div>
+            <div><label>الإيميل</label><input id="co-email" dir="ltr" type="email" placeholder="info@gharbawy.com"></div>
+          </div>
+          <div style="margin-bottom:12px">
+            <label>العنوان</label>
+            <input id="co-address" placeholder="القاهرة، مصر">
+          </div>
+          <div class="form-row">
+            <div><label>السجل التجاري</label><input id="co-cr" dir="ltr" placeholder="12345"></div>
+            <div><label>الرقم الضريبي</label><input id="co-tax" dir="ltr" placeholder="123-456-789"></div>
+          </div>
+          <div style="margin-bottom:12px">
+            <label>ساعات العمل</label>
+            <input id="co-hours" placeholder="يومياً من 8 صباحاً حتى 2 صباحاً">
+          </div>
+          <div style="margin-bottom:12px">
+            <label>اللوجو</label>
+            <img id="co-logo-preview" class="img-preview" src="" style="display:none">
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="file" id="co-logo-file" accept="image/*" style="flex:1">
+              <span style="font-size:11px;color:var(--muted)">أو</span>
+              <input id="co-logo-url" placeholder="رابط الصورة" style="flex:1;font-size:11px">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button class="btn btn-primary" onclick="saveCompany()">💾 حفظ البيانات</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-header">🔴 منطقة الخطر — إيقاف النظام</h3>
+          <p class="section-desc">لو ضغطت على "إيقاف النظام"، الموقع هيتوقف فوراً وكل الزباين هيشوفوا رسالة "النظام متوقف مؤقتاً".</p>
           <div id="systemStatusBox" style="margin-bottom:14px">
             <span class="badge badge-green" id="systemStatusBadge">● النظام يعمل</span>
           </div>
@@ -208,7 +249,7 @@ tr:hover td{background:var(--subtle)}
         </div>
 
         <div class="card">
-          <h3 style="font-size:15px;font-weight:900;margin:0 0 8px">📊 معلومات النظام</h3>
+          <h3 class="section-header">📊 معلومات النظام</h3>
           <div style="font-size:13px;color:var(--muted);line-height:2">
             <div>إجمالي الفروع: <strong id="infoBranches">—</strong></div>
             <div>إجمالي المستخدمين: <strong id="infoUsers">—</strong></div>
@@ -393,7 +434,7 @@ tr:hover td{background:var(--subtle)}
         <select id="u-role" onchange="onUserRoleChange()">
           <option value="admin">Admin (مدير عام)</option>
           <option value="branch_manager">Branch Manager (مدير فرع)</option>
-          <option value="super_admin">Super Admin (مالك)</option>
+          <option value="super_admin" id="optSuperAdmin" style="display:none">Super Admin (مالك)</option>
         </select>
       </div>
       <div id="u-branchBox" style="display:none">
@@ -418,6 +459,7 @@ let currentUser = null;
 let currentUserData = null;
 let menus = [], categories = [], items = [], branches = [], orders = [], users = [];
 let systemOnline = true;
+let companyInfo = {};
 let unsubs = [];
 
 function $(id){return document.getElementById(id)}
@@ -435,6 +477,7 @@ onFbReady(()=>{
       $('app').style.display='block';
       applyRoleUI();
       subscribeAll();
+      loadCompanyInfo();
     } else {
       currentUser = null;
       currentUserData = null;
@@ -556,6 +599,78 @@ function subscribeAll(){
     }
     updateSystemStatus();
   }));
+}
+
+/* ═══════════ COMPANY INFO ═══════════ */
+function loadCompanyInfo(){
+  const {db,doc,onSnapshot}=window.FB;
+  onSnapshot(doc(db,'settings','company'), s=>{
+    if(s.exists()){
+      companyInfo = s.data();
+      fillCompanyForm(companyInfo);
+    }
+  });
+}
+
+function fillCompanyForm(c){
+  if(!c) return;
+  $('co-nameAr').value = c.nameAr || '';
+  $('co-nameEn').value = c.nameEn || '';
+  $('co-phone').value = c.phone || '';
+  $('co-email').value = c.email || '';
+  $('co-address').value = c.address || '';
+  $('co-cr').value = c.commercialRegister || '';
+  $('co-tax').value = c.taxId || '';
+  $('co-hours').value = c.hours || '';
+  const logoPreview = $('co-logo-preview');
+  if(c.logo){
+    logoPreview.src = c.logo;
+    logoPreview.style.display = 'block';
+  } else {
+    logoPreview.style.display = 'none';
+  }
+  if(c.logo && !c.logo.startsWith('http')){
+    $('co-logo-url').value = '';
+  } else {
+    $('co-logo-url').value = c.logo || '';
+  }
+}
+
+async function saveCompany(){
+  if(currentUserData.role !== 'super_admin'){ showToast('⚠️ Super Admin فقط'); return; }
+  const {db,doc,setDoc}=window.FB;
+
+  const file = $('co-logo-file').files[0];
+  let logoUrl = $('co-logo-url').value.trim() || (companyInfo.logo || '');
+
+  if(file){
+    try{
+      showToast('⏳ جاري رفع اللوجو...');
+      logoUrl = await uploadToCloudinary(file);
+    }catch(e){ showToast('❌ فشل رفع اللوجو'); return; }
+  }
+
+  const data = {
+    nameAr: $('co-nameAr').value.trim(),
+    nameEn: $('co-nameEn').value.trim(),
+    phone: $('co-phone').value.trim(),
+    email: $('co-email').value.trim(),
+    address: $('co-address').value.trim(),
+    commercialRegister: $('co-cr').value.trim(),
+    taxId: $('co-tax').value.trim(),
+    hours: $('co-hours').value.trim(),
+    logo: logoUrl,
+    updatedAt: new Date().toISOString()
+  };
+
+  try{
+    await setDoc(doc(db,'settings','company'), data, {merge:true});
+    showToast('✅ تم حفظ بيانات الشركة');
+    companyInfo = data;
+  }catch(e){
+    console.error(e);
+    showToast('❌ '+e.message);
+  }
 }
 
 function showPage(name){
@@ -959,6 +1074,18 @@ document.addEventListener('DOMContentLoaded',()=>{
     const u=e.target.value.trim();
     if(u) $('m-preview').src=u;
   });
+  const coFile = $('co-logo-file');
+  if(coFile) coFile.addEventListener('change',(e)=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=(ev)=>{ const p=$('co-logo-preview'); p.src=ev.target.result; p.style.display='block'; };
+    r.readAsDataURL(f);
+  });
+  const coUrl = $('co-logo-url');
+  if(coUrl) coUrl.addEventListener('input',(e)=>{
+    const u=e.target.value.trim();
+    if(u){ const p=$('co-logo-preview'); p.src=u; p.style.display='block'; }
+  });
 });
 
 function renderOrders(){
@@ -1020,7 +1147,9 @@ function renderUsers(){
   const tb=$('usersTable');
   if(!users.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش مستخدمين</td></tr>'; return; }
   const roleNames={super_admin:'👑 Super Admin',admin:'🛡️ Admin',branch_manager:'👔 مدير فرع'};
-  tb.innerHTML=users.map(u=>{
+  // Hide Super Admin row from non-super admin viewers
+  const visibleUsers = currentUserData.role === 'super_admin' ? users : users.filter(u=>u.role!=='super_admin');
+  tb.innerHTML=visibleUsers.map(u=>{
     const b=branches.find(x=>x.id===u.branchId);
     return `<tr>
       <td><strong>${u.name||'—'}</strong></td>
@@ -1043,6 +1172,14 @@ function onUserRoleChange(){
 
 function openUserModal(id){
   refreshSelect('u-branchId');
+  // Show/hide super admin option based on current user role
+  const superOpt = $('optSuperAdmin');
+  if(currentUserData.role === 'super_admin'){
+    superOpt.style.display = 'block';
+  } else {
+    superOpt.style.display = 'none';
+  }
+
   if(id){
     const u=users.find(x=>x.id===id); if(!u) return;
     $('userModalTitle').innerText='✏️ تعديل: '+u.name;
@@ -1078,6 +1215,11 @@ async function saveUser(){
 
   if (!name || !email) { showToast('⚠️ كمل البيانات'); return; }
   if (role === 'branch_manager' && !branchId) { showToast('⚠️ اختار الفرع'); return; }
+
+  // Prevent non-super-admin from creating super admins
+  if (role === 'super_admin' && currentUserData.role !== 'super_admin') {
+    showToast('⚠️ غير مسموح'); return;
+  }
 
   try {
     if (isEdit) {
@@ -1132,6 +1274,10 @@ async function saveUser(){
 
 async function deleteUser(id){
   if(id === currentUser.uid){ showToast('⚠️ مش هتقدر تحذف نفسك'); return; }
+  const u = users.find(x=>x.id===id);
+  if(u && u.role === 'super_admin' && currentUserData.role !== 'super_admin'){
+    showToast('⚠️ غير مسموح'); return;
+  }
   if(!confirm('تأكيد الحذف؟ (اليوزر هيفضل في Firebase Auth — امسحه يدوياً من Firebase Console)')) return;
   await window.FB.deleteDoc(window.FB.doc(window.FB.db,'users',id));
   showToast('🗑️ تم');
