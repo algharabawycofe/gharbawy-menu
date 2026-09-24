@@ -219,7 +219,7 @@ html.dark .waiter-time { color: var(--text-primary); }
   <div style="max-width: 860px; margin: 0 auto; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
     <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
       <div style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-        <img src="logo-01.png" alt="Al-Gharbawy" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.parentElement.innerHTML='<div style=\'font-size:28px\'>☕</div>';">
+        <img id="headerLogo" src="logo-01.png" alt="Al-Gharbawy" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.parentElement.innerHTML='<div style=\'font-size:28px\'>☕</div>';">
       </div>
       <div style="min-width: 0;">
         <h1 id="brandTitle" style="font-size: 14px; font-weight: 900; margin: 0; color: var(--text-primary);">Al-Gharbawy</h1>
@@ -346,6 +346,7 @@ let currentBranch = null;
 let currentMenuId = null;
 let currentTable = null;
 let systemOnline = true;
+let companyInfo = {};
 let unsubscribes = [];
 
 /* ══════════ HELPERS ══════════ */
@@ -406,6 +407,14 @@ function subscribeAll() {
     updateSystemOverlay();
   });
 
+  // بيانات الشركة
+  onSnapshot(doc(db, 'settings', 'company'), (snap) => {
+    if (snap.exists()) {
+      companyInfo = snap.data();
+      applyCompanyInfo(companyInfo);
+    }
+  });
+
   unsubscribes.push(onSnapshot(collection(db, 'menus'), (snap) => {
     allMenus = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.order||0)-(b.order||0));
     checkBranchFromUrl();
@@ -426,6 +435,38 @@ function subscribeAll() {
     allBranches = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.active !== false);
     checkBranchFromUrl();
   }));
+}
+
+/* ══════════ COMPANY INFO ══════════ */
+function applyCompanyInfo(c) {
+  if (!c) return;
+  const isAr = currentLang === 'ar';
+  const name = isAr ? (c.nameAr || 'الغرباوي') : (c.nameEn || c.nameAr || 'Al-Gharbawy');
+
+  // Update brand title
+  const brandTitle = $('brandTitle');
+  if (brandTitle) brandTitle.innerText = name;
+
+  // Update welcome eyebrow
+  const eyebrow = $('welcomeEyebrow');
+  if (eyebrow && c.nameEn) eyebrow.innerText = c.nameEn.toUpperCase() + ' CAFE';
+
+  // Update logos if provided
+  if (c.logo) {
+    const headerLogo = $('headerLogo');
+    if (headerLogo) headerLogo.src = c.logo;
+    const welcomeLogo = document.querySelector('.welcome-logo-wrap img');
+    if (welcomeLogo) welcomeLogo.src = c.logo;
+  }
+
+  // Update footer
+  const footer = $('footerText');
+  if (footer) {
+    const year = new Date().getFullYear();
+    let line = `${name} © ${year} ☕ ${isAr ? 'جميع الحقوق محفوظة' : 'All Rights Reserved'}`;
+    if (c.phone) line += ` • 📞 ${c.phone}`;
+    footer.innerText = line;
+  }
 }
 
 function updateSystemOverlay() {
@@ -548,18 +589,19 @@ function applyLanguageUI() {
   const r = $('htmlRoot');
   const lb = $('langBtnText');
   const si = $('searchInput');
+  const isAr = currentLang === 'ar';
+  const companyName = isAr ? (companyInfo.nameAr || 'الغرباوي') : (companyInfo.nameEn || companyInfo.nameAr || 'Al-Gharbawy');
 
   if (currentLang === 'en') {
     r.setAttribute('lang', 'en');
     r.setAttribute('dir', 'ltr');
     lb.innerText = 'AR';
-    $('pageTitle').innerText = 'Al-Gharbawy - Digital Menu';
-    $('brandTitle').innerText = 'Al-Gharbawy';
+    $('pageTitle').innerText = companyName + ' - Digital Menu';
+    $('brandTitle').innerText = companyName;
     if (!currentBranch) $('brandSub').innerText = 'Digital Menu';
     si.placeholder = 'Search menu...';
     $('favFilterText').innerText = 'Favorites';
     $('cartModalTitle').innerText = '📋 My Current Order';
-    $('footerText').innerText = 'Al-Gharbawy © 2026 ☕ All Rights Reserved';
     $('navHome').innerText = 'Menu';
     $('navSearch').innerText = 'Search';
     $('navFav').innerText = 'Favorites';
@@ -571,13 +613,12 @@ function applyLanguageUI() {
     r.setAttribute('lang', 'ar');
     r.setAttribute('dir', 'rtl');
     lb.innerText = 'EN';
-    $('pageTitle').innerText = 'القائمة الرقمية - الغرباوي';
-    $('brandTitle').innerText = 'الغرباوي';
+    $('pageTitle').innerText = 'القائمة الرقمية - ' + companyName;
+    $('brandTitle').innerText = companyName;
     if (!currentBranch) $('brandSub').innerText = 'القائمة الرقمية';
     si.placeholder = 'ابحث في القائمة...';
     $('favFilterText').innerText = 'المفضلة';
     $('cartModalTitle').innerText = '📋 طلباتي الحالية';
-    $('footerText').innerText = 'الغرباوي © 2026 ☕ جميع الحقوق محفوظة';
     $('navHome').innerText = 'القائمة';
     $('navSearch').innerText = 'بحث';
     $('navFav').innerText = 'المفضلة';
@@ -590,6 +631,9 @@ function applyLanguageUI() {
   if (currentBranch) {
     $('brandSub').innerText = currentLang === 'en' ? (currentBranch.nameEn || currentBranch.nameAr) : currentBranch.nameAr;
   }
+
+  // تحديث الفوتر
+  if (Object.keys(companyInfo).length > 0) applyCompanyInfo(companyInfo);
 
   updateWelcomeLanguage();
   if ($('cartSheet')?.classList.contains('open')) renderCartModalItems();
@@ -609,7 +653,7 @@ function updateWelcomeLanguage() {
   const isAr = currentLang === 'ar';
   const eyebrow = $('welcomeEyebrow');
   if (!eyebrow) return;
-  $('welcomeTitle').innerText = isAr ? 'أهلاً وسهلاً بيك' : 'Welcome to Al-Gharbawy';
+  $('welcomeTitle').innerText = isAr ? 'أهلاً وسهلاً بيك' : 'Welcome';
   $('welcomeSubtitle').innerHTML = isAr
     ? 'منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.'
     : 'We are glad you are here ☕<br>Take your time, explore the menu, and choose what you love.';
@@ -940,6 +984,7 @@ async function showOrderToWaiter() {
     });
   } catch (e) { console.error('Order save failed', e); }
 
+  const companyName = currentLang === 'ar' ? (companyInfo.nameAr || 'الغرباوي') : (companyInfo.nameEn || 'Al-Gharbawy');
   const branchName = currentBranch
     ? (currentLang === 'en' ? (currentBranch.nameEn || currentBranch.nameAr) : currentBranch.nameAr)
     : '';
@@ -949,7 +994,7 @@ async function showOrderToWaiter() {
   $('waiterContent').innerHTML = `
     <div class="waiter-header">
       <span style="font-size: 42px; display: block; margin-bottom: 8px;">☕</span>
-      <h1 class="waiter-brand">${currentLang === 'en' ? 'Al-Gharbawy' : 'الغرباوي'}</h1>
+      <h1 class="waiter-brand">${companyName}</h1>
       <div class="waiter-subtitle">${branchName}${tableLabel ? ' — ' + tableLabel : ''}</div>
     </div>
     <div class="waiter-order-title">📋 ${currentLang === 'en' ? 'Order Details' : 'تفاصيل الطلب'}</div>
