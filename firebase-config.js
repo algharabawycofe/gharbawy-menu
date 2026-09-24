@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, doc, setDoc, updateDoc, deleteDoc,
+  getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
   onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
@@ -21,7 +21,7 @@ const app = initializeApp(firebaseConfig);
 window.FB = {
   db: getFirestore(app),
   auth: getAuth(app),
-  collection, doc, setDoc, updateDoc, deleteDoc,
+  collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
   onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch,
   signInWithEmailAndPassword, signOut, onAuthStateChanged
 };
