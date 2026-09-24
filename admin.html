@@ -125,7 +125,6 @@ tr:hover td{background:var(--subtle)}
     </aside>
 
     <main class="main">
-      <!-- DASHBOARD -->
       <div id="page-dashboard" class="page active">
         <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">نظرة عامة</h2>
         <div class="stat-grid">
@@ -140,7 +139,6 @@ tr:hover td{background:var(--subtle)}
         </div>
       </div>
 
-      <!-- BRANCHES -->
       <div id="page-branches" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">الفروع</h2>
@@ -151,7 +149,6 @@ tr:hover td{background:var(--subtle)}
         </div>
       </div>
 
-      <!-- MENUS -->
       <div id="page-menus" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">المجموعات</h2>
@@ -160,7 +157,6 @@ tr:hover td{background:var(--subtle)}
         <div id="menusList"></div>
       </div>
 
-      <!-- CATEGORIES -->
       <div id="page-categories" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">الأقسام</h2>
@@ -171,7 +167,6 @@ tr:hover td{background:var(--subtle)}
         </div>
       </div>
 
-      <!-- ITEMS -->
       <div id="page-items" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">المنتجات</h2>
@@ -182,7 +177,6 @@ tr:hover td{background:var(--subtle)}
         </div>
       </div>
 
-      <!-- ORDERS -->
       <div id="page-orders" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">الأوردرات</h2>
@@ -191,7 +185,6 @@ tr:hover td{background:var(--subtle)}
         <div id="ordersList"></div>
       </div>
 
-      <!-- USERS -->
       <div id="page-users" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">المستخدمين</h2>
@@ -202,7 +195,6 @@ tr:hover td{background:var(--subtle)}
         </div>
       </div>
 
-      <!-- SETTINGS -->
       <div id="page-settings" class="page">
         <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">الإعدادات</h2>
 
@@ -566,7 +558,6 @@ function subscribeAll(){
   }));
 }
 
-/* ═══════════ UI HELPERS ═══════════ */
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -601,7 +592,6 @@ function playNotificationSound(){
   } catch(e){ console.error('audio error',e); }
 }
 
-/* ═══════════ BRANCHES ═══════════ */
 function renderBranches(){
   const tb=$('branchesTable');
   if(!branches.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش فروع</td></tr>'; return; }
@@ -686,7 +676,6 @@ async function deleteBranch(id){
   showToast('🗑️ تم');
 }
 
-/* ═══════════ QR ═══════════ */
 let currentQRBranch = null;
 function showQR(branchId){
   currentQRBranch = branches.find(x=>x.id===branchId);
@@ -725,7 +714,6 @@ function downloadQR(){
   link.click();
 }
 
-/* ═══════════ MENUS ═══════════ */
 function renderMenus(){
   const el=$('menusList');
   if(!menus.length){ el.innerHTML='<div class="card empty">مفيش مجموعات</div>'; return; }
@@ -786,7 +774,6 @@ async function deleteMenu(id){
   showToast('🗑️ تم');
 }
 
-/* ═══════════ CATEGORIES ═══════════ */
 function renderCategories(){
   const tb=$('categoriesTable');
   if(!categories.length){ tb.innerHTML='<tr><td colspan="5" class="empty">مفيش أقسام</td></tr>'; return; }
@@ -840,7 +827,6 @@ async function deleteCategory(id){
   showToast('🗑️ تم');
 }
 
-/* ═══════════ ITEMS ═══════════ */
 function renderItems(){
   let list = items;
   if(currentUserData.role === 'branch_manager'){
@@ -975,7 +961,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 });
 
-/* ═══════════ ORDERS ═══════════ */
 function renderOrders(){
   let list = orders;
   if(currentUserData.role === 'branch_manager'){
@@ -1031,7 +1016,6 @@ async function clearDoneOrders(){
   showToast('🗑️ تم');
 }
 
-/* ═══════════ USERS ═══════════ */
 function renderUsers(){
   const tb=$('usersTable');
   if(!users.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش مستخدمين</td></tr>'; return; }
@@ -1083,8 +1067,7 @@ function openUserModal(id){
 }
 
 async function saveUser(){
-  const { db, doc, setDoc, updateDoc, firebaseConfig, initializeApp, getAuth,
-          createUserWithEmailAndPassword, signOut, deleteApp } = window.FB;
+  const { db, doc, setDoc, updateDoc, firebaseConfig } = window.FB;
   const id = $('u-uid').value;
   const isEdit = !!id;
   const name = $('u-name').value.trim();
@@ -1102,37 +1085,39 @@ async function saveUser(){
       showToast('✅ تم التعديل');
     } else {
       if (!password || password.length < 6) { showToast('⚠️ الباسورد 6 حروف على الأقل'); return; }
-      if (!initializeApp || !createUserWithEmailAndPassword || !deleteApp) {
-        showToast('❌ في مشكلة في firebase-config. أعد رفعه.');
-        return;
-      }
 
       showToast('⏳ جاري إنشاء المستخدم...');
 
-      const secondaryAppName = 'Secondary_' + Date.now();
-      const secondaryApp = initializeApp(firebaseConfig, secondaryAppName);
-      const secondaryAuth = getAuth(secondaryApp);
+      const apiKey = firebaseConfig.apiKey;
+      const res = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, returnSecureToken: false })
+        }
+      );
+      const data = await res.json();
 
-      try {
-        const userCred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-        const newUid = userCred.user.uid;
-
-        await setDoc(doc(db, 'users', newUid), {
-          name, email, role, branchId, active: true
-        });
-
-        await signOut(secondaryAuth);
-        await deleteApp(secondaryApp);
-
-        showToast('✅ تم إنشاء المستخدم');
-      } catch (e) {
-        try { await deleteApp(secondaryApp); } catch(_) {}
-        throw e;
+      if (!res.ok) {
+        const errMsg = (data.error && data.error.message) || 'Signup failed';
+        if (errMsg === 'EMAIL_EXISTS') throw { code: 'auth/email-already-in-use' };
+        if (errMsg.indexOf('WEAK_PASSWORD') >= 0) throw { code: 'auth/weak-password' };
+        if (errMsg.indexOf('INVALID_EMAIL') >= 0) throw { code: 'auth/invalid-email' };
+        throw new Error(errMsg);
       }
+
+      const newUid = data.localId;
+
+      await setDoc(doc(db, 'users', newUid), {
+        name, email, role, branchId, active: true
+      });
+
+      showToast('✅ تم إنشاء المستخدم');
     }
     closeModal('userModal');
   } catch(e){
-    console.error(e);
+    console.error('saveUser error:', e);
     if (e.code === 'auth/email-already-in-use') {
       showToast('❌ الإيميل مستخدم بالفعل');
     } else if (e.code === 'auth/invalid-email') {
@@ -1152,7 +1137,6 @@ async function deleteUser(id){
   showToast('🗑️ تم');
 }
 
-/* ═══════════ SYSTEM STATUS (KILL SWITCH) ═══════════ */
 function updateSystemStatus(){
   const badge = $('systemStatusBadge');
   const btn = $('killSwitchBtn');
@@ -1179,7 +1163,6 @@ async function toggleSystemStatus(){
   } catch(e){ showToast('❌ '+e.message); }
 }
 
-/* ═══════════ SELECTS ═══════════ */
 function refreshSelect(id,value){
   const s=$(id); if(!s) return;
   const cur=value||s.value;
@@ -1195,7 +1178,6 @@ function refreshSelects(){
   refreshSelect('u-branchId');
 }
 
-/* ═══════════ STATS ═══════════ */
 function updateStats(){
   $('statBranches').innerText=branches.length;
   $('statItems').innerText=items.length;
@@ -1215,7 +1197,6 @@ function updateStats(){
   updateSystemStatus();
 }
 
-/* ═══════════ INIT ═══════════ */
 window.addEventListener('fb-ready',()=>{
   if(!window.FB.getDoc){
     import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js").then(mod=>{
