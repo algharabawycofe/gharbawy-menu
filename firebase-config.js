@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
   onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch
@@ -27,12 +27,8 @@ window.FB = {
   onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch,
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, setPersistence, inMemoryPersistence,
-  initializeApp, getAuth
+  initializeApp, getAuth, deleteApp
 };
-
-import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js").then(mod => {
-  window.FB.deleteApp = mod.deleteApp;
-});
 
 window.FB_READY = true;
 window.dispatchEvent(new Event('fb-ready'));
