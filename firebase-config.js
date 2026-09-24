@@ -5,7 +5,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-  createUserWithEmailAndPassword, updatePassword
+  createUserWithEmailAndPassword, setPersistence, inMemoryPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -26,8 +26,8 @@ window.FB = {
   collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
   onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch,
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
-  createUserWithEmailAndPassword, updatePassword,
-  initializeApp, getAuth, deleteApp: null // we'll add dynamically
+  createUserWithEmailAndPassword, setPersistence, inMemoryPersistence,
+  initializeApp, getAuth
 };
 
 import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js").then(mod => {
