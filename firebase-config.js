@@ -4,7 +4,8 @@ import {
   onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  createUserWithEmailAndPassword, updatePassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -19,11 +20,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 window.FB = {
+  firebaseConfig,
   db: getFirestore(app),
   auth: getAuth(app),
   collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
   onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch,
-  signInWithEmailAndPassword, signOut, onAuthStateChanged
+  signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  createUserWithEmailAndPassword, updatePassword,
+  initializeApp, getAuth, deleteApp: null // we'll add dynamically
 };
+
+import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js").then(mod => {
+  window.FB.deleteApp = mod.deleteApp;
+});
+
 window.FB_READY = true;
 window.dispatchEvent(new Event('fb-ready'));
