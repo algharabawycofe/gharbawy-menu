@@ -111,7 +111,6 @@ html.dark .toast { background: var(--coffee-gold); color: #1F1611; }
 @media (max-width: 640px) { .sticky-search { top: 54px; } }
 .hidden-init { display: none; }
 
-/* WELCOME */
 .welcome-screen { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; transition: opacity .65s, visibility .65s; background: radial-gradient(circle at 50% 8%, rgba(200,155,94,.12), transparent 26%), linear-gradient(180deg, #FBF7F1 0%, #F4EDE3 100%); }
 html.dark .welcome-screen { background: radial-gradient(circle at 50% 8%, rgba(200,155,94,.10), transparent 26%), linear-gradient(180deg, #1D1511 0%, #130E0B 100%); }
 .welcome-screen.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -134,7 +133,6 @@ html.dark .welcome-lang-btn { color: #FAF6F0; background: rgba(255,255,255,.05);
 .welcome-footer { margin-top: 22px; color: #9B8776; font-size: 10px; font-weight: 700; }
 html.dark .welcome-footer { color: rgba(250,246,240,.40); }
 
-/* WAITER */
 .waiter-overlay { position: fixed; inset: 0; background: #FFF; color: #1F1611; z-index: 100; display: flex; flex-direction: column; overflow-y: auto; opacity: 0; pointer-events: none; transition: opacity 0.35s; }
 .waiter-overlay.open { opacity: 1; pointer-events: auto; }
 html.dark .waiter-overlay { background: var(--bg-primary); color: var(--text-primary); }
@@ -162,7 +160,6 @@ html.dark .waiter-item-price { color: var(--text-primary); }
 html.dark .waiter-time { color: var(--text-primary); }
 .waiter-thanks { margin-top: 24px; font-size: 16px; font-weight: 800; color: #C89B5E; }
 
-/* BRANCH SELECT */
 .branch-select-screen { position: fixed; inset: 0; z-index: 900; display: none; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px; }
 .branch-select-screen.show { display: flex; }
 .branch-select-card { width: min(92vw, 480px); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; text-align: center; max-height: 90vh; overflow-y: auto; }
@@ -172,9 +169,21 @@ html.dark .waiter-time { color: var(--text-primary); }
 .branch-option:hover { border-color: var(--coffee-gold); background: color-mix(in srgb, var(--coffee-gold) 8%, var(--bg-subtle)); }
 .branch-option strong { font-weight: 900; font-size: 14px; display: block; }
 .branch-option small { font-size: 11px; color: var(--text-muted); }
+
+.system-offline-overlay { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+.system-offline-overlay.show { display: flex; }
 </style>
 </head>
 <body>
+
+<!-- SYSTEM OFFLINE OVERLAY -->
+<div id="systemOfflineOverlay" class="system-offline-overlay">
+  <div style="font-size:80px;margin-bottom:20px">⏸️</div>
+  <h1 style="font-size:28px;font-weight:900;margin:0 0 12px;color:var(--text-primary)">النظام متوقف مؤقتاً</h1>
+  <p style="font-size:15px;color:var(--text-muted);max-width:400px;line-height:1.8">
+    نعتذر عن الإزعاج 🙏<br>بنعمل صيانة سريعة، يرجى المحاولة بعد قليل.
+  </p>
+</div>
 
 <!-- BRANCH SELECT -->
 <div id="branchSelectScreen" class="branch-select-screen">
@@ -335,6 +344,8 @@ let allItems = [];
 let allBranches = [];
 let currentBranch = null;
 let currentMenuId = null;
+let currentTable = null;
+let systemOnline = true;
 let unsubscribes = [];
 
 /* ══════════ HELPERS ══════════ */
@@ -366,12 +377,34 @@ window.addEventListener('DOMContentLoaded', () => {
   updateCartBadge();
   renderSkeleton();
   initWelcome();
+  readTableFromUrl();
 
   onFbReady(() => subscribeAll());
 });
 
+function readTableFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const t = params.get('table');
+  if (t) {
+    currentTable = t;
+    localStorage.setItem('gharbaoui_table', t);
+  } else {
+    currentTable = localStorage.getItem('gharbaoui_table') || null;
+  }
+}
+
 function subscribeAll() {
-  const { db, collection, onSnapshot } = window.FB;
+  const { db, collection, onSnapshot, doc } = window.FB;
+
+  // فحص حالة النظام
+  onSnapshot(doc(db, 'settings', 'system'), (snap) => {
+    if (snap.exists()) {
+      systemOnline = snap.data().online !== false;
+    } else {
+      systemOnline = true;
+    }
+    updateSystemOverlay();
+  });
 
   unsubscribes.push(onSnapshot(collection(db, 'menus'), (snap) => {
     allMenus = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.order||0)-(b.order||0));
@@ -395,6 +428,16 @@ function subscribeAll() {
   }));
 }
 
+function updateSystemOverlay() {
+  const el = $('systemOfflineOverlay');
+  if (!el) return;
+  if (systemOnline) {
+    el.classList.remove('show');
+  } else {
+    el.classList.add('show');
+  }
+}
+
 /* ══════════ BRANCH HANDLING ══════════ */
 function checkBranchFromUrl() {
   if (!allBranches.length || !allMenus.length) return;
@@ -405,11 +448,9 @@ function checkBranchFromUrl() {
   if (code) {
     const b = allBranches.find(x => x.code === code);
     if (b) { selectBranch(b); return; }
-    // branch code not found
     showToast(currentLang === 'ar' ? 'الفرع غير موجود' : 'Branch not found', '⚠️');
   }
 
-  // مش محدد فرع → نعرض شاشة الاختيار
   showBranchSelector();
 }
 
@@ -440,16 +481,13 @@ function selectBranch(branch) {
   currentBranch = branch;
   currentMenuId = branch.menuId;
 
-  // خزّن آخر فرع استخدمه الزبون
   localStorage.setItem('gharbaoui_last_branch', branch.id);
 
   $('branchSelectScreen').classList.remove('show');
   $('changeBranchBtn').style.display = 'flex';
 
-  // اعرض اسم الفرع تحت الاسم
   $('brandSub').innerText = currentLang === 'en' ? (branch.nameEn || branch.nameAr) : branch.nameAr;
 
-  // لمسح السلة لو الفرع اتغير
   const lastBranchForCart = localStorage.getItem('gharbaoui_cart_branch');
   if (lastBranchForCart && lastBranchForCart !== branch.id) {
     cart = [];
@@ -868,6 +906,7 @@ async function showOrderToWaiter() {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
   const dateStr = now.toLocaleDateString(currentLang === 'en' ? 'en-GB' : 'ar-EG', { day: '2-digit', month: 'long', year: 'numeric' });
+  const tableNum = currentTable || '';
 
   let total = 0;
   const itemsHtml = cart.map(item => {
@@ -894,6 +933,7 @@ async function showOrderToWaiter() {
       branchCode: currentBranch ? currentBranch.code : 'unknown',
       branchNameAr: currentBranch ? currentBranch.nameAr : '',
       branchNameEn: currentBranch ? (currentBranch.nameEn || '') : '',
+      table: tableNum,
       items: cart.map(c => ({ id: c.id, nameAr: c.nameAr, nameEn: c.nameEn, price: c.unitPrice, qty: c.quantity, notes: c.notes || '' })),
       total, currency, status: 'pending',
       createdAt: serverTimestamp()
@@ -904,11 +944,13 @@ async function showOrderToWaiter() {
     ? (currentLang === 'en' ? (currentBranch.nameEn || currentBranch.nameAr) : currentBranch.nameAr)
     : '';
 
+  const tableLabel = tableNum ? (currentLang === 'en' ? `Table ${tableNum}` : `طربيزة ${tableNum}`) : '';
+
   $('waiterContent').innerHTML = `
     <div class="waiter-header">
       <span style="font-size: 42px; display: block; margin-bottom: 8px;">☕</span>
       <h1 class="waiter-brand">${currentLang === 'en' ? 'Al-Gharbawy' : 'الغرباوي'}</h1>
-      <div class="waiter-subtitle">${branchName}</div>
+      <div class="waiter-subtitle">${branchName}${tableLabel ? ' — ' + tableLabel : ''}</div>
     </div>
     <div class="waiter-order-title">📋 ${currentLang === 'en' ? 'Order Details' : 'تفاصيل الطلب'}</div>
     <div>${itemsHtml}</div>
@@ -1024,7 +1066,6 @@ function initFeaturedCarousel() {
     return;
   }
 
-  // اختار أول 10 منتجات عشوائية
   const shuffled = [...items].sort(() => Math.random() - 0.5);
   featuredItems = shuffled.slice(0, 10);
   $('featuredSection').classList.remove('hidden-init');
