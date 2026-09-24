@@ -12,9 +12,14 @@ html.dark{--bg:#1A1310;--surface:#241B16;--subtle:#1F1712;--text:#FAF6F0;--muted
 body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;min-height:100vh}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
 .brand{font-weight:900;font-size:18px}.brand-sub{font-size:11px;color:var(--muted)}
+.user-box{display:flex;align-items:center;gap:10px}
+.role-badge{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:900}
+.role-super_admin{background:linear-gradient(135deg,#B33A3A,#E74C3C);color:#fff}
+.role-admin{background:linear-gradient(135deg,#C89B5E,#E0BE85);color:#1F1611}
+.role-branch_manager{background:linear-gradient(135deg,#4A7C59,#6EBF82);color:#fff}
 .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 65px)}
 .side{background:var(--surface);border-left:1px solid var(--border);padding:16px 10px}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:10px;background:transparent;border:none;cursor:pointer;color:var(--text);font-family:inherit;font-weight:700;font-size:13px;text-align:right;margin-bottom:3px;transition:.2s}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:10px;background:transparent;border:none;cursor:pointer;color:var(--text);font-family:inherit;font-weight:700;font-size:13px;text-align:right;margin-bottom:3px}
 .nav-btn:hover{background:var(--subtle)}
 .nav-btn.active{background:var(--gold);color:#1F1611}
 .main{padding:24px;overflow:auto}
@@ -27,14 +32,14 @@ body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);mar
 input,select,textarea{width:100%;padding:10px 14px;background:var(--subtle);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--gold)}
 label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px}
-.btn{padding:9px 16px;border-radius:10px;border:none;font-family:inherit;font-weight:900;font-size:13px;cursor:pointer;transition:.15s}
+.btn{padding:9px 16px;border-radius:10px;border:none;font-family:inherit;font-weight:900;font-size:13px;cursor:pointer}
 .btn-primary{background:var(--dark);color:var(--bg)}
 html.dark .btn-primary{background:var(--gold);color:#1F1611}
 .btn-ghost{background:var(--subtle);color:var(--text);border:1px solid var(--border)}
 .btn-danger{background:var(--danger);color:#fff}
 .btn-success{background:var(--success);color:#fff}
-.btn-sm{padding:5px 10px;font-size:11px}
 .btn-gold{background:var(--gold);color:#1F1611}
+.btn-sm{padding:5px 10px;font-size:11px}
 table{width:100%;border-collapse:collapse}
 th{text-align:right;padding:10px 12px;font-size:11px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);font-weight:800}
 td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}
@@ -45,34 +50,31 @@ tr:hover td{background:var(--subtle)}
 .badge-red{background:rgba(179,58,58,.15);color:var(--danger)}
 .badge-gold{background:rgba(200,155,94,.15);color:var(--gold)}
 .badge-blue{background:rgba(60,120,200,.15);color:#3C78C8}
+.badge-gray{background:rgba(150,150,150,.15);color:#888}
 .page{display:none}.page.active{display:block}
 .order-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
-.order-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.order-card.new{animation:pulseOrder 1.5s ease}
+@keyframes pulseOrder{0%,100%{box-shadow:0 0 0 0 rgba(200,155,94,0)}50%{box-shadow:0 0 0 12px rgba(200,155,94,.3)}}
+.order-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
 .order-items{font-size:12px;color:var(--muted);line-height:1.8}
 .order-total{font-size:20px;font-weight:900;color:var(--gold)}
 #loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
 #loginCard{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:380px;max-width:92vw}
+#noPermOverlay{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+#noPermCard{background:var(--surface);border:1px solid var(--danger);border-radius:20px;padding:32px;width:460px;max-width:92vw;text-align:center}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--dark);color:var(--bg);padding:12px 20px;border-radius:12px;font-weight:700;font-size:13px;z-index:200;box-shadow:0 12px 40px rgba(0,0,0,.2)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:150;padding:20px}
 .modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:700px;max-width:100%;max-height:90vh;overflow:auto}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:600px;max-width:100%;max-height:90vh;overflow:auto}
 .img-preview{width:100%;height:180px;border-radius:12px;object-fit:cover;background:var(--subtle);border:1px dashed var(--border);display:block;margin-bottom:8px}
-.upload-progress{height:4px;background:var(--subtle);border-radius:999px;overflow:hidden;margin-top:8px;display:none}
-.upload-progress.active{display:block}
-.upload-progress-bar{height:100%;background:var(--gold);width:0%;transition:width .2s}
-.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
-.filter-bar select,.filter-bar input{width:auto;min-width:150px}
-.qr-container{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px}
 .qr-code-box{background:#fff;padding:20px;border-radius:16px;border:1px solid var(--border)}
-.branch-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px}
-.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
-.tab{padding:10px 16px;background:transparent;border:none;border-bottom:3px solid transparent;cursor:pointer;font-family:inherit;font-weight:800;font-size:13px;color:var(--muted)}
-.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
 .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="loginOverlay">
   <div id="loginCard">
     <div style="font-size:40px;text-align:center">☕</div>
@@ -87,48 +89,53 @@ tr:hover td{background:var(--subtle)}
   </div>
 </div>
 
+<!-- NO PERMISSION -->
+<div id="noPermOverlay">
+  <div id="noPermCard">
+    <div style="font-size:48px">🚫</div>
+    <h2 style="font-size:20px;font-weight:900;margin:12px 0">لا توجد صلاحيات</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">هذا الحساب غير مسجل في النظام. تواصل مع الأدمن.</p>
+    <button class="btn btn-ghost" onclick="doLogout()">خروج</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
 <div id="app" style="display:none">
   <div class="topbar">
-    <div><div class="brand">☕ الغرباوي — Admin</div><div class="brand-sub">لوحة التحكم</div></div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <span style="font-size:11px;color:var(--success);font-weight:800">● متصل مباشر</span>
+    <div><div class="brand">☕ الغرباوي — Admin</div><div class="brand-sub" id="userBranchLabel">لوحة التحكم</div></div>
+    <div class="user-box">
+      <span style="font-size:12px;font-weight:700" id="userName">—</span>
+      <span class="role-badge" id="userRoleBadge">—</span>
       <button class="btn btn-ghost btn-sm" onclick="document.documentElement.classList.toggle('dark')">🌓</button>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">خروج</button>
     </div>
   </div>
 
   <div class="layout">
-    <aside class="side">
+    <aside class="side" id="sidebar">
       <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard')">📊 نظرة عامة</button>
-      <button class="nav-btn" data-page="branches" onclick="showPage('branches')">🏢 الفروع</button>
-      <button class="nav-btn" data-page="menus" onclick="showPage('menus')">📂 المجموعات</button>
-      <button class="nav-btn" data-page="categories" onclick="showPage('categories')">🏷️ الأقسام</button>
-      <button class="nav-btn" data-page="items" onclick="showPage('items')">🍽️ المنتجات</button>
+      <button class="nav-btn" data-page="branches" data-role="admin" onclick="showPage('branches')">🏢 الفروع</button>
+      <button class="nav-btn" data-page="menus" data-role="admin" onclick="showPage('menus')">📂 المجموعات</button>
+      <button class="nav-btn" data-page="categories" data-role="admin" onclick="showPage('categories')">🏷️ الأقسام</button>
+      <button class="nav-btn" data-page="items" data-role="admin" onclick="showPage('items')">🍽️ المنتجات</button>
       <button class="nav-btn" data-page="orders" onclick="showPage('orders')">📦 الأوردرات</button>
+      <button class="nav-btn" data-page="users" data-role="admin" onclick="showPage('users')">👥 المستخدمين</button>
+      <button class="nav-btn" data-page="settings" data-role="super" onclick="showPage('settings')">⚙️ الإعدادات</button>
     </aside>
 
     <main class="main">
-
       <!-- DASHBOARD -->
       <div id="page-dashboard" class="page active">
         <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">نظرة عامة</h2>
         <div class="stat-grid">
           <div class="stat"><div class="stat-label">الفروع</div><div class="stat-value" id="statBranches">—</div></div>
-          <div class="stat"><div class="stat-label">المجموعات</div><div class="stat-value" id="statMenus">—</div></div>
-          <div class="stat"><div class="stat-label">الأقسام</div><div class="stat-value" id="statCategories">—</div></div>
           <div class="stat"><div class="stat-label">المنتجات</div><div class="stat-value" id="statItems">—</div></div>
           <div class="stat"><div class="stat-label">أوردرات النهاردة</div><div class="stat-value" id="statOrders">—</div></div>
+          <div class="stat"><div class="stat-label">حالة النظام</div><div class="stat-value" id="statSystem">—</div></div>
         </div>
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <h3 style="font-size:14px;font-weight:900;margin:0">آخر الأوردرات</h3>
-          </div>
+          <h3 style="font-size:14px;font-weight:900;margin:0 0 12px">آخر الأوردرات</h3>
           <div id="recentOrders"></div>
-        </div>
-        <div class="card" id="migrationCard" style="display:none;background:rgba(200,155,94,.08);border-color:var(--gold)">
-          <h3 style="font-size:15px;font-weight:900;margin:0 0 8px">🚀 تهيئة النظام</h3>
-          <p style="font-size:13px;color:var(--muted);margin:0 0 14px">النظام محتاج يهيّئ البيانات الأولى: مجموعة رئيسية + أقسام + فرع افتراضي من منتجاتك الحالية (74 عنصر).</p>
-          <button class="btn btn-gold" onclick="runMigration()">🚀 هيّئ النظام دلوقتي</button>
         </div>
       </div>
 
@@ -139,17 +146,14 @@ tr:hover td{background:var(--subtle)}
           <button class="btn btn-primary" onclick="openBranchModal()">+ إضافة فرع</button>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
-          <table>
-            <thead><tr><th>الكود</th><th>الاسم</th><th>المجموعة</th><th>الهاتف</th><th>الحالة</th><th>إجراءات</th></tr></thead>
-            <tbody id="branchesTable"></tbody>
-          </table>
+          <table><thead><tr><th>الكود</th><th>الاسم</th><th>المجموعة</th><th>الطربيزات</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="branchesTable"></tbody></table>
         </div>
       </div>
 
       <!-- MENUS -->
       <div id="page-menus" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h2 style="font-size:22px;font-weight:900;margin:0">المجموعات (Menus)</h2>
+          <h2 style="font-size:22px;font-weight:900;margin:0">المجموعات</h2>
           <button class="btn btn-primary" onclick="openMenuModal()">+ إضافة مجموعة</button>
         </div>
         <div id="menusList"></div>
@@ -161,15 +165,8 @@ tr:hover td{background:var(--subtle)}
           <h2 style="font-size:22px;font-weight:900;margin:0">الأقسام</h2>
           <button class="btn btn-primary" onclick="openCategoryModal()">+ إضافة قسم</button>
         </div>
-        <div class="filter-bar">
-          <label style="margin:0;align-self:center">المجموعة:</label>
-          <select id="catMenuFilter" onchange="renderCategories()"></select>
-        </div>
         <div class="card" style="padding:0;overflow:hidden">
-          <table>
-            <thead><tr><th>الأيقونة</th><th>الاسم عربي</th><th>الاسم إنجليزي</th><th>الترتيب</th><th>الحالة</th><th>إجراءات</th></tr></thead>
-            <tbody id="categoriesTable"></tbody>
-          </table>
+          <table><thead><tr><th>الأيقونة</th><th>الاسم عربي</th><th>المجموعة</th><th>الترتيب</th><th>إجراءات</th></tr></thead><tbody id="categoriesTable"></tbody></table>
         </div>
       </div>
 
@@ -179,16 +176,8 @@ tr:hover td{background:var(--subtle)}
           <h2 style="font-size:22px;font-weight:900;margin:0">المنتجات</h2>
           <button class="btn btn-primary" onclick="openItemModal()">+ إضافة منتج</button>
         </div>
-        <div class="filter-bar">
-          <select id="itemMenuFilter" onchange="renderItems()"></select>
-          <select id="itemCatFilter" onchange="renderItems()"></select>
-          <input id="itemSearch" placeholder="🔍 ابحث..." oninput="renderItems()">
-        </div>
         <div class="card" style="padding:0;overflow:hidden">
-          <table>
-            <thead><tr><th>#</th><th>صورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead>
-            <tbody id="itemsTable"></tbody>
-          </table>
+          <table><thead><tr><th>#</th><th>صورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="itemsTable"></tbody></table>
         </div>
       </div>
 
@@ -198,24 +187,59 @@ tr:hover td{background:var(--subtle)}
           <h2 style="font-size:22px;font-weight:900;margin:0">الأوردرات</h2>
           <button class="btn btn-ghost btn-sm" onclick="clearDoneOrders()">مسح المكتملة</button>
         </div>
-        <div class="filter-bar">
-          <select id="orderBranchFilter" onchange="renderOrders()"></select>
-          <select id="orderStatusFilter" onchange="renderOrders()">
-            <option value="">كل الحالات</option>
-            <option value="pending">جديد</option>
-            <option value="done">مكتمل</option>
-          </select>
-        </div>
         <div id="ordersList"></div>
       </div>
 
+      <!-- USERS -->
+      <div id="page-users" class="page">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h2 style="font-size:22px;font-weight:900;margin:0">المستخدمين</h2>
+          <button class="btn btn-primary" onclick="openUserModal()">+ إضافة مستخدم</button>
+        </div>
+        <div class="card" style="background:rgba(200,155,94,.08);border-color:var(--gold);margin-bottom:16px">
+          <div style="font-size:13px;font-weight:900;margin-bottom:8px">📌 خطوات إضافة مستخدم:</div>
+          <ol style="font-size:12px;color:var(--muted);line-height:1.8;margin:0;padding-inline-start:20px">
+            <li>افتح Firebase Console → Authentication → Users → <strong>Add user</strong></li>
+            <li>اكتب الإيميل والباسورد → Save</li>
+            <li>انسخ الـ <strong>User UID</strong> الجديد</li>
+            <li>ارجع هنا واضغط <strong>+ إضافة مستخدم</strong> والصق الـ UID</li>
+          </ol>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table><thead><tr><th>الاسم</th><th>الإيميل</th><th>الدور</th><th>الفرع</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="usersTable"></tbody></table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="page-settings" class="page">
+        <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">الإعدادات</h2>
+
+        <div class="card">
+          <h3 style="font-size:15px;font-weight:900;margin:0 0 8px">🔴 منطقة الخطر — إيقاف النظام</h3>
+          <p style="font-size:13px;color:var(--muted);margin:0 0 14px">لو ضغطت على "إيقاف النظام"، الموقع هيتوقف فوراً وكل الزباين هيشوفوا رسالة "النظام متوقف مؤقتاً".</p>
+          <div id="systemStatusBox" style="margin-bottom:14px">
+            <span class="badge badge-green" id="systemStatusBadge">● النظام يعمل</span>
+          </div>
+          <button class="btn btn-danger" id="killSwitchBtn" onclick="toggleSystemStatus()">🔴 إيقاف النظام</button>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:15px;font-weight:900;margin:0 0 8px">📊 معلومات النظام</h3>
+          <div style="font-size:13px;color:var(--muted);line-height:2">
+            <div>إجمالي الفروع: <strong id="infoBranches">—</strong></div>
+            <div>إجمالي المستخدمين: <strong id="infoUsers">—</strong></div>
+            <div>إجمالي المنتجات: <strong id="infoItems">—</strong></div>
+            <div>إجمالي الأوردرات: <strong id="infoOrders">—</strong></div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </div>
 
 <!-- BRANCH MODAL -->
 <div id="branchModal" class="modal-overlay">
-  <div class="modal" style="width:520px">
+  <div class="modal">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <h3 id="branchModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة فرع</h3>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('branchModal')">✕</button>
@@ -223,17 +247,23 @@ tr:hover td{background:var(--subtle)}
     <input type="hidden" id="b-id">
     <div class="form-row">
       <div><label>الكود (للـ QR)</label><input id="b-code" dir="ltr" placeholder="MAADI01"></div>
-      <div><label>الاسم عربي</label><input id="b-nameAr" placeholder="فرع المعادي"></div>
-    </div>
-    <div class="form-row">
-      <div><label>الاسم إنجليزي</label><input id="b-nameEn" dir="ltr" placeholder="Maadi Branch"></div>
       <div><label>المجموعة</label><select id="b-menuId"></select></div>
     </div>
     <div class="form-row">
-      <div><label>الهاتف</label><input id="b-phone" dir="ltr" placeholder="01123456789"></div>
+      <div><label>الاسم عربي</label><input id="b-nameAr"></div>
+      <div><label>الاسم إنجليزي</label><input id="b-nameEn" dir="ltr"></div>
+    </div>
+    <div class="form-row">
+      <div><label>الهاتف</label><input id="b-phone" dir="ltr"></div>
       <div><label>العنوان</label><input id="b-address"></div>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
+    <div style="margin-top:12px">
+      <label>عدد الطربيزات</label>
+      <input id="b-tablesCount" type="number" min="0" value="10" oninput="updateTablesListPreview()">
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">هيتم إنشاء طربيزات من 1 إلى العدد ده</div>
+      <div id="tablesListPreview" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
       <button class="btn btn-ghost" onclick="closeModal('branchModal')">إلغاء</button>
       <button class="btn btn-primary" onclick="saveBranch()">حفظ</button>
     </div>
@@ -242,18 +272,29 @@ tr:hover td{background:var(--subtle)}
 
 <!-- QR MODAL -->
 <div id="qrModal" class="modal-overlay">
-  <div class="modal" style="width:420px">
+  <div class="modal" style="width:480px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 id="qrTitle" style="font-size:17px;font-weight:900;margin:0">QR الفرع</h3>
+      <h3 id="qrTitle" style="font-size:17px;font-weight:900;margin:0">QR</h3>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('qrModal')">✕</button>
     </div>
-    <div class="qr-container">
+    <div style="margin-bottom:12px">
+      <label>نوع الـ QR</label>
+      <select id="qrType" onchange="renderQRPreview()">
+        <option value="branch">QR عام للفرع (يفتح المنيو)</option>
+        <option value="table">QR لكل طربيزة (يحدد الطربيزة)</option>
+      </select>
+    </div>
+    <div id="qrTableSelectBox" style="display:none;margin-bottom:12px">
+      <label>اختار الطربيزة</label>
+      <select id="qrTable" onchange="renderQRPreview()"></select>
+    </div>
+    <div style="display:flex;justify-content:center;padding:20px">
       <div class="qr-code-box"><div id="qrCode"></div></div>
-      <div style="font-size:12px;color:var(--muted);text-align:center;word-break:break-all" id="qrUrl"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="window.print()">🖨️ طباعة</button>
-        <button class="btn btn-primary" onclick="downloadQR()">⬇️ تحميل</button>
-      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;word-break:break-all;margin-bottom:14px" id="qrUrl"></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-ghost" onclick="window.print()">🖨️ طباعة</button>
+      <button class="btn btn-primary" onclick="downloadQR()">⬇️ تحميل</button>
     </div>
   </div>
 </div>
@@ -271,8 +312,8 @@ tr:hover td{background:var(--subtle)}
       <div><label>الترتيب</label><input id="mn-order" type="number" value="1"></div>
     </div>
     <div class="form-row">
-      <div><label>الاسم عربي</label><input id="mn-nameAr" placeholder="المنيو الأساسي"></div>
-      <div><label>الاسم إنجليزي</label><input id="mn-nameEn" dir="ltr" placeholder="Main Menu"></div>
+      <div><label>الاسم عربي</label><input id="mn-nameAr"></div>
+      <div><label>الاسم إنجليزي</label><input id="mn-nameEn" dir="ltr"></div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
       <button class="btn btn-ghost" onclick="closeModal('menuModal')">إلغاء</button>
@@ -295,8 +336,8 @@ tr:hover td{background:var(--subtle)}
       <div><label>الترتيب</label><input id="c-order" type="number" value="1"></div>
     </div>
     <div class="form-row">
-      <div><label>الاسم عربي</label><input id="c-nameAr" placeholder="قهوة ساخنة"></div>
-      <div><label>الاسم إنجليزي</label><input id="c-nameEn" dir="ltr" placeholder="Hot Coffee"></div>
+      <div><label>الاسم عربي</label><input id="c-nameAr"></div>
+      <div><label>الاسم إنجليزي</label><input id="c-nameEn" dir="ltr"></div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
       <button class="btn btn-ghost" onclick="closeModal('categoryModal')">إلغاء</button>
@@ -313,7 +354,6 @@ tr:hover td{background:var(--subtle)}
       <button class="btn btn-ghost btn-sm" onclick="closeModal('itemModal')">✕</button>
     </div>
     <input type="hidden" id="m-id">
-
     <div style="margin-bottom:12px">
       <label>صورة المنتج</label>
       <img id="m-preview" class="img-preview" src="" alt="">
@@ -322,10 +362,7 @@ tr:hover td{background:var(--subtle)}
         <span style="font-size:11px;color:var(--muted)">أو</span>
         <input id="m-imageUrl" placeholder="رابط صورة" style="flex:1;font-size:11px">
       </div>
-      <div id="m-progress" class="upload-progress"><div id="m-progressBar" class="upload-progress-bar"></div></div>
-      <div style="font-size:10px;color:var(--muted);margin-top:6px">💡 ارفع صورة من جهازك، أو الصق رابط صورة</div>
     </div>
-
     <div class="form-row">
       <div><label>المجموعة</label><select id="m-menuId" onchange="onItemMenuChange()"></select></div>
       <div><label>القسم</label><select id="m-categoryId"></select></div>
@@ -335,25 +372,54 @@ tr:hover td{background:var(--subtle)}
       <div><label>الاسم إنجليزي</label><input id="m-nameEn" dir="ltr"></div>
     </div>
     <div class="form-row">
-      <div><label>السعر الأساسي (جنيه)</label><input id="m-price" type="number"></div>
-      <div><label>الحالة</label>
-        <select id="m-inStock"><option value="true">متوفر</option><option value="false">نفد</option></select>
-      </div>
+      <div><label>السعر (جنيه)</label><input id="m-price" type="number"></div>
+      <div><label>الحالة</label><select id="m-inStock"><option value="true">متوفر</option><option value="false">نفد</option></select></div>
     </div>
     <div class="form-row">
       <div><label>وصف عربي</label><input id="m-descAr"></div>
       <div><label>وصف إنجليزي</label><input id="m-descEn" dir="ltr"></div>
     </div>
-
-    <div style="margin-top:16px;padding:14px;background:var(--subtle);border-radius:12px;border:1px solid var(--border)">
-      <div style="font-size:12px;font-weight:900;margin-bottom:10px">💰 أسعار خاصة لفروع (اختياري)</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">سيب الخانة فاضية عشان تستخدم السعر الأساسي</div>
-      <div id="m-priceOverrides"></div>
-    </div>
-
-    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
       <button class="btn btn-ghost" onclick="closeModal('itemModal')">إلغاء</button>
-      <button class="btn btn-primary" id="m-saveBtn" onclick="saveItem()">حفظ</button>
+      <button class="btn btn-primary" onclick="saveItem()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div id="userModal" class="modal-overlay">
+  <div class="modal" style="width:520px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3 id="userModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة مستخدم</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('userModal')">✕</button>
+    </div>
+    <input type="hidden" id="u-uid">
+    <div style="margin-bottom:12px">
+      <label>User UID (من Firebase Auth)</label>
+      <input id="u-uidInput" dir="ltr" placeholder="qQX1NbfvpSVEKln95bzqtu5wdyo1">
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">⚠️ مطلوب فقط عند إضافة مستخدم جديد</div>
+    </div>
+    <div class="form-row">
+      <div><label>الاسم</label><input id="u-name"></div>
+      <div><label>الإيميل</label><input id="u-email" dir="ltr" type="email"></div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>الدور</label>
+        <select id="u-role" onchange="onUserRoleChange()">
+          <option value="admin">Admin (مدير عام)</option>
+          <option value="branch_manager">Branch Manager (مدير فرع)</option>
+          <option value="super_admin">Super Admin (مالك)</option>
+        </select>
+      </div>
+      <div id="u-branchBox" style="display:none">
+        <label>الفرع</label>
+        <select id="u-branchId"></select>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+      <button class="btn btn-ghost" onclick="closeModal('userModal')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveUser()">حفظ</button>
     </div>
   </div>
 </div>
@@ -364,121 +430,207 @@ const CLOUDINARY_CLOUD = 'meiv47ul';
 const CLOUDINARY_PRESET = 'gharbawy_menu';
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
 
-let menus=[], categories=[], items=[], branches=[], orders=[];
-let currentUser=null;
+let currentUser = null;
+let currentUserData = null;
+let menus = [], categories = [], items = [], branches = [], orders = [], users = [];
+let systemOnline = true;
+let unsubs = [];
+let lastOrderCount = 0;
+let notificationAudio = null;
 
-function onFbReady(cb){ if(window.FB_READY)cb(); else window.addEventListener('fb-ready',cb,{once:true}); }
 function $(id){return document.getElementById(id)}
+function onFbReady(cb){if(window.FB_READY)cb();else window.addEventListener('fb-ready',cb,{once:true});}
 
 onFbReady(()=>{
   const {auth,onAuthStateChanged}=window.FB;
-  onAuthStateChanged(auth,(u)=>{
-    currentUser=u;
-    if(u){ $('loginOverlay').style.display='none'; $('app').style.display='block'; subscribeAll(); }
-    else { $('loginOverlay').style.display='flex'; $('app').style.display='none'; }
+  onAuthStateChanged(auth, async (user)=>{
+    if(user){
+      currentUser = user;
+      const ok = await loadUserData(user.uid);
+      if(!ok){ showNoPermission(); return; }
+      $('loginOverlay').style.display='none';
+      $('noPermOverlay').style.display='none';
+      $('app').style.display='block';
+      applyRoleUI();
+      subscribeAll();
+    } else {
+      currentUser = null;
+      currentUserData = null;
+      $('loginOverlay').style.display='flex';
+      $('noPermOverlay').style.display='none';
+      $('app').style.display='none';
+      unsubs.forEach(u=>u&&u());
+      unsubs=[];
+    }
   });
 });
 
-async function doLogin(){
-  const {auth,signInWithEmailAndPassword}=window.FB;
-  try{ await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value); }
-  catch(e){ $('loginError').innerText='بيانات غلط'; }
-}
-async function doLogout(){ await window.FB.signOut(window.FB.auth); }
-
-let unsubs=[];
-function subscribeAll(){
-  unsubs.forEach(u=>u&&u());
-  unsubs=[];
-  const {db,collection,onSnapshot,query,orderBy}=window.FB;
-  unsubs.push(onSnapshot(collection(db,'menus'),s=>{
-    menus=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
-    renderMenus(); refreshMenuSelects(); renderItems(); updateStats();
-  }));
-  unsubs.push(onSnapshot(collection(db,'categories'),s=>{
-    categories=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
-    renderCategories(); refreshCatSelects(); renderItems(); updateStats();
-  }));
-  unsubs.push(onSnapshot(collection(db,'menu'),s=>{
-    items=s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id);
-    renderItems(); updateStats();
-  }));
-  unsubs.push(onSnapshot(collection(db,'branches'),s=>{
-    branches=s.docs.map(d=>({id:d.id,...d.data()}));
-    renderBranches(); refreshBranchSelects(); updateStats();
-  }));
-  unsubs.push(onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),s=>{
-    orders=s.docs.map(d=>({id:d.id,...d.data()}));
-    renderOrders(); renderRecentOrders(); updateStats();
-    if(items.length===0) checkMigration(); // only check once items loaded
-  }));
-  // تشيك الـ migration بعد ما كل حاجة تحمّل
-  setTimeout(checkMigration,1500);
-}
-
-function showPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  $('page-'+name).classList.add('active');
-  document.querySelector(`[data-page="${name}"]`).classList.add('active');
-}
-function closeModal(id){ $(id).classList.remove('open'); }
-function toast(m){
-  const t=document.createElement('div'); t.className='toast'; t.innerText=m;
-  document.body.appendChild(t); setTimeout(()=>t.remove(),2200);
-}
-
-/* ============ MIGRATION ============ */
-function checkMigration(){
-  const card=$('migrationCard');
-  if(!card) return;
-  // لو مفيش menus ولا categories بس فيه items → محتاج migration
-  if(menus.length===0 && categories.length===0 && items.length>0){
-    card.style.display='block';
-  } else {
-    card.style.display='none';
+async function loadUserData(uid){
+  try {
+    const {db, doc, getDoc} = window.FB;
+    if(!getDoc) return false;
+    const snap = await getDoc(doc(db,'users',uid));
+    if(!snap.exists()) return false;
+    currentUserData = { id: uid, ...snap.data() };
+    if(currentUserData.active === false) return false;
+    return true;
+  } catch(e){
+    console.error('loadUserData error', e);
+    return false;
   }
 }
 
-async function runMigration(){
-  if(!confirm('هيتم:\n1. إنشاء مجموعة "Main Menu"\n2. استخراج الأقسام من المنتجات الحالية\n3. ربط كل منتج بمجموعته وقسمه\n4. إنشاء فرع افتراضي\n\nمتأكد؟')) return;
-  const {db,doc,setDoc,writeBatch}=window.FB;
-  try{
-    toast('⏳ جاري التهيئة...');
-    // 1. menu
-    await setDoc(doc(db,'menus','main'),{nameAr:'المنيو الأساسي',nameEn:'Main Menu',icon:'🍽️',order:1,active:true});
-    // 2. categories
-    const uniqueCats=[...new Set(items.map(i=>i.category||'Other'))];
-    const batch=writeBatch(db);
-    const slugify=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-    uniqueCats.forEach((cat,i)=>{
-      const slug=slugify(cat)||('cat-'+(i+1));
-      batch.set(doc(db,'categories',slug),{menuId:'main',nameAr:cat,nameEn:cat,icon:'🏷️',order:i+1,active:true});
-    });
-    // 3. update items
-    items.forEach(item=>{
-      const slug=slugify(item.category||'Other');
-      batch.set(doc(db,'menu',String(item.id)),{menuId:'main',categoryId:slug},{merge:true});
-    });
-    // 4. default branch
-    batch.set(doc(db,'branches','main'),{code:'MAIN',nameAr:'الفرع الرئيسي',nameEn:'Main Branch',menuId:'main',active:true,priceOverrides:{}});
-    await batch.commit();
-    toast('✅ تم التهيئة بنجاح');
-    $('migrationCard').style.display='none';
-  }catch(e){ console.error(e); toast('❌ فشل: '+e.message); }
+function showNoPermission(){
+  $('loginOverlay').style.display='none';
+  $('noPermOverlay').style.display='flex';
+  $('app').style.display='none';
 }
 
-/* ============ BRANCHES ============ */
+async function doLogin(){
+  const {auth,signInWithEmailAndPassword}=window.FB;
+  $('loginError').innerText='';
+  try{ await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value); }
+  catch(e){ $('loginError').innerText='بيانات غلط'; }
+}
+
+async function doLogout(){
+  await window.FB.signOut(window.FB.auth);
+  location.reload();
+}
+
+function applyRoleUI(){
+  const role = currentUserData.role;
+  const roleNames = {super_admin:'👑 Super Admin', admin:'🛡️ Admin', branch_manager:'👔 مدير فرع'};
+  $('userName').innerText = currentUserData.name || currentUser.email;
+  $('userRoleBadge').className = 'role-badge role-'+role;
+  $('userRoleBadge').innerText = roleNames[role] || role;
+
+  // Branch label
+  const b = branches.find(x=>x.id===currentUserData.branchId);
+  if(role === 'branch_manager' && currentUserData.branchId){
+    $('userBranchLabel').innerText = b ? b.nameAr : 'فرع';
+  } else {
+    $('userBranchLabel').innerText = 'لوحة التحكم';
+  }
+
+  // Sidebar based on role
+  document.querySelectorAll('#sidebar .nav-btn').forEach(btn=>{
+    const requiredRole = btn.dataset.role;
+    if(!requiredRole){ btn.style.display='flex'; return; }
+    if(role === 'super_admin'){ btn.style.display='flex'; return; }
+    if(role === 'admin' && requiredRole === 'admin'){ btn.style.display='flex'; return; }
+    if(role === 'admin' && requiredRole === 'super'){ btn.style.display='none'; return; }
+    btn.style.display = 'none';
+  });
+
+  // Default page: dashboard
+  showPage('dashboard');
+}
+
+let unsubMenus, unsubCats, unsubItems, unsubBranches, unsubOrders, unsubUsers, unsubSettings;
+
+function subscribeAll(){
+  const {db,collection,onSnapshot,query,orderBy,doc}=window.FB;
+  unsubs.forEach(u=>u&&u());
+  unsubs=[];
+
+  unsubs.push(onSnapshot(collection(db,'menus'),s=>{
+    menus = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+    renderMenus(); refreshSelects(); applyRoleUI();
+  }));
+
+  unsubs.push(onSnapshot(collection(db,'categories'),s=>{
+    categories = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+    renderCategories(); refreshSelects();
+  }));
+
+  unsubs.push(onSnapshot(collection(db,'menu'),s=>{
+    items = s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id);
+    renderItems(); updateStats();
+  }));
+
+  unsubs.push(onSnapshot(collection(db,'branches'),s=>{
+    branches = s.docs.map(d=>({id:d.id,...d.data()}));
+    renderBranches(); refreshSelects(); applyRoleUI();
+  }));
+
+  unsubs.push(onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),s=>{
+    const prevCount = orders.length;
+    orders = s.docs.map(d=>({id:d.id,...d.data()}));
+    // New order notification
+    if(prevCount > 0 && orders.length > prevCount){
+      const newOrder = orders[0];
+      // Only notify if branch manager sees his own branch, or admin/super
+      const role = currentUserData.role;
+      if(role !== 'branch_manager' || newOrder.branchId === currentUserData.branchId){
+        playNotificationSound();
+        showToast('🔔 أوردر جديد من ' + (newOrder.branchNameAr || 'فرع'));
+      }
+    }
+    renderOrders(); renderRecentOrders(); updateStats();
+  }));
+
+  unsubs.push(onSnapshot(collection(db,'users'),s=>{
+    users = s.docs.map(d=>({id:d.id,...d.data()}));
+    renderUsers(); updateStats();
+  }));
+
+  unsubs.push(onSnapshot(doc(db,'settings','system'),s=>{
+    if(s.exists()){
+      systemOnline = s.data().online !== false;
+    }
+    updateSystemStatus();
+  }));
+}
+
+/* ═══════════ UI HELPERS ═══════════ */
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const p = $('page-'+name);
+  if(p) p.classList.add('active');
+  const b = document.querySelector(`[data-page="${name}"]`);
+  if(b) b.classList.add('active');
+}
+
+function closeModal(id){ $(id).classList.remove('open'); }
+function showToast(msg){
+  const t=document.createElement('div');
+  t.className='toast'; t.innerText=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+function playNotificationSound(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Two short beeps
+    [0, 0.15].forEach((delay)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.12);
+    });
+  } catch(e){ console.error('audio error',e); }
+}
+
+/* ═══════════ BRANCHES ═══════════ */
 function renderBranches(){
   const tb=$('branchesTable');
   if(!branches.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش فروع</td></tr>'; return; }
-  tb.innerHTML=branches.map(b=>{
-    const menu=menus.find(m=>m.id===b.menuId);
+  tb.innerHTML = branches.map(b=>{
+    const menu = menus.find(m=>m.id===b.menuId);
+    const tablesCount = (b.tables||[]).length;
     return `<tr>
       <td><code style="background:var(--subtle);padding:3px 8px;border-radius:6px">${b.code||'—'}</code></td>
-      <td><strong>${b.nameAr||''}</strong><br><span style="font-size:11px;color:var(--muted)">${b.nameEn||''}</span></td>
+      <td><strong>${b.nameAr||''}</strong></td>
       <td>${menu?menu.nameAr:'—'}</td>
-      <td dir="ltr" style="font-size:12px">${b.phone||'—'}</td>
+      <td>${tablesCount} طربيزة</td>
       <td>${b.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-gold btn-sm" onclick="showQR('${b.id}')">📱 QR</button>
@@ -489,10 +641,14 @@ function renderBranches(){
   }).join('');
 }
 
+function updateTablesListPreview(){
+  const n = Number($('b-tablesCount').value)||0;
+  if(n<=0){ $('tablesListPreview').innerText=''; return; }
+  $('tablesListPreview').innerText = `هيتم إنشاء: ${Array.from({length:Math.min(n,30)},(_,i)=>i+1).join(', ')}${n>30?'...':''}`;
+}
+
 function openBranchModal(id){
-  const {db,doc,setDoc,updateDoc}=window.FB;
-  // refresh selects
-  refreshMenuSelect('b-menuId');
+  refreshSelect('b-menuId');
   if(id){
     const b=branches.find(x=>x.id===id);
     if(!b) return;
@@ -500,10 +656,13 @@ function openBranchModal(id){
     $('b-id').value=b.id; $('b-code').value=b.code||''; $('b-nameAr').value=b.nameAr||'';
     $('b-nameEn').value=b.nameEn||''; $('b-menuId').value=b.menuId||''; $('b-phone').value=b.phone||'';
     $('b-address').value=b.address||'';
+    $('b-tablesCount').value=(b.tables||[]).length;
   } else {
     $('branchModalTitle').innerText='إضافة فرع';
     ['b-id','b-code','b-nameAr','b-nameEn','b-phone','b-address'].forEach(f=>$(f).value='');
+    $('b-tablesCount').value=10;
   }
+  updateTablesListPreview();
   $('branchModal').classList.add('open');
 }
 
@@ -512,78 +671,97 @@ async function saveBranch(){
   const id=$('b-id').value;
   const code=$('b-code').value.trim().toUpperCase();
   const nameAr=$('b-nameAr').value.trim();
-  if(!code||!nameAr){ toast('⚠️ كمل البيانات'); return; }
+  if(!code||!nameAr){ showToast('⚠️ كمل البيانات'); return; }
+  const tablesCount = Number($('b-tablesCount').value)||0;
+  const tables = Array.from({length:tablesCount},(_,i)=>({ number: i+1, active: true }));
   const data={
     code, nameAr,
     nameEn:$('b-nameEn').value.trim()||nameAr,
     menuId:$('b-menuId').value,
     phone:$('b-phone').value.trim(),
     address:$('b-address').value.trim(),
+    tables,
     active:true
   };
   try{
     if(id) await updateDoc(doc(db,'branches',id),data);
-    else{
-      data.priceOverrides={};
-      await setDoc(doc(db,'branches',id||code.toLowerCase()),data);
-    }
+    else await setDoc(doc(db,'branches',id||code.toLowerCase()),data);
     closeModal('branchModal');
-    toast('✅ تم الحفظ');
-  }catch(e){ toast('❌ '+e.message); }
+    showToast('✅ تم الحفظ');
+  }catch(e){ showToast('❌ '+e.message); }
 }
 
 async function toggleBranch(id){
   const b=branches.find(x=>x.id===id);
   const {db,doc,updateDoc}=window.FB;
   await updateDoc(doc(db,'branches',id),{active:b.active===false});
-  toast('✅ تم');
+  showToast('✅ تم');
 }
 async function deleteBranch(id){
   if(!confirm('تأكيد حذف الفرع؟')) return;
   const {db,doc,deleteDoc}=window.FB;
   await deleteDoc(doc(db,'branches',id));
-  toast('🗑️ تم الحذف');
+  showToast('🗑️ تم');
 }
 
-/* ============ QR ============ */
+/* ═══════════ QR ═══════════ */
+let currentQRBranch = null;
 function showQR(branchId){
-  const b=branches.find(x=>x.id===branchId);
-  if(!b) return;
-  const url=`https://algharabawycofe.github.io/gharbawy-menu/index.html?branch=${b.code}`;
-  $('qrTitle').innerText='📱 QR — '+b.nameAr;
-  $('qrUrl').innerText=url;
-  $('qrCode').innerHTML='';
-  new QRCode($('qrCode'),{text:url,width:256,height:256,colorDark:'#2B1D14',colorLight:'#FFFFFF',correctLevel:QRCode.CorrectLevel.H});
+  currentQRBranch = branches.find(x=>x.id===branchId);
+  if(!currentQRBranch) return;
+  $('qrTitle').innerText='📱 QR — '+currentQRBranch.nameAr;
+  $('qrType').value='branch';
+  const tables = currentQRBranch.tables||[];
+  $('qrTable').innerHTML = tables.map(t=>`<option value="${t.number}">طربيزة ${t.number}</option>`).join('') || '<option>لا توجد طربيزات</option>';
+  $('qrTableSelectBox').style.display='none';
+  renderQRPreview();
   $('qrModal').classList.add('open');
 }
+
+function renderQRPreview(){
+  if(!currentQRBranch) return;
+  const type = $('qrType').value;
+  let url = `https://algharabawycofe.github.io/gharbawy-menu/index.html?branch=${currentQRBranch.code}`;
+  if(type==='table'){
+    $('qrTableSelectBox').style.display='block';
+    const t = $('qrTable').value;
+    url += `&table=${t}`;
+  } else {
+    $('qrTableSelectBox').style.display='none';
+  }
+  $('qrUrl').innerText = url;
+  $('qrCode').innerHTML='';
+  new QRCode($('qrCode'),{text:url,width:256,height:256,colorDark:'#2B1D14',colorLight:'#FFFFFF',correctLevel:QRCode.CorrectLevel.H});
+}
+
 function downloadQR(){
   const canvas=$('qrCode').querySelector('canvas');
   if(!canvas) return;
   const link=document.createElement('a');
-  link.download='qr.png';
+  link.download='qr-'+currentQRBranch.code+(($('qrType').value==='table')?('-table-'+$('qrTable').value):'')+'.png';
   link.href=canvas.toDataURL('image/png');
   link.click();
 }
 
-/* ============ MENUS ============ */
+/* ═══════════ MENUS ═══════════ */
 function renderMenus(){
   const el=$('menusList');
-  if(!menus.length){ el.innerHTML='<div class="card empty">مفيش مجموعات — اضغط + إضافة مجموعة</div>'; return; }
+  if(!menus.length){ el.innerHTML='<div class="card empty">مفيش مجموعات</div>'; return; }
   el.innerHTML=menus.map(m=>{
     const cnt=items.filter(i=>i.menuId===m.id).length;
-    const branchesCnt=branches.filter(b=>b.menuId===m.id).length;
+    const bCnt=branches.filter(b=>b.menuId===m.id).length;
     return `<div class="card" style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-size:20px;margin-bottom:4px">${m.icon||'📂'}</div>
+        <div style="font-size:20px">${m.icon||'📂'}</div>
         <div style="font-size:16px;font-weight:900">${m.nameAr}</div>
         <div style="font-size:12px;color:var(--muted)">${m.nameEn}</div>
         <div style="margin-top:8px;display:flex;gap:8px">
           <span class="badge badge-gold">${cnt} منتج</span>
-          <span class="badge badge-blue">${branchesCnt} فرع</span>
+          <span class="badge badge-blue">${bCnt} فرع</span>
         </div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="openMenuModal('${m.id}')">✏️ تعديل</button>
+        <button class="btn btn-primary btn-sm" onclick="openMenuModal('${m.id}')">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteMenu('${m.id}')">🗑️</button>
       </div>
     </div>`;
@@ -591,11 +769,9 @@ function renderMenus(){
 }
 
 function openMenuModal(id){
-  const {db,doc,setDoc,updateDoc}=window.FB;
   if(id){
-    const m=menus.find(x=>x.id===id);
-    if(!m) return;
-    $('menuModalTitle').innerText='✏️ تعديل: '+m.nameAr;
+    const m=menus.find(x=>x.id===id); if(!m) return;
+    $('menuModalTitle').innerText='✏️ تعديل';
     $('mn-id').value=m.id; $('mn-icon').value=m.icon||''; $('mn-order').value=m.order||1;
     $('mn-nameAr').value=m.nameAr||''; $('mn-nameEn').value=m.nameEn||'';
   } else {
@@ -605,76 +781,51 @@ function openMenuModal(id){
   }
   $('menuModal').classList.add('open');
 }
-
 async function saveMenu(){
   const {db,doc,setDoc,updateDoc}=window.FB;
   const id=$('mn-id').value;
   const nameAr=$('mn-nameAr').value.trim();
-  if(!nameAr){ toast('⚠️ اكتب الاسم'); return; }
+  if(!nameAr){ showToast('⚠️ اكتب الاسم'); return; }
   const data={
-    nameAr,
-    nameEn:$('mn-nameEn').value.trim()||nameAr,
+    nameAr, nameEn:$('mn-nameEn').value.trim()||nameAr,
     icon:$('mn-icon').value.trim()||'📂',
     order:Number($('mn-order').value)||1,
     active:true
   };
   try{
     if(id) await updateDoc(doc(db,'menus',id),data);
-    else{
-      const newId='menu-'+Date.now();
-      await setDoc(doc(db,'menus',newId),data);
-    }
-    closeModal('menuModal');
-    toast('✅ تم الحفظ');
-  }catch(e){ toast('❌ '+e.message); }
+    else await setDoc(doc(db,'menus','menu-'+Date.now()),data);
+    closeModal('menuModal'); showToast('✅ تم');
+  }catch(e){ showToast('❌ '+e.message); }
 }
 async function deleteMenu(id){
-  if(!confirm('تأكيد الحذف؟ المنتجات والأقسام المرتبطة هتفضل موجودة بس مش هتظهر.')) return;
-  const {db,doc,deleteDoc}=window.FB;
-  await deleteDoc(doc(db,'menus',id));
-  toast('🗑️ تم الحذف');
+  if(!confirm('تأكيد الحذف؟')) return;
+  await window.FB.deleteDoc(window.FB.doc(window.FB.db,'menus',id));
+  showToast('🗑️ تم');
 }
 
-/* ============ CATEGORIES ============ */
-function refreshMenuSelect(id,value){
-  const s=$(id); if(!s) return;
-  s.innerHTML=menus.map(m=>`<option value="${m.id}">${m.icon||''} ${m.nameAr}</option>`).join('');
-  if(value) s.value=value;
-}
-function refreshMenuSelects(){
-  refreshMenuSelect('catMenuFilter',$('catMenuFilter')?.value);
-  refreshMenuSelect('b-menuId',$('b-menuId')?.value);
-  refreshMenuSelect('c-menuId',$('c-menuId')?.value);
-  refreshMenuSelect('itemMenuFilter',$('itemMenuFilter')?.value);
-  refreshMenuSelect('m-menuId',$('m-menuId')?.value);
-}
-
+/* ═══════════ CATEGORIES ═══════════ */
 function renderCategories(){
-  const menuId=$('catMenuFilter')?.value;
-  const filtered=categories.filter(c=>!menuId||c.menuId===menuId);
   const tb=$('categoriesTable');
-  if(!filtered.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش أقسام</td></tr>'; return; }
-  tb.innerHTML=filtered.map(c=>{
-    const cnt=items.filter(i=>i.categoryId===c.id).length;
+  if(!categories.length){ tb.innerHTML='<tr><td colspan="5" class="empty">مفيش أقسام</td></tr>'; return; }
+  tb.innerHTML=categories.map(c=>{
+    const menu=menus.find(m=>m.id===c.menuId);
     return `<tr>
       <td style="font-size:20px">${c.icon||'🏷️'}</td>
       <td><strong>${c.nameAr}</strong></td>
-      <td>${c.nameEn}</td>
+      <td>${menu?menu.nameAr:'—'}</td>
       <td>${c.order||0}</td>
-      <td><span class="badge badge-gold">${cnt} منتج</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-primary btn-sm" onclick="openCategoryModal('${c.id}')">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">🗑️</button>
       </td></tr>`;
   }).join('');
 }
-
 function openCategoryModal(id){
-  refreshMenuSelect('c-menuId');
+  refreshSelect('c-menuId');
   if(id){
-    const c=categories.find(x=>x.id===id);
-    if(!c) return;
-    $('catModalTitle').innerText='✏️ تعديل: '+c.nameAr;
+    const c=categories.find(x=>x.id===id); if(!c) return;
+    $('catModalTitle').innerText='✏️ تعديل';
     $('c-id').value=c.id; $('c-menuId').value=c.menuId||''; $('c-icon').value=c.icon||'';
     $('c-order').value=c.order||1; $('c-nameAr').value=c.nameAr||''; $('c-nameEn').value=c.nameEn||'';
   } else {
@@ -684,83 +835,47 @@ function openCategoryModal(id){
   }
   $('categoryModal').classList.add('open');
 }
-
 async function saveCategory(){
   const {db,doc,setDoc,updateDoc}=window.FB;
   const id=$('c-id').value;
   const nameAr=$('c-nameAr').value.trim();
   const menuId=$('c-menuId').value;
-  if(!nameAr||!menuId){ toast('⚠️ كمل البيانات'); return; }
+  if(!nameAr||!menuId){ showToast('⚠️ كمل البيانات'); return; }
   const data={
-    nameAr,
-    nameEn:$('c-nameEn').value.trim()||nameAr,
-    menuId,
-    icon:$('c-icon').value.trim()||'🏷️',
-    order:Number($('c-order').value)||1,
-    active:true
+    nameAr, nameEn:$('c-nameEn').value.trim()||nameAr,
+    menuId, icon:$('c-icon').value.trim()||'🏷️',
+    order:Number($('c-order').value)||1, active:true
   };
   try{
     if(id) await updateDoc(doc(db,'categories',id),data);
-    else{
-      const slug=nameAr.toLowerCase().replace(/\s+/g,'-')+'-'+Date.now().toString(36);
-      await setDoc(doc(db,'categories',slug),data);
-    }
-    closeModal('categoryModal');
-    toast('✅ تم الحفظ');
-  }catch(e){ toast('❌ '+e.message); }
+    else await setDoc(doc(db,'categories','cat-'+Date.now()),data);
+    closeModal('categoryModal'); showToast('✅ تم');
+  }catch(e){ showToast('❌ '+e.message); }
 }
 async function deleteCategory(id){
   if(!confirm('تأكيد الحذف؟')) return;
-  const {db,doc,deleteDoc}=window.FB;
-  await deleteDoc(doc(db,'categories',id));
-  toast('🗑️ تم الحذف');
+  await window.FB.deleteDoc(window.FB.doc(window.FB.db,'categories',id));
+  showToast('🗑️ تم');
 }
 
-/* ============ ITEMS ============ */
-function refreshCatSelects(){
-  // categories dropdown for item modal
-  const mId=$('m-menuId')?.value;
-  const cSel=$('m-categoryId');
-  if(cSel){
-    const filtered=categories.filter(c=>!mId||c.menuId===mId);
-    cSel.innerHTML=filtered.map(c=>`<option value="${c.id}">${c.icon||''} ${c.nameAr}</option>`).join('');
-  }
-  // filter bar
-  const fMenu=$('itemMenuFilter')?.value;
-  const fCat=$('itemCatFilter');
-  if(fCat){
-    const filtered=categories.filter(c=>!fMenu||c.menuId===fMenu);
-    fCat.innerHTML='<option value="">كل الأقسام</option>'+filtered.map(c=>`<option value="${c.id}">${c.nameAr}</option>`).join('');
-  }
-}
-function onItemMenuChange(){ refreshCatSelects(); }
-
+/* ═══════════ ITEMS ═══════════ */
 function renderItems(){
-  const mFilter=$('itemMenuFilter')?.value;
-  const cFilter=$('itemCatFilter')?.value;
-  const search=($('itemSearch')?.value||'').toLowerCase().trim();
-
-  let filtered=items.filter(i=>{
-    if(mFilter && i.menuId!==mFilter) return false;
-    if(cFilter && i.categoryId!==cFilter) return false;
-    if(search){
-      const s=(i.nameAr+' '+i.nameEn).toLowerCase();
-      if(!s.includes(search)) return false;
-    }
-    return true;
-  });
-
+  // Branch manager filter
+  let list = items;
+  if(currentUserData.role === 'branch_manager'){
+    const bId = currentUserData.branchId;
+    const b = branches.find(x=>x.id===bId);
+    if(b) list = items.filter(i=>i.menuId===b.menuId);
+  }
   const tb=$('itemsTable');
-  if(!filtered.length){ tb.innerHTML='<tr><td colspan="7" class="empty">مفيش منتجات</td></tr>'; return; }
-  tb.innerHTML=filtered.map(it=>{
+  if(!list.length){ tb.innerHTML='<tr><td colspan="7" class="empty">مفيش منتجات</td></tr>'; return; }
+  tb.innerHTML=list.map(it=>{
     const cat=categories.find(c=>c.id===it.categoryId);
-    const catName=cat?cat.nameAr:(it.category||'—');
-    const overrides=Object.keys(it.priceOverrides||{}).length;
     return `<tr>
       <td>${it.id}</td>
       <td><img class="thumb" src="${it.image}" onerror="this.style.opacity=.2"></td>
-      <td><strong>${it.nameAr}</strong><br><span style="font-size:11px;color:var(--muted)">${it.nameEn}</span>${overrides>0?`<br><span class="badge badge-gold" style="margin-top:4px">${overrides} سعر خاص</span>`:''}</td>
-      <td>${catName}</td>
+      <td><strong>${it.nameAr}</strong></td>
+      <td>${cat?cat.nameAr:'—'}</td>
       <td><strong style="color:var(--gold)">${it.price}</strong></td>
       <td>${it.inStock!==false?'<span class="badge badge-green">متوفر</span>':'<span class="badge badge-red">نفد</span>'}</td>
       <td style="white-space:nowrap">
@@ -772,13 +887,11 @@ function renderItems(){
 }
 
 function openItemModal(id){
-  refreshMenuSelect('m-menuId');
+  refreshSelect('m-menuId');
   if(id){
-    const it=items.find(x=>x.id===id);
-    if(!it) return;
-    $('itemModalTitle').innerText='✏️ تعديل: '+it.nameAr;
-    $('m-id').value=it.id;
-    $('m-menuId').value=it.menuId||'';
+    const it=items.find(x=>x.id===id); if(!it) return;
+    $('itemModalTitle').innerText='✏️ تعديل';
+    $('m-id').value=it.id; $('m-menuId').value=it.menuId||'';
     onItemMenuChange();
     setTimeout(()=>{ $('m-categoryId').value=it.categoryId||''; },50);
     $('m-nameAr').value=it.nameAr||''; $('m-nameEn').value=it.nameEn||'';
@@ -786,7 +899,6 @@ function openItemModal(id){
     $('m-inStock').value=it.inStock===false?'false':'true';
     $('m-imageUrl').value=(it.image||'').startsWith('http')?it.image:'';
     $('m-preview').src=it.image||'';
-    renderPriceOverrides(it.priceOverrides||{});
   } else {
     $('itemModalTitle').innerText='إضافة منتج';
     $('m-id').value=''; $('m-nameAr').value=''; $('m-nameEn').value='';
@@ -794,19 +906,14 @@ function openItemModal(id){
     $('m-file').value=''; $('m-imageUrl').value=''; $('m-preview').src='';
     $('m-inStock').value='true';
     onItemMenuChange();
-    renderPriceOverrides({});
   }
   $('itemModal').classList.add('open');
 }
 
-function renderPriceOverrides(overrides){
-  const el=$('m-priceOverrides');
-  if(!branches.length){ el.innerHTML='<div style="font-size:11px;color:var(--muted)">مفيش فروع بعد</div>'; return; }
-  el.innerHTML=branches.map(b=>`
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <span style="flex:1;font-size:12px">${b.nameAr} <code style="font-size:10px;color:var(--muted)">${b.code}</code></span>
-      <input type="number" placeholder="السعر الأساسي" style="width:140px;font-size:12px" data-branch="${b.id}" value="${overrides[b.id]||''}">
-    </div>`).join('');
+function onItemMenuChange(){
+  const mId=$('m-menuId').value;
+  const filtered=categories.filter(c=>!mId||c.menuId===mId);
+  $('m-categoryId').innerHTML=filtered.map(c=>`<option value="${c.id}">${c.icon||''} ${c.nameAr}</option>`).join('');
 }
 
 async function saveItem(){
@@ -818,47 +925,25 @@ async function saveItem(){
   const price=Number($('m-price').value);
   const menuId=$('m-menuId').value;
   const categoryId=$('m-categoryId').value;
-  if(!nameAr||!nameEn||!price||!menuId||!categoryId){ toast('⚠️ كمل البيانات'); return; }
+  if(!nameAr||!nameEn||!price||!menuId||!categoryId){ showToast('⚠️ كمل البيانات'); return; }
 
   const file=$('m-file').files[0];
   let imageUrl=$('m-imageUrl').value.trim();
 
   if(file){
     try{
-      const bar=$('m-progress'), inner=$('m-progressBar');
-      bar.classList.add('active'); inner.style.width='0%';
-      $('m-saveBtn').disabled=true; $('m-saveBtn').innerText='⏳ رفع...';
-      imageUrl=await uploadToCloudinary(file,(p)=>{inner.style.width=p+'%'});
-      bar.classList.remove('active');
-      $('m-saveBtn').disabled=false; $('m-saveBtn').innerText='حفظ';
-    }catch(e){
-      toast('❌ فشل رفع الصورة');
-      $('m-saveBtn').disabled=false; $('m-saveBtn').innerText='حفظ';
-      $('m-progress').classList.remove('active');
-      return;
-    }
+      showToast('⏳ جاري رفع الصورة...');
+      imageUrl=await uploadToCloudinary(file);
+    }catch(e){ showToast('❌ فشل رفع الصورة'); return; }
   }
-
   if(!imageUrl){
-    if(isEdit){
-      const ex=items.find(i=>i.id===Number(id));
-      imageUrl=ex?ex.image:'images/hot-coffee/01.jpg';
-    } else imageUrl='images/hot-coffee/01.jpg';
+    if(isEdit){ const ex=items.find(i=>i.id===Number(id)); imageUrl=ex?ex.image:'images/hot-coffee/01.jpg'; }
+    else imageUrl='images/hot-coffee/01.jpg';
   }
 
-  // price overrides
-  const priceOverrides={};
-  document.querySelectorAll('#m-priceOverrides input').forEach(inp=>{
-    const v=inp.value.trim();
-    if(v) priceOverrides[inp.dataset.branch]=Number(v);
-  });
-
-  const data={
-    nameAr,nameEn,menuId,categoryId,price,image:imageUrl,
+  const data={nameAr,nameEn,menuId,categoryId,price,image:imageUrl,
     descAr:$('m-descAr').value||'', descEn:$('m-descEn').value||'',
-    inStock:$('m-inStock').value==='true',
-    priceOverrides
-  };
+    inStock:$('m-inStock').value==='true'};
 
   try{
     if(isEdit) await updateDoc(doc(db,'menu',String(id)),data);
@@ -866,25 +951,18 @@ async function saveItem(){
       const maxId=items.reduce((m,i)=>Math.max(m,i.id||0),0);
       await setDoc(doc(db,'menu',String(maxId+1)),data);
     }
-    closeModal('itemModal');
-    toast('✅ تم الحفظ');
-  }catch(e){ toast('❌ '+e.message); }
+    closeModal('itemModal'); showToast('✅ تم');
+  }catch(e){ showToast('❌ '+e.message); }
 }
 
-async function uploadToCloudinary(file,onProgress){
+async function uploadToCloudinary(file){
   const fd=new FormData();
-  fd.append('file',file);
-  fd.append('upload_preset',CLOUDINARY_PRESET);
-  return new Promise((resolve,reject)=>{
+  fd.append('file',file); fd.append('upload_preset',CLOUDINARY_PRESET);
+  return new Promise((res,rej)=>{
     const xhr=new XMLHttpRequest();
     xhr.open('POST',CLOUDINARY_URL);
-    xhr.upload.onprogress=(e)=>{ if(e.lengthComputable&&onProgress) onProgress((e.loaded/e.total)*100); };
-    xhr.onload=()=>{
-      if(xhr.status>=200&&xhr.status<300){
-        try{ resolve(JSON.parse(xhr.responseText).secure_url); }catch(e){ reject(e); }
-      } else reject(new Error(xhr.status));
-    };
-    xhr.onerror=()=>reject(new Error('Network'));
+    xhr.onload=()=>{ if(xhr.status>=200&&xhr.status<300){ try{res(JSON.parse(xhr.responseText).secure_url);}catch(e){rej(e);} } else rej(new Error(xhr.status)); };
+    xhr.onerror=()=>rej(new Error('net'));
     xhr.send(fd);
   });
 }
@@ -893,56 +971,48 @@ async function toggleStock(id){
   const it=items.find(i=>i.id===id);
   const {db,doc,updateDoc}=window.FB;
   await updateDoc(doc(db,'menu',String(id)),{inStock:it.inStock===false});
-  toast('✅ تم');
+  showToast('✅ تم');
 }
 async function deleteItem(id){
   if(!confirm('تأكيد الحذف؟')) return;
-  const {db,doc,deleteDoc}=window.FB;
-  await deleteDoc(doc(db,'menu',String(id)));
-  toast('🗑️ تم الحذف');
+  await window.FB.deleteDoc(window.FB.doc(window.FB.db,'menu',String(id)));
+  showToast('🗑️ تم');
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-  $('m-file').addEventListener('change',(e)=>{
+  const fileIn = $('m-file');
+  if(fileIn) fileIn.addEventListener('change',(e)=>{
     const f=e.target.files[0]; if(!f) return;
     const r=new FileReader();
     r.onload=(ev)=>{ $('m-preview').src=ev.target.result; };
     r.readAsDataURL(f);
   });
-  $('m-imageUrl').addEventListener('input',(e)=>{
+  const urlIn = $('m-imageUrl');
+  if(urlIn) urlIn.addEventListener('input',(e)=>{
     const u=e.target.value.trim();
     if(u) $('m-preview').src=u;
   });
 });
 
-/* ============ ORDERS ============ */
-function refreshBranchSelects(){
-  const s=$('orderBranchFilter'); if(!s) return;
-  const cur=s.value;
-  s.innerHTML='<option value="">كل الفروع</option>'+branches.map(b=>`<option value="${b.id}">${b.nameAr}</option>`).join('');
-  if(cur) s.value=cur;
-}
-
+/* ═══════════ ORDERS ═══════════ */
 function renderOrders(){
-  const bF=$('orderBranchFilter')?.value;
-  const sF=$('orderStatusFilter')?.value;
-  let filtered=orders.filter(o=>{
-    if(bF && o.branchId!==bF) return false;
-    if(sF && o.status!==sF) return false;
-    return true;
-  });
-  const list=$('ordersList');
-  if(!filtered.length){ list.innerHTML='<div class="card empty">مفيش أوردرات</div>'; return; }
-  list.innerHTML=filtered.map(o=>{
+  let list = orders;
+  if(currentUserData.role === 'branch_manager'){
+    list = orders.filter(o=>o.branchId === currentUserData.branchId);
+  }
+  const el=$('ordersList');
+  if(!list.length){ el.innerHTML='<div class="card empty">مفيش أوردرات</div>'; return; }
+  el.innerHTML=list.map((o,idx)=>{
     const time=o.createdAt?.toDate?o.createdAt.toDate().toLocaleString('ar-EG'):'—';
-    const b=branches.find(x=>x.id===o.branchId);
-    const branchName=b?b.nameAr:(o.branchCode||'—');
     const itemsHtml=(o.items||[]).map(i=>'• '+i.nameAr+' × '+i.qty+' = '+(i.price*i.qty)+' ج'+(i.notes?' <em style="color:var(--gold)">('+i.notes+')</em>':'')).join('<br>');
-    return `<div class="order-card">
+    const isNew = o.status !== 'done';
+    const tableLabel = o.table ? `<span class="badge badge-gold">🍽️ طربيزة ${o.table}</span>` : '';
+    return `<div class="order-card ${isNew?'new':''}">
       <div class="order-head">
         <div>
           <strong>${time}</strong><br>
-          <span class="badge badge-blue">🏢 ${branchName}</span>
+          <span class="badge badge-blue">🏢 ${o.branchNameAr||'—'}</span>
+          ${tableLabel}
           <span class="badge ${o.status==='done'?'badge-green':'badge-gold'}">${o.status==='done'?'مكتمل':'جديد'}</span>
         </div>
         <div class="order-total">${o.total} ج</div>
@@ -954,43 +1024,180 @@ function renderOrders(){
 }
 
 function renderRecentOrders(){
+  let list = orders;
+  if(currentUserData.role === 'branch_manager'){
+    list = orders.filter(o=>o.branchId === currentUserData.branchId);
+  }
+  const recent = list.slice(0,5);
   const el=$('recentOrders');
-  const recent=orders.slice(0,5);
   if(!recent.length){ el.innerHTML='<div class="empty">مفيش أوردرات</div>'; return; }
-  el.innerHTML=recent.map(o=>{
+  el.innerHTML = recent.map(o=>{
     const time=o.createdAt?.toDate?o.createdAt.toDate().toLocaleTimeString('ar-EG'):'—';
-    const b=branches.find(x=>x.id===o.branchId);
     return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
-      <span style="font-size:13px">${time} — ${b?b.nameAr:'—'} — ${o.items?.length||0} عنصر</span>
+      <span style="font-size:13px">${time} — ${o.branchNameAr||'—'}${o.table?' — طربيزة '+o.table:''}</span>
       <strong style="color:var(--gold)">${o.total} ج</strong></div>`;
   }).join('');
 }
 
 async function markDone(id){
-  const {db,doc,updateDoc}=window.FB;
-  await updateDoc(doc(db,'orders',id),{status:'done'});
-  toast('✅ تم');
+  await window.FB.updateDoc(window.FB.doc(window.FB.db,'orders',id),{status:'done'});
+  showToast('✅ تم');
 }
 async function clearDoneOrders(){
   if(!confirm('مسح المكتملة؟')) return;
-  const {db,doc,deleteDoc}=window.FB;
   const done=orders.filter(o=>o.status==='done');
-  for(const o of done) await deleteDoc(doc(db,'orders',o.id));
-  toast('🗑️ تم');
+  for(const o of done) await window.FB.deleteDoc(window.FB.doc(window.FB.db,'orders',o.id));
+  showToast('🗑️ تم');
 }
 
-/* ============ STATS ============ */
+/* ═══════════ USERS ═══════════ */
+function renderUsers(){
+  const tb=$('usersTable');
+  if(!users.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش مستخدمين</td></tr>'; return; }
+  const roleNames={super_admin:'👑 Super Admin',admin:'🛡️ Admin',branch_manager:'👔 مدير فرع'};
+  tb.innerHTML=users.map(u=>{
+    const b=branches.find(x=>x.id===u.branchId);
+    return `<tr>
+      <td><strong>${u.name||'—'}</strong></td>
+      <td dir="ltr" style="font-size:12px">${u.email||'—'}</td>
+      <td><span class="badge ${u.role==='super_admin'?'badge-red':u.role==='admin'?'badge-gold':'badge-green'}">${roleNames[u.role]||u.role}</span></td>
+      <td>${b?b.nameAr:'—'}</td>
+      <td>${u.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-primary btn-sm" onclick="openUserModal('${u.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑️</button>
+      </td></tr>`;
+  }).join('');
+}
+
+function onUserRoleChange(){
+  const role = $('u-role').value;
+  $('u-branchBox').style.display = role==='branch_manager' ? 'block' : 'none';
+  refreshSelect('u-branchId');
+}
+
+function openUserModal(id){
+  refreshSelect('u-branchId');
+  if(id){
+    const u=users.find(x=>x.id===id); if(!u) return;
+    $('userModalTitle').innerText='✏️ تعديل: '+u.name;
+    $('u-uid').value=u.id; $('u-uidInput').value=u.id;
+    $('u-uidInput').disabled=true;
+    $('u-name').value=u.name||''; $('u-email').value=u.email||'';
+    $('u-role').value=u.role||'admin';
+    onUserRoleChange();
+    setTimeout(()=>{ $('u-branchId').value=u.branchId||''; },50);
+  } else {
+    $('userModalTitle').innerText='إضافة مستخدم';
+    $('u-uid').value=''; $('u-uidInput').value=''; $('u-uidInput').disabled=false;
+    $('u-name').value=''; $('u-email').value='';
+    $('u-role').value='admin';
+    onUserRoleChange();
+  }
+  $('userModal').classList.add('open');
+}
+
+async function saveUser(){
+  const {db,doc,setDoc,updateDoc}=window.FB;
+  const id=$('u-uid').value;
+  const uidInput = $('u-uidInput').value.trim();
+  const isEdit = !!id;
+  const name=$('u-name').value.trim();
+  const email=$('u-email').value.trim();
+  const role=$('u-role').value;
+  const branchId= role==='branch_manager' ? $('u-branchId').value : '';
+  if(!isEdit && !uidInput){ showToast('⚠️ الصق الـ UID'); return; }
+  if(!name||!email){ showToast('⚠️ كمل البيانات'); return; }
+  if(role==='branch_manager' && !branchId){ showToast('⚠️ اختار الفرع'); return; }
+
+  const data={name,email,role,branchId,active:true};
+  try{
+    if(isEdit) await updateDoc(doc(db,'users',id),data);
+    else await setDoc(doc(db,'users',uidInput),data);
+    closeModal('userModal'); showToast('✅ تم');
+  }catch(e){ showToast('❌ '+e.message); }
+}
+
+async function deleteUser(id){
+  if(id === currentUser.uid){ showToast('⚠️ مش هتقدر تحذف نفسك'); return; }
+  if(!confirm('تأكيد الحذف؟ (اليوزر هيفضل في Firebase Auth)')) return;
+  await window.FB.deleteDoc(window.FB.doc(window.FB.db,'users',id));
+  showToast('🗑️ تم');
+}
+
+/* ═══════════ SYSTEM STATUS (KILL SWITCH) ═══════════ */
+function updateSystemStatus(){
+  const badge = $('systemStatusBadge');
+  const btn = $('killSwitchBtn');
+  if(!badge || !btn) return;
+  if(systemOnline){
+    badge.className='badge badge-green'; badge.innerText='● النظام يعمل';
+    btn.className='btn btn-danger'; btn.innerText='🔴 إيقاف النظام';
+  } else {
+    badge.className='badge badge-red'; badge.innerText='● النظام متوقف';
+    btn.className='btn btn-success'; btn.innerText='🟢 تشغيل النظام';
+  }
+  // dashboard stat
+  const s = $('statSystem');
+  if(s){ s.innerText = systemOnline ? '✅' : '⛔'; s.style.color = systemOnline ? 'var(--success)' : 'var(--danger)'; }
+}
+
+async function toggleSystemStatus(){
+  if(currentUserData.role !== 'super_admin'){ showToast('⚠️ Super Admin فقط'); return; }
+  const confirmMsg = systemOnline ? '⚠️ إيقاف النظام كامل؟ كل الزباين هيشوفوا "النظام متوقف مؤقتاً".' : 'تشغيل النظام؟';
+  if(!confirm(confirmMsg)) return;
+  const {db,doc,setDoc}=window.FB;
+  try {
+    await setDoc(doc(db,'settings','system'),{online: !systemOnline},{merge:true});
+    showToast(systemOnline ? '⛔ تم إيقاف النظام' : '✅ تم تشغيل النظام');
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+/* ═══════════ SELECTS ═══════════ */
+function refreshSelect(id,value){
+  const s=$(id); if(!s) return;
+  const cur=value||s.value;
+  if(id==='u-branchId'){
+    s.innerHTML=branches.map(b=>`<option value="${b.id}">${b.nameAr}</option>`).join('');
+  } else {
+    s.innerHTML=menus.map(m=>`<option value="${m.id}">${m.icon||''} ${m.nameAr}</option>`).join('');
+  }
+  if(cur) s.value=cur;
+}
+function refreshSelects(){
+  ['b-menuId','c-menuId','m-menuId'].forEach(id=>refreshSelect(id));
+  refreshSelect('u-branchId');
+}
+
+/* ═══════════ STATS ═══════════ */
 function updateStats(){
   $('statBranches').innerText=branches.length;
-  $('statMenus').innerText=menus.length;
-  $('statCategories').innerText=categories.length;
   $('statItems').innerText=items.length;
   const today=new Date().toDateString();
-  $('statOrders').innerText=orders.filter(o=>{
+  let ordersToday = orders.filter(o=>{
     const d=o.createdAt?.toDate?o.createdAt.toDate():null;
     return d && d.toDateString()===today;
-  }).length;
+  });
+  if(currentUserData.role === 'branch_manager'){
+    ordersToday = ordersToday.filter(o=>o.branchId === currentUserData.branchId);
+  }
+  $('statOrders').innerText=ordersToday.length;
+  if($('infoBranches')) $('infoBranches').innerText=branches.length;
+  if($('infoUsers')) $('infoUsers').innerText=users.length;
+  if($('infoItems')) $('infoItems').innerText=items.length;
+  if($('infoOrders')) $('infoOrders').innerText=orders.length;
+  updateSystemStatus();
 }
+
+/* ═══════════ INIT ═══════════ */
+// Add getDoc to FB if not exists
+window.addEventListener('fb-ready',()=>{
+  if(!window.FB.getDoc){
+    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js").then(mod=>{
+      window.FB.getDoc = mod.getDoc;
+    });
+  }
+});
 </script>
 </body>
 </html>
