@@ -70,6 +70,7 @@ tr:hover td{background:var(--subtle)}
 .qr-code-box{background:#fff;padding:20px;border-radius:16px;border:1px solid var(--border)}
 .danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
 .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+.pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
 </style>
 </head>
 <body>
@@ -195,15 +196,6 @@ tr:hover td{background:var(--subtle)}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">المستخدمين</h2>
           <button class="btn btn-primary" onclick="openUserModal()">+ إضافة مستخدم</button>
-        </div>
-        <div class="card" style="background:rgba(200,155,94,.08);border-color:var(--gold);margin-bottom:16px">
-          <div style="font-size:13px;font-weight:900;margin-bottom:8px">📌 خطوات إضافة مستخدم:</div>
-          <ol style="font-size:12px;color:var(--muted);line-height:1.8;margin:0;padding-inline-start:20px">
-            <li>افتح Firebase Console → Authentication → Users → <strong>Add user</strong></li>
-            <li>اكتب الإيميل والباسورد → Save</li>
-            <li>انسخ الـ <strong>User UID</strong> الجديد</li>
-            <li>ارجع هنا واضغط <strong>+ إضافة مستخدم</strong> والصق الـ UID</li>
-          </ol>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
           <table><thead><tr><th>الاسم</th><th>الإيميل</th><th>الدور</th><th>الفرع</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="usersTable"></tbody></table>
@@ -394,14 +386,14 @@ tr:hover td{background:var(--subtle)}
       <button class="btn btn-ghost btn-sm" onclick="closeModal('userModal')">✕</button>
     </div>
     <input type="hidden" id="u-uid">
-    <div style="margin-bottom:12px">
-      <label>User UID (من Firebase Auth)</label>
-      <input id="u-uidInput" dir="ltr" placeholder="qQX1NbfvpSVEKln95bzqtu5wdyo1">
-      <div style="font-size:11px;color:var(--muted);margin-top:6px">⚠️ مطلوب فقط عند إضافة مستخدم جديد</div>
-    </div>
     <div class="form-row">
       <div><label>الاسم</label><input id="u-name"></div>
       <div><label>الإيميل</label><input id="u-email" dir="ltr" type="email"></div>
+    </div>
+    <div id="u-passwordBox" style="margin-bottom:12px">
+      <label>الباسورد</label>
+      <input id="u-password" type="text" dir="ltr" placeholder="6 حروف على الأقل">
+      <div class="pwd-box">⚠️ اكتبه في مكان آمن — اليوزر هيدخل بيه. متنساهوش!</div>
     </div>
     <div class="form-row">
       <div>
@@ -435,8 +427,6 @@ let currentUserData = null;
 let menus = [], categories = [], items = [], branches = [], orders = [], users = [];
 let systemOnline = true;
 let unsubs = [];
-let lastOrderCount = 0;
-let notificationAudio = null;
 
 function $(id){return document.getElementById(id)}
 function onFbReady(cb){if(window.FB_READY)cb();else window.addEventListener('fb-ready',cb,{once:true});}
@@ -505,7 +495,6 @@ function applyRoleUI(){
   $('userRoleBadge').className = 'role-badge role-'+role;
   $('userRoleBadge').innerText = roleNames[role] || role;
 
-  // Branch label
   const b = branches.find(x=>x.id===currentUserData.branchId);
   if(role === 'branch_manager' && currentUserData.branchId){
     $('userBranchLabel').innerText = b ? b.nameAr : 'فرع';
@@ -513,7 +502,6 @@ function applyRoleUI(){
     $('userBranchLabel').innerText = 'لوحة التحكم';
   }
 
-  // Sidebar based on role
   document.querySelectorAll('#sidebar .nav-btn').forEach(btn=>{
     const requiredRole = btn.dataset.role;
     if(!requiredRole){ btn.style.display='flex'; return; }
@@ -523,11 +511,8 @@ function applyRoleUI(){
     btn.style.display = 'none';
   });
 
-  // Default page: dashboard
   showPage('dashboard');
 }
-
-let unsubMenus, unsubCats, unsubItems, unsubBranches, unsubOrders, unsubUsers, unsubSettings;
 
 function subscribeAll(){
   const {db,collection,onSnapshot,query,orderBy,doc}=window.FB;
@@ -557,10 +542,8 @@ function subscribeAll(){
   unsubs.push(onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),s=>{
     const prevCount = orders.length;
     orders = s.docs.map(d=>({id:d.id,...d.data()}));
-    // New order notification
     if(prevCount > 0 && orders.length > prevCount){
       const newOrder = orders[0];
-      // Only notify if branch manager sees his own branch, or admin/super
       const role = currentUserData.role;
       if(role !== 'branch_manager' || newOrder.branchId === currentUserData.branchId){
         playNotificationSound();
@@ -604,7 +587,6 @@ function showToast(msg){
 function playNotificationSound(){
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    // Two short beeps
     [0, 0.15].forEach((delay)=>{
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -860,7 +842,6 @@ async function deleteCategory(id){
 
 /* ═══════════ ITEMS ═══════════ */
 function renderItems(){
-  // Branch manager filter
   let list = items;
   if(currentUserData.role === 'branch_manager'){
     const bId = currentUserData.branchId;
@@ -1081,16 +1062,20 @@ function openUserModal(id){
   if(id){
     const u=users.find(x=>x.id===id); if(!u) return;
     $('userModalTitle').innerText='✏️ تعديل: '+u.name;
-    $('u-uid').value=u.id; $('u-uidInput').value=u.id;
-    $('u-uidInput').disabled=true;
+    $('u-uid').value=u.id;
+    $('u-passwordBox').style.display='none';
     $('u-name').value=u.name||''; $('u-email').value=u.email||'';
+    $('u-email').disabled = true;
     $('u-role').value=u.role||'admin';
     onUserRoleChange();
     setTimeout(()=>{ $('u-branchId').value=u.branchId||''; },50);
   } else {
     $('userModalTitle').innerText='إضافة مستخدم';
-    $('u-uid').value=''; $('u-uidInput').value=''; $('u-uidInput').disabled=false;
+    $('u-uid').value='';
+    $('u-passwordBox').style.display='block';
+    $('u-password').value='';
     $('u-name').value=''; $('u-email').value='';
+    $('u-email').disabled = false;
     $('u-role').value='admin';
     onUserRoleChange();
   }
@@ -1098,29 +1083,71 @@ function openUserModal(id){
 }
 
 async function saveUser(){
-  const {db,doc,setDoc,updateDoc}=window.FB;
-  const id=$('u-uid').value;
-  const uidInput = $('u-uidInput').value.trim();
+  const { db, doc, setDoc, updateDoc, firebaseConfig, initializeApp, getAuth,
+          createUserWithEmailAndPassword, signOut, deleteApp } = window.FB;
+  const id = $('u-uid').value;
   const isEdit = !!id;
-  const name=$('u-name').value.trim();
-  const email=$('u-email').value.trim();
-  const role=$('u-role').value;
-  const branchId= role==='branch_manager' ? $('u-branchId').value : '';
-  if(!isEdit && !uidInput){ showToast('⚠️ الصق الـ UID'); return; }
-  if(!name||!email){ showToast('⚠️ كمل البيانات'); return; }
-  if(role==='branch_manager' && !branchId){ showToast('⚠️ اختار الفرع'); return; }
+  const name = $('u-name').value.trim();
+  const email = $('u-email').value.trim();
+  const role = $('u-role').value;
+  const branchId = role === 'branch_manager' ? $('u-branchId').value : '';
+  const password = $('u-password') ? $('u-password').value : '';
 
-  const data={name,email,role,branchId,active:true};
-  try{
-    if(isEdit) await updateDoc(doc(db,'users',id),data);
-    else await setDoc(doc(db,'users',uidInput),data);
-    closeModal('userModal'); showToast('✅ تم');
-  }catch(e){ showToast('❌ '+e.message); }
+  if (!name || !email) { showToast('⚠️ كمل البيانات'); return; }
+  if (role === 'branch_manager' && !branchId) { showToast('⚠️ اختار الفرع'); return; }
+
+  try {
+    if (isEdit) {
+      await updateDoc(doc(db, 'users', id), { name, role, branchId });
+      showToast('✅ تم التعديل');
+    } else {
+      if (!password || password.length < 6) { showToast('⚠️ الباسورد 6 حروف على الأقل'); return; }
+      if (!initializeApp || !createUserWithEmailAndPassword || !deleteApp) {
+        showToast('❌ في مشكلة في firebase-config. أعد رفعه.');
+        return;
+      }
+
+      showToast('⏳ جاري إنشاء المستخدم...');
+
+      const secondaryAppName = 'Secondary_' + Date.now();
+      const secondaryApp = initializeApp(firebaseConfig, secondaryAppName);
+      const secondaryAuth = getAuth(secondaryApp);
+
+      try {
+        const userCred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const newUid = userCred.user.uid;
+
+        await setDoc(doc(db, 'users', newUid), {
+          name, email, role, branchId, active: true
+        });
+
+        await signOut(secondaryAuth);
+        await deleteApp(secondaryApp);
+
+        showToast('✅ تم إنشاء المستخدم');
+      } catch (e) {
+        try { await deleteApp(secondaryApp); } catch(_) {}
+        throw e;
+      }
+    }
+    closeModal('userModal');
+  } catch(e){
+    console.error(e);
+    if (e.code === 'auth/email-already-in-use') {
+      showToast('❌ الإيميل مستخدم بالفعل');
+    } else if (e.code === 'auth/invalid-email') {
+      showToast('❌ إيميل غير صالح');
+    } else if (e.code === 'auth/weak-password') {
+      showToast('❌ الباسورد ضعيف');
+    } else {
+      showToast('❌ ' + (e.message || 'خطأ غير معروف'));
+    }
+  }
 }
 
 async function deleteUser(id){
   if(id === currentUser.uid){ showToast('⚠️ مش هتقدر تحذف نفسك'); return; }
-  if(!confirm('تأكيد الحذف؟ (اليوزر هيفضل في Firebase Auth)')) return;
+  if(!confirm('تأكيد الحذف؟ (اليوزر هيفضل في Firebase Auth — امسحه يدوياً من Firebase Console)')) return;
   await window.FB.deleteDoc(window.FB.doc(window.FB.db,'users',id));
   showToast('🗑️ تم');
 }
@@ -1137,7 +1164,6 @@ function updateSystemStatus(){
     badge.className='badge badge-red'; badge.innerText='● النظام متوقف';
     btn.className='btn btn-success'; btn.innerText='🟢 تشغيل النظام';
   }
-  // dashboard stat
   const s = $('statSystem');
   if(s){ s.innerText = systemOnline ? '✅' : '⛔'; s.style.color = systemOnline ? 'var(--success)' : 'var(--danger)'; }
 }
@@ -1190,7 +1216,6 @@ function updateStats(){
 }
 
 /* ═══════════ INIT ═══════════ */
-// Add getDoc to FB if not exists
 window.addEventListener('fb-ready',()=>{
   if(!window.FB.getDoc){
     import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js").then(mod=>{
