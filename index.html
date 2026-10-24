@@ -594,13 +594,32 @@ function applyRoleUI(){
     $('userBranchLabel').innerText = 'لوحة التحكم';
   }
 
+  // التحكم في إظهار وإخفاء أزرار القائمة الجانبية
   document.querySelectorAll('#sidebar .nav-btn').forEach(btn=>{
-    const requiredRole = btn.dataset.role;
-    if(!requiredRole){ btn.style.display='flex'; return; }
-    if(role === 'super_admin'){ btn.style.display='flex'; return; }
-    if(role === 'admin' && requiredRole === 'admin'){ btn.style.display='flex'; return; }
-    if(role === 'admin' && requiredRole === 'super'){ btn.style.display='none'; return; }
-    if(role === 'branch_manager' && btn.dataset.page === 'reports'){ btn.style.display='none'; return; }
+    const requiredRole = btn.dataset.role; // بنقرا الـ data-role من الـ HTML
+    
+    if(!requiredRole){ 
+      btn.style.display='flex'; // لو مفيش شرط، بيظهر للكل
+      return; 
+    }
+    
+    if(role === 'super_admin'){ 
+      btn.style.display='flex'; // السوبر أدمن بيشوف كل حاجة
+      return; 
+    }
+    
+    if(role === 'admin' && requiredRole === 'admin'){ 
+      btn.style.display='flex'; // الأدمن العادي بيشوف حاجات الـ admin بس
+      return; 
+    }
+    
+    // لو مدير فرع، ميشوفش التقارير (لأنها بتخص الأدمن)
+    if(role === 'branch_manager' && btn.dataset.page === 'reports'){ 
+      btn.style.display='none'; 
+      return; 
+    }
+
+    // أي حاجة تانية (زي الإعدادات اللي واخدة data-role="super") تتخفي
     btn.style.display = 'none';
   });
 
@@ -1208,11 +1227,22 @@ async function clearDoneOrders(){
 function renderUsers(){
   const tb=$('usersTable');
   if(!users.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش مستخدمين</td></tr>'; return; }
+  
   const roleNames={super_admin:'👑 Super Admin',admin:'🛡️ Admin',branch_manager:'👔 مدير فرع'};
-  // Hide Super Admin row from non-super admin viewers
-  const visibleUsers = currentUserData.role === 'super_admin' ? users : users.filter(u=>u.role!=='super_admin');
+  
+  // الفلترة هنا: لو اللي داخل سوبر أدمن، يشوف الكل. غير كده، يشوف الكل ما عدا السوبر أدمن
+  const visibleUsers = currentUserData.role === 'super_admin' 
+    ? users 
+    : users.filter(u => u.role !== 'super_admin');
+
   tb.innerHTML=visibleUsers.map(u=>{
     const b=branches.find(x=>x.id===u.branchId);
+    
+    // زرار المسح (Delete) ميتعرضش للسوبر أدمن عشان محدش يمسحه بالغلط من غير السوبر
+    const deleteBtn = (u.role === 'super_admin' && currentUserData.role !== 'super_admin') 
+      ? '' 
+      : `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑️</button>`;
+
     return `<tr>
       <td><strong>${u.name||'—'}</strong></td>
       <td dir="ltr" style="font-size:12px">${u.email||'—'}</td>
@@ -1221,7 +1251,7 @@ function renderUsers(){
       <td>${u.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-primary btn-sm" onclick="openUserModal('${u.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑️</button>
+        ${deleteBtn}
       </td></tr>`;
   }).join('');
 }
@@ -1336,11 +1366,17 @@ async function saveUser(){
 
 async function deleteUser(id){
   if(id === currentUser.uid){ showToast('⚠️ مش هتقدر تحذف نفسك'); return; }
+  
   const u = users.find(x=>x.id===id);
+  
+  // حماية: لو الحساب اللي بنمسحه سوبر أدمن، واللي بيمسح مش سوبر أدمن، نرفض العملية
   if(u && u.role === 'super_admin' && currentUserData.role !== 'super_admin'){
-    showToast('⚠️ غير مسموح'); return;
+    showToast('⚠️ غير مسموح بمسح حساب Super Admin'); 
+    return;
   }
+  
   if(!confirm('تأكيد الحذف؟ (اليوزر هيفضل في Firebase Auth — امسحه يدوياً من Firebase Console)')) return;
+  
   await window.FB.deleteDoc(window.FB.doc(window.FB.db,'users',id));
   showToast('🗑️ تم');
 }
