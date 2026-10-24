@@ -1098,6 +1098,9 @@ async function showOrderToWaiter() {
   const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
   const dateStr = now.toLocaleDateString(currentLang === 'en' ? 'en-GB' : 'ar-EG', { day: '2-digit', month: 'long', year: 'numeric' });
   const tableNum = currentTable || '';
+  
+  // 👇 السطر الجديد المهم للتقارير 👇
+  const todayStr = new Date().toISOString().split('T')[0]; 
 
   let total = 0;
   const itemsHtml = cart.map(item => {
@@ -1126,7 +1129,8 @@ async function showOrderToWaiter() {
       table: tableNum,
       items: cart.map(c => ({ id: c.id, nameAr: c.nameAr, nameEn: c.nameEn, price: c.unitPrice, qty: c.quantity, notes: c.notes || '' })),
       total, currency, status: 'pending',
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      dateStr: todayStr // 👈 تمت الإضافة هنا
     });
   } catch (e) { console.error('Order save failed', e); }
 
