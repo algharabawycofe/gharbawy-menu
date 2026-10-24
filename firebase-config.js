@@ -19,14 +19,18 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
+// تصدير كل دوال Firebase عشان صفحة العميل ولوحة التحكم يستخدموها
 window.FB = {
   firebaseConfig,
   db: getFirestore(app),
   auth: getAuth(app),
+  // Firestore
   collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
   onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch,
+  // Auth
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, setPersistence, inMemoryPersistence,
+  // App
   initializeApp, getAuth, deleteApp
 };
 
