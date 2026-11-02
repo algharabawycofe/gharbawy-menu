@@ -394,10 +394,10 @@ let features = { callWaiter: false, kds: false, orderTimer: false, charts: false
 let unsubs = [];
 let myChart = null;
 
-// ✅ NEW: للتحكم في أول snapshot وأوردرات جديدة
+// ✅ للتحكم في أول snapshot وأوردرات جديدة
 let isFirstOrdersSnapshot = true;
 
-// ✅ NEW: AudioContext مشترك + unlock
+// ✅ AudioContext مشترك + unlock
 let audioCtx = null;
 function unlockAudio() {
   try {
@@ -500,36 +500,28 @@ async function toggleFeature(featureName, isEnabled) {
 // ✅ subscribeAll — بعد الإصلاح
 // ═══════════════════════════════════════════════════════════════════════════
 function subscribeAll(){
-  // ✅ ضيفنا where للـ destructuring
   const {db, collection, onSnapshot, query, orderBy, where, doc} = window.FB;
   unsubs.forEach(u=>u&&u()); unsubs=[];
 
-  isFirstOrdersSnapshot = true;   // reset عند كل subscribe جديد
+  isFirstOrdersSnapshot = true;
 
   unsubs.push(onSnapshot(collection(db,'menus'),s=>{ menus = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0)); renderMenus(); refreshSelects(); applyRoleUI(); }));
   unsubs.push(onSnapshot(collection(db,'categories'),s=>{ categories = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0)); renderCategories(); refreshSelects(); }));
   unsubs.push(onSnapshot(collection(db,'menu'),s=>{ items = s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id); renderItems(); updateStats(); }));
   unsubs.push(onSnapshot(collection(db,'branches'),s=>{ branches = s.docs.map(d=>({id:d.id,...d.data()})); renderBranches(); refreshSelects(); applyRoleUI(); }));
 
-  // ✅ BUG FIX #2: فلتر الـ query حسب الدور
+  // ✅ الفلترة حسب الدور
   const ordersQuery = currentUserData.role === 'branch_manager'
-    ? query(
-        collection(db, 'orders'),
-        where('branchId', '==', currentUserData.branchId),
-        orderBy('createdAt', 'desc')
-      )
+    ? query(collection(db, 'orders'), where('branchId', '==', currentUserData.branchId), orderBy('createdAt', 'desc'))
     : query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
 
   unsubs.push(onSnapshot(ordersQuery,
     (s) => {
-      // ✅ BUG FIX #1: استخدام docChanges بدل عدّ length
       s.docChanges().forEach(change => {
         if (change.type === 'added' && !isFirstOrdersSnapshot) {
           const newOrder = { id: change.doc.id, ...change.doc.data() };
-          // مدير الفرع: صوّت بس لو الأوردر بتاعه (احتياطي)
-          if (currentUserData.role !== 'branch_manager' ||
-              newOrder.branchId === currentUserData.branchId) {
-            unlockAudio();   // تأكد الصوت unlocked
+          if (currentUserData.role !== 'branch_manager' || newOrder.branchId === currentUserData.branchId) {
+            unlockAudio();
             playNotificationSound();
             showToast('🔔 أوردر جديد من ' + (newOrder.branchNameAr || 'فرع'));
           }
