@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة تحكم الغرباوي - Admin</title>
+<title>لوحة التحكم</title>
 <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -68,16 +68,15 @@ tr:hover td{background:var(--subtle)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:600px;max-width:100%;max-height:90vh;overflow:auto}
 .img-preview{width:100%;height:180px;border-radius:12px;object-fit:cover;background:var(--subtle);border:1px dashed var(--border);display:block;margin-bottom:8px}
-.qr-wrapper { background: #fff; padding: 24px; border-radius: 24px; box-shadow: 0 10px 40px rgba(43,29,20,0.08); border: 1px solid var(--border); text-align: center; position: relative; margin-bottom: 16px; }
-.qr-title-text { font-size: 14px; font-weight: 900; color: var(--dark); margin-bottom: 16px; letter-spacing: 1px; }
-.qr-container { position: relative; display: inline-block; padding: 16px; background: #fff; border-radius: 20px; border: 2px dashed var(--gold); }
-.qr-logo-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: #fff; border-radius: 50%; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid var(--gold); object-fit: contain; z-index: 10; }
+.qr-wrapper{background:#fff;padding:24px;border-radius:24px;box-shadow:0 10px 40px rgba(43,29,20,0.08);border:1px solid var(--border);text-align:center;position:relative;margin-bottom:16px}
+.qr-title-text{font-size:14px;font-weight:900;color:var(--dark);margin-bottom:16px;letter-spacing:1px}
+.qr-container{position:relative;display:inline-block;padding:16px;background:#fff;border-radius:20px;border:2px dashed var(--gold)}
+.qr-logo-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:#fff;border-radius:50%;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:2px solid var(--gold);object-fit:contain;z-index:10}
 .danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
 .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
 .pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
 .section-header{font-size:15px;font-weight:900;margin:0 0 6px}
 .section-desc{font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.6}
-
 @media (max-width: 768px) {
   .layout { display: block; }
   .side { display: flex; overflow-x: auto; padding: 10px; border-left: none; border-bottom: 1px solid var(--border); white-space: nowrap; gap: 8px; }
@@ -93,12 +92,11 @@ tr:hover td{background:var(--subtle)}
 <div id="loginOverlay">
   <div id="loginCard">
     <div style="font-size:40px;text-align:center">☕</div>
-    <h1 style="text-align:center;font-size:20px;font-weight:900;margin:12px 0 4px">لوحة تحكم الغرباوي</h1>
-    <p style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:24px">دخول الإدارة (Admin)</p>
+    <h1 style="text-align:center;font-size:20px;font-weight:900;margin:12px 0 24px">لوحة التحكم</h1>
     <label>الإيميل</label>
-    <input id="email" type="email" dir="ltr" placeholder="admin@gharbawy.com" style="margin-bottom:12px">
+    <input id="email" type="email" dir="ltr" style="margin-bottom:12px">
     <label>الباسورد</label>
-    <input id="password" type="password" dir="ltr" placeholder="••••••••" style="margin-bottom:16px">
+    <input id="password" type="password" dir="ltr" style="margin-bottom:16px">
     <button class="btn btn-primary" style="width:100%;padding:14px" onclick="doLogin()">دخول</button>
     <p id="loginError" style="color:var(--danger);font-size:12px;text-align:center;margin-top:12px;min-height:16px"></p>
   </div>
@@ -108,7 +106,7 @@ tr:hover td{background:var(--subtle)}
   <div id="noPermCard">
     <div style="font-size:48px">🚫</div>
     <h2 style="font-size:20px;font-weight:900;margin:12px 0">لا توجد صلاحيات</h2>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">هذا الحساب غير مسجل في النظام. تواصل مع الأدمن.</p>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">هذا الحساب غير مسجل في النظام. تواصل مع الإدارة.</p>
     <button class="btn btn-ghost" onclick="doLogout()">خروج</button>
   </div>
 </div>
@@ -255,10 +253,10 @@ tr:hover td{background:var(--subtle)}
         <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">الإعدادات</h2>
         <div class="card">
           <h3 class="section-header">🏢 بيانات الشركة</h3>
-          <p class="section-desc">البيانات دي بتظهر في الموقع للزباين (الـ Welcome + الفوتر)</p>
+          <p class="section-desc">البيانات التي تظهر في الموقع للزباين</p>
           <div class="form-row">
-            <div><label>اسم الشركة (عربي)</label><input id="co-nameAr" placeholder="الغرباوي"></div>
-            <div><label>اسم الشركة (إنجليزي)</label><input id="co-nameEn" dir="ltr" placeholder="Al-Gharbawy"></div>
+            <div><label>اسم الشركة (عربي)</label><input id="co-nameAr"></div>
+            <div><label>اسم الشركة (إنجليزي)</label><input id="co-nameEn" dir="ltr"></div>
           </div>
           <div class="form-row">
             <div><label>الهاتف</label><input id="co-phone" dir="ltr"></div>
@@ -276,7 +274,7 @@ tr:hover td{background:var(--subtle)}
             <div style="display:flex;gap:8px;align-items:center">
               <input type="file" id="co-logo-file" accept="image/*" style="flex:1">
               <span style="font-size:11px;color:var(--muted)">أو</span>
-              <input id="co-logo-url" placeholder="رابط الصورة" style="flex:1;font-size:11px">
+              <input id="co-logo-url" style="flex:1;font-size:11px">
             </div>
           </div>
           <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn btn-primary" onclick="saveCompany()">💾 حفظ البيانات</button></div>
@@ -284,7 +282,6 @@ tr:hover td{background:var(--subtle)}
 
         <div class="card">
           <h3 class="section-header">⚙️ تشغيل وإيقاف الميزات</h3>
-          <p class="section-desc">تحكم في مميزات النظام.</p>
           <div style="display:flex;flex-direction:column;gap:12px">
             <label style="display:flex;justify-content:space-between;align-items:center;cursor:pointer"><span>🛎️ زرار "نادي الويتر"</span><input type="checkbox" id="feat-callWaiter" style="width:20px;height:20px" onchange="toggleFeature('callWaiter', this.checked)"></label>
             <label style="display:flex;justify-content:space-between;align-items:center;cursor:pointer"><span>📺 شاشة المطبخ (KDS)</span><input type="checkbox" id="feat-kds" style="width:20px;height:20px" onchange="toggleFeature('kds', this.checked)"></label>
@@ -302,7 +299,6 @@ tr:hover td{background:var(--subtle)}
   </div>
 </div>
 
-<!-- Modals -->
 <div id="branchModal" class="modal-overlay"><div class="modal">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h3 id="branchModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة فرع</h3><button class="btn btn-ghost btn-sm" onclick="closeModal('branchModal')">✕</button></div>
   <input type="hidden" id="b-id">
@@ -345,7 +341,7 @@ tr:hover td{background:var(--subtle)}
 <div id="itemModal" class="modal-overlay"><div class="modal">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h3 id="itemModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة منتج</h3><button class="btn btn-ghost btn-sm" onclick="closeModal('itemModal')">✕</button></div>
   <input type="hidden" id="m-id">
-  <div style="margin-bottom:12px"><label>صورة المنتج</label><img id="m-preview" class="img-preview" src=""><div style="display:flex;gap:8px;align-items:center"><input type="file" id="m-file" accept="image/*" style="flex:1"><span style="font-size:11px;color:var(--muted)">أو</span><input id="m-imageUrl" placeholder="رابط صورة" style="flex:1;font-size:11px"></div></div>
+  <div style="margin-bottom:12px"><label>صورة المنتج</label><img id="m-preview" class="img-preview" src=""><div style="display:flex;gap:8px;align-items:center"><input type="file" id="m-file" accept="image/*" style="flex:1"><span style="font-size:11px;color:var(--muted)">أو</span><input id="m-imageUrl" style="flex:1;font-size:11px"></div></div>
   <div class="form-row"><div><label>المجموعة</label><select id="m-menuId" onchange="onItemMenuChange()"></select></div><div><label>القسم</label><select id="m-categoryId"></select></div></div>
   <div class="form-row"><div><label>الاسم عربي</label><input id="m-nameAr"></div><div><label>الاسم إنجليزي</label><input id="m-nameEn" dir="ltr"></div></div>
   <div class="form-row"><div><label>السعر</label><input id="m-price" type="number"></div><div><label>الحالة</label><select id="m-inStock"><option value="true">متوفر</option><option value="false">نفد</option></select></div></div>
@@ -394,20 +390,6 @@ let features = { callWaiter: false, kds: false, orderTimer: false, charts: false
 let unsubs = [];
 let myChart = null;
 
-let isFirstOrdersSnapshot = true;
-let audioCtx = null;
-
-// حل مشكلة الصوت في المتصفحات الحديثة
-function unlockAudio() {
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-  } catch(e) { console.error('audio unlock error', e); }
-}
-document.addEventListener('click', unlockAudio, { once: true });
-document.addEventListener('touchstart', unlockAudio, { once: true });
-document.addEventListener('keydown', unlockAudio, { once: true });
-
 function $(id){return document.getElementById(id)}
 function onFbReady(cb){if(window.FB_READY)cb();else window.addEventListener('fb-ready',cb,{once:true});}
 
@@ -419,7 +401,6 @@ onFbReady(()=>{
       const ok = await loadUserData(user.uid);
       if(!ok){ showNoPermission(); return; }
 
-      // ✅ التوجيه: لو مدير فرع، اطرده لصفحته المخصصة
       if(currentUserData.role === 'branch_manager'){
           window.location.href = 'branch.html';
           return;
@@ -432,8 +413,6 @@ onFbReady(()=>{
       subscribeAll();
       loadCompanyInfo();
       loadFeatures();
-
-    
     } else {
       currentUser = null; currentUserData = null;
       $('loginOverlay').style.display='flex'; $('noPermOverlay').style.display='none'; $('app').style.display='none';
@@ -455,7 +434,7 @@ async function loadUserData(uid){
 }
 
 function showNoPermission(){ $('loginOverlay').style.display='none'; $('noPermOverlay').style.display='flex'; $('app').style.display='none'; }
-async function doLogin(){ const {auth,signInWithEmailAndPassword}=window.FB; $('loginError').innerText=''; try{ await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value); } catch(e){ $('loginError').innerText='بيانات غلط'; } }
+async function doLogin(){ const {auth,signInWithEmailAndPassword}=window.FB; $('loginError').innerText=''; try{ await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value); } catch(e){ $('loginError').innerText='بيانات الدخول غير صحيحة'; } }
 async function doLogout(){ await window.FB.signOut(window.FB.auth); location.reload(); }
 
 function applyRoleUI(){
@@ -506,15 +485,12 @@ async function toggleFeature(featureName, isEnabled) {
 function subscribeAll(){
   const {db, collection, onSnapshot, query, orderBy, where, doc} = window.FB;
   unsubs.forEach(u=>u&&u()); unsubs=[];
-  
-  isFirstOrdersSnapshot = true;
 
   unsubs.push(onSnapshot(collection(db,'menus'),s=>{ menus = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0)); renderMenus(); refreshSelects(); applyRoleUI(); }));
   unsubs.push(onSnapshot(collection(db,'categories'),s=>{ categories = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0)); renderCategories(); refreshSelects(); }));
   unsubs.push(onSnapshot(collection(db,'menu'),s=>{ items = s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id); renderItems(); updateStats(); }));
   unsubs.push(onSnapshot(collection(db,'branches'),s=>{ branches = s.docs.map(d=>({id:d.id,...d.data()})); renderBranches(); refreshSelects(); applyRoleUI(); }));
 
-    // هنا بنجيب كل الأوردرات (بدون صوت أو تنبيهات للأدمن)
   const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
 
   unsubs.push(onSnapshot(ordersQuery,
@@ -527,42 +503,16 @@ function subscribeAll(){
       if (features.charts) renderSalesChart();
     },
     (err) => {
-      console.error('❌ Orders snapshot error:', err.code, err.message);
+      console.error('Orders snapshot error:', err.code, err.message);
     }
   ));
 
-  // نداءات الويتر (شيلنا الصوت منها للأدمن)
   unsubs.push(onSnapshot(collection(db,'waiter_calls'), s => {
     s.docChanges().forEach(change => {
       if (change.type === 'added') {
         const call = change.doc.data();
         if (call.status === 'pending') {
           showToast(`🔔 نداء من طربيزة ${call.table} - ${call.branchNameAr}`);
-        }
-      }
-    });
-  }));
-
-  // جلب المستخدمين (للأدمن فقط)
-  if (currentUserData.role === 'admin' || currentUserData.role === 'super_admin') {
-      unsubs.push(onSnapshot(collection(db,'users'),s=>{ users = s.docs.map(d=>({id:d.id,...d.data()})); renderUsers(); updateStats(); }));
-  }
-  
-  // حالة النظام
-  unsubs.push(onSnapshot(doc(db,'settings','system'),s=>{ if(s.exists()) systemOnline = s.data().online !== false; updateSystemStatus(); }));
-}
-    (err) => {
-      console.error('❌ Orders snapshot error:', err.code, err.message);
-    }
-  ));
-
-  unsubs.push(onSnapshot(collection(db,'waiter_calls'), s => {
-    s.docChanges().forEach(change => {
-      if (change.type === 'added') {
-        const call = change.doc.data();
-        if (call.status === 'pending') {
-          unlockAudio();
-          playNotificationSound(); showToast(`🔔 نداء من طربيزة ${call.table} - ${call.branchNameAr}`);
         }
       }
     });
@@ -603,33 +553,14 @@ function showPage(name){
 function closeModal(id){ $(id).classList.remove('open'); }
 function showToast(msg){ const t=document.createElement('div'); t.className='toast'; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
 
-function playNotificationSound(){
-  try {
-    unlockAudio();
-    if (!audioCtx) return;
-    [0, 0.15].forEach((delay)=>{
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.value = 880;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.12);
-      osc.start(audioCtx.currentTime + delay);
-      osc.stop(audioCtx.currentTime + delay + 0.12);
-    });
-  } catch(e){ console.error('audio error',e); }
-}
-
 function renderBranches(){
-  const tb=$('branchesTable'); if(!branches.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش فروع</td></tr>'; return; }
+  const tb=$('branchesTable'); if(!branches.length){ tb.innerHTML='<tr><td colspan="6" class="empty">لا توجد فروع</td></tr>'; return; }
   tb.innerHTML = branches.map(b=>{
     const menu = menus.find(m=>m.id===b.menuId); const tablesCount = (b.tables||[]).length;
     return `<tr><td><code style="background:var(--subtle);padding:3px 8px;border-radius:6px">${b.code||'—'}</code></td><td><strong>${b.nameAr||''}</strong></td><td>${menu?menu.nameAr:'—'}</td><td>${tablesCount} طربيزة</td><td>${b.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td><td style="white-space:nowrap"><button class="btn btn-gold btn-sm" onclick="showQR('${b.id}')">📱 QR</button><button class="btn btn-ghost btn-sm" onclick="toggleBranch('${b.id}')">${b.active!==false?'⏸️':'▶️'}</button><button class="btn btn-primary btn-sm" onclick="openBranchModal('${b.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteBranch('${b.id}')">🗑️</button></td></tr>`;
   }).join('');
 }
-function updateTablesListPreview(){ const n = Number($('b-tablesCount').value)||0; if(n<=0){ $('tablesListPreview').innerText=''; return; } $('tablesListPreview').innerText = `هيتم إنشاء: ${Array.from({length:Math.min(n,30)},(_,i)=>i+1).join(', ')}${n>30?'...':''}`; }
+function updateTablesListPreview(){ const n = Number($('b-tablesCount').value)||0; if(n<=0){ $('tablesListPreview').innerText=''; return; } $('tablesListPreview').innerText = `سيتم إنشاء: ${Array.from({length:Math.min(n,30)},(_,i)=>i+1).join(', ')}${n>30?'...':''}`; }
 function openBranchModal(id){
   refreshSelect('b-menuId');
   if(id){ const b=branches.find(x=>x.id===id); if(!b) return; $('branchModalTitle').innerText='✏️ تعديل: '+b.nameAr; $('b-id').value=b.id; $('b-code').value=b.code||''; $('b-nameAr').value=b.nameAr||''; $('b-nameEn').value=b.nameEn||''; $('b-menuId').value=b.menuId||''; $('b-phone').value=b.phone||''; $('b-address').value=b.address||''; $('b-tablesCount').value=(b.tables||[]).length; }
@@ -638,7 +569,7 @@ function openBranchModal(id){
 }
 async function saveBranch(){
   const {db,doc,setDoc,updateDoc}=window.FB; const id=$('b-id').value; const code=$('b-code').value.trim().toUpperCase(); const nameAr=$('b-nameAr').value.trim();
-  if(!code||!nameAr){ showToast('⚠️ كمل البيانات'); return; }
+  if(!code||!nameAr){ showToast('⚠️ اكمل البيانات'); return; }
   const tablesCount = Number($('b-tablesCount').value)||0; const tables = Array.from({length:tablesCount},(_,i)=>({ number: i+1, active: true }));
   const data={ code, nameAr, nameEn:$('b-nameEn').value.trim()||nameAr, menuId:$('b-menuId').value, phone:$('b-phone').value.trim(), address:$('b-address').value.trim(), tables, active:true };
   try{ if(id) await updateDoc(doc(db,'branches',id),data); else await setDoc(doc(db,'branches',id||code.toLowerCase()),data); closeModal('branchModal'); showToast('✅ تم الحفظ'); }catch(e){ showToast('❌ '+e.message); }
@@ -661,7 +592,7 @@ function renderQRPreview(){
   const logoUrl = companyInfo.logo || 'logo-01.png'; const img = document.createElement('img'); img.src = logoUrl; img.className = 'qr-logo-overlay'; img.onerror = function() { this.style.display = 'none'; }; $('qrCode').appendChild(img);
 }
 function printQR() {
-  const qrContainer = $('qrCodeContainer'); if(!qrContainer) { showToast('⚠️ مش قادر أطبع الـ QR'); return; }
+  const qrContainer = $('qrCodeContainer'); if(!qrContainer) { showToast('⚠️ خطأ في الطباعة'); return; }
   const branchName = currentQRBranch.nameAr; const isTable = $('qrType').value === 'table'; const tableNum = isTable ? $('qrTable').value : null; const companyName = companyInfo.nameAr || 'الغرباوي'; const logoUrl = companyInfo.logo || 'logo-01.png';
   html2canvas(qrContainer, { scale: 3, backgroundColor: '#ffffff' }).then(canvas => {
       const qrDataUrl = canvas.toDataURL('image/png'); const printWindow = window.open('', '_blank');
@@ -670,14 +601,14 @@ function printQR() {
   });
 }
 function downloadQR(){
-  const qrContainer = $('qrCodeContainer'); if(!qrContainer) return; showToast('⏳ جاري تحميل الصورة...');
+  const qrContainer = $('qrCodeContainer'); if(!qrContainer) return; showToast('⏳ جاري التحميل...');
   html2canvas(qrContainer, { scale: 3, backgroundColor: '#ffffff' }).then(canvas => {
     const link = document.createElement('a'); link.download = 'qr-' + currentQRBranch.code + (($('qrType').value==='table')?('-table-'+$('qrTable').value):'') + '.png'; link.href = canvas.toDataURL('image/png'); link.click(); showToast('✅ تم التحميل');
   });
 }
 
 function renderMenus(){
-  const el=$('menusList'); if(!menus.length){ el.innerHTML='<div class="card empty">مفيش مجموعات</div>'; return; }
+  const el=$('menusList'); if(!menus.length){ el.innerHTML='<div class="card empty">لا توجد مجموعات</div>'; return; }
   el.innerHTML=menus.map(m=>{ const cnt=items.filter(i=>i.menuId===m.id).length; const bCnt=branches.filter(b=>b.menuId===m.id).length; return `<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:20px">${m.icon||'📂'}</div><div style="font-size:16px;font-weight:900">${m.nameAr}</div><div style="font-size:12px;color:var(--muted)">${m.nameEn}</div><div style="margin-top:8px;display:flex;gap:8px"><span class="badge badge-gold">${cnt} منتج</span><span class="badge badge-blue">${bCnt} فرع</span></div></div><div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="openMenuModal('${m.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteMenu('${m.id}')">🗑️</button></div></div>`; }).join('');
 }
 function openMenuModal(id){ if(id){ const m=menus.find(x=>x.id===id); if(!m) return; $('menuModalTitle').innerText='✏️ تعديل'; $('mn-id').value=m.id; $('mn-icon').value=m.icon||''; $('mn-order').value=m.order||1; $('mn-nameAr').value=m.nameAr||''; $('mn-nameEn').value=m.nameEn||''; } else { $('menuModalTitle').innerText='إضافة مجموعة'; $('mn-id').value=''; $('mn-icon').value='📂'; $('mn-order').value=menus.length+1; $('mn-nameAr').value=''; $('mn-nameEn').value=''; } $('menuModal').classList.add('open'); }
@@ -685,7 +616,7 @@ async function saveMenu(){ const {db,doc,setDoc,updateDoc}=window.FB; const id=$
 async function deleteMenu(id){ if(!confirm('تأكيد الحذف؟')) return; await window.FB.deleteDoc(window.FB.doc(window.FB.db,'menus',id)); showToast('🗑️ تم'); }
 
 function renderCategories(){
-  const tb=$('categoriesTable'); if(!categories.length){ tb.innerHTML='<tr><td colspan="5" class="empty">مفيش أقسام</td></tr>'; return; }
+  const tb=$('categoriesTable'); if(!categories.length){ tb.innerHTML='<tr><td colspan="5" class="empty">لا توجد أقسام</td></tr>'; return; }
   tb.innerHTML=categories.map(c=>{ const menu=menus.find(m=>m.id===c.menuId); return `<tr><td style="font-size:20px">${c.icon||'🏷️'}</td><td><strong>${c.nameAr}</strong></td><td>${menu?menu.nameAr:'—'}</td><td>${c.order||0}</td><td style="white-space:nowrap"><button class="btn btn-primary btn-sm" onclick="openCategoryModal('${c.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">🗑️</button></td></tr>`; }).join('');
 }
 function openCategoryModal(id){
@@ -696,7 +627,7 @@ function openCategoryModal(id){
 }
 async function saveCategory(){
   const {db,doc,setDoc,updateDoc}=window.FB; const id=$('c-id').value; const nameAr=$('c-nameAr').value.trim(); const menuId=$('c-menuId').value;
-  if(!nameAr||!menuId){ showToast('⚠️ كمل البيانات'); return; } const data={ nameAr, nameEn:$('c-nameEn').value.trim()||nameAr, menuId, icon:$('c-icon').value.trim()||'🏷️', order:Number($('c-order').value)||1, active:true };
+  if(!nameAr||!menuId){ showToast('⚠️ اكمل البيانات'); return; } const data={ nameAr, nameEn:$('c-nameEn').value.trim()||nameAr, menuId, icon:$('c-icon').value.trim()||'🏷️', order:Number($('c-order').value)||1, active:true };
   try{ if(id) await updateDoc(doc(db,'categories',id),data); else await setDoc(doc(db,'categories','cat-'+Date.now()),data); closeModal('categoryModal'); showToast('✅ تم'); }catch(e){ showToast('❌ '+e.message); }
 }
 async function deleteCategory(id){ if(!confirm('تأكيد الحذف؟')) return; await window.FB.deleteDoc(window.FB.doc(window.FB.db,'categories',id)); showToast('🗑️ تم'); }
@@ -704,7 +635,7 @@ async function deleteCategory(id){ if(!confirm('تأكيد الحذف؟')) retur
 function renderItems(){
   let list = items;
   if(currentUserData.role === 'branch_manager'){ const bId = currentUserData.branchId; const b = branches.find(x=>x.id===bId); if(b) list = items.filter(i=>i.menuId===b.menuId); }
-  const tb=$('itemsTable'); if(!list.length){ tb.innerHTML='<tr><td colspan="7" class="empty">مفيش منتجات</td></tr>'; return; }
+  const tb=$('itemsTable'); if(!list.length){ tb.innerHTML='<tr><td colspan="7" class="empty">لا توجد منتجات</td></tr>'; return; }
   tb.innerHTML=list.map(it=>{
     const cat=categories.find(c=>c.id===it.categoryId);
     return `<tr>
@@ -730,9 +661,9 @@ function openItemModal(id){
 function onItemMenuChange(){ const mId=$('m-menuId').value; const filtered=categories.filter(c=>!mId||c.menuId===mId); $('m-categoryId').innerHTML=filtered.map(c=>`<option value="${c.id}">${c.icon||''} ${c.nameAr}</option>`).join(''); }
 async function saveItem(){
   const {db,doc,setDoc,updateDoc}=window.FB; const id=$('m-id').value; const isEdit=!!id; const nameAr=$('m-nameAr').value.trim(); const nameEn=$('m-nameEn').value.trim(); const price=Number($('m-price').value); const menuId=$('m-menuId').value; const categoryId=$('m-categoryId').value;
-  if(!nameAr||!nameEn||!price||!menuId||!categoryId){ showToast('⚠️ كمل البيانات'); return; }
+  if(!nameAr||!nameEn||!price||!menuId||!categoryId){ showToast('⚠️ اكمل البيانات'); return; }
   const file=$('m-file').files[0]; let imageUrl=$('m-imageUrl').value.trim();
-  if(file){ try{ showToast('⏳ جاري رفع الصورة...'); imageUrl=await uploadToCloudinary(file); }catch(e){ showToast('❌ فشل رفع الصورة'); return; } }
+  if(file){ try{ showToast('⏳ جاري الرفع...'); imageUrl=await uploadToCloudinary(file); }catch(e){ showToast('❌ فشل الرفع'); return; } }
   if(!imageUrl){ if(isEdit){ const ex=items.find(i=>i.id===Number(id)); imageUrl=ex?ex.image:'images/hot-coffee/01.jpg'; } else imageUrl='images/hot-coffee/01.jpg'; }
   const data={nameAr,nameEn,menuId,categoryId,price,image:imageUrl, descAr:$('m-descAr').value||'', descEn:$('m-descEn').value||'', inStock:$('m-inStock').value==='true'};
   try{ if(isEdit) await updateDoc(doc(db,'menu',String(id)),data); else{ const maxId=items.reduce((m,i)=>Math.max(m,i.id||0),0); await setDoc(doc(db,'menu',String(maxId+1)),data); } closeModal('itemModal'); showToast('✅ تم'); }catch(e){ showToast('❌ '+e.message); }
@@ -755,7 +686,7 @@ function openItemBranchesModal(itemId) {
   const listEl = $('itemBranchesList');
   
   if (relatedBranches.length === 0) {
-    listEl.innerHTML = '<div class="empty">مفيش فروع مرتبطة بالمنيو ده</div>';
+    listEl.innerHTML = '<div class="empty">لا توجد فروع مرتبطة</div>';
     return;
   }
 
@@ -798,7 +729,7 @@ async function saveItemBranches() {
       await updateDoc(doc(db, 'branches', b.id), { stockOverrides });
     }
     closeModal('itemBranchesModal');
-    showToast('✅ تم تحديث حالة المنتج في الفروع');
+    showToast('✅ تم تحديث الحالة');
   } catch(e) {
     console.error(e);
     showToast('❌ ' + e.message);
@@ -814,7 +745,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 function renderOrders(){
   let list = orders; 
-  const el=$('ordersList'); if(!list.length){ el.innerHTML='<div class="card empty">مفيش أوردرات</div>'; return; }
+  const el=$('ordersList'); if(!list.length){ el.innerHTML='<div class="card empty">لا توجد أوردرات</div>'; return; }
   el.innerHTML=list.map((o,idx)=>{
     const time=o.createdAt?.toDate?o.createdAt.toDate().toLocaleString('ar-EG'):'—'; const itemsHtml=(o.items||[]).map(i=>'• '+i.nameAr+' × '+i.qty+' = '+(i.price*i.qty)+' ج'+(i.notes?' <em style="color:var(--gold)">('+i.notes+')</em>':'')).join('<br>');
     const isNew = o.status !== 'done'; const tableLabel = o.table ? `<span class="badge badge-gold">🍽️ طربيزة ${o.table}</span>` : '';
@@ -830,7 +761,7 @@ function renderOrders(){
 
 function renderRecentOrders(){
   let list = orders; 
-  const recent = list.slice(0,5); const el=$('recentOrders'); if(!recent.length){ el.innerHTML='<div class="empty">مفيش أوردرات</div>'; return; }
+  const recent = list.slice(0,5); const el=$('recentOrders'); if(!recent.length){ el.innerHTML='<div class="empty">لا توجد أوردرات</div>'; return; }
   el.innerHTML = recent.map(o=>{ const time=o.createdAt?.toDate?o.createdAt.toDate().toLocaleTimeString('ar-EG'):'—'; return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span style="font-size:13px">${time} — ${o.branchNameAr||'—'}${o.table?' — طربيزة '+o.table:''}</span><strong style="color:var(--gold)">${o.total} ج</strong></div>`; }).join('');
 }
 
@@ -840,7 +771,7 @@ async function clearDoneOrders(){ if(!confirm('مسح المكتملة؟')) retu
 function renderKDS() {
   const el = $('kdsOrders'); if(!el) return;
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'preparing');
-  if(!pendingOrders.length) { el.innerHTML = '<div style="text-align:center;color:#888;font-size:20px;">مفيش أوردرات جديدة ☕</div>'; return; }
+  if(!pendingOrders.length) { el.innerHTML = '<div style="text-align:center;color:#888;font-size:20px;">لا توجد أوردرات جديدة ☕</div>'; return; }
   el.innerHTML = pendingOrders.map(o => {
     const itemsHtml = (o.items||[]).map(i => `<div style="font-size:18px; margin-bottom:5px;">• ${i.nameAr} <strong style="color:#C89B5E;">× ${i.qty}</strong> ${i.notes ? `<em style="color:#E74C3C;">(${i.notes})</em>` : ''}</div>`).join('');
     const time = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
@@ -864,7 +795,7 @@ function renderSalesChart() {
 }
 
 function renderUsers(){
-  const tb=$('usersTable'); if(!users.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش مستخدمين</td></tr>'; return; }
+  const tb=$('usersTable'); if(!users.length){ tb.innerHTML='<tr><td colspan="6" class="empty">لا يوجد مستخدمون</td></tr>'; return; }
   const roleNames={super_admin:'👑 Super Admin',admin:'🛡️ Admin',branch_manager:'👔 مدير فرع'};
   const visibleUsers = currentUserData.role === 'super_admin' ? users : users.filter(u => u.role !== 'super_admin');
   tb.innerHTML=visibleUsers.map(u=>{
@@ -882,22 +813,22 @@ function openUserModal(id){
 }
 async function saveUser(){
   const { db, doc, setDoc, updateDoc, firebaseConfig } = window.FB; const id = $('u-uid').value; const isEdit = !!id; const name = $('u-name').value.trim(); const email = $('u-email').value.trim(); const role = $('u-role').value; const branchId = role === 'branch_manager' ? $('u-branchId').value : ''; const password = $('u-password') ? $('u-password').value : '';
-  if (!name || !email) { showToast('⚠️ كمل البيانات'); return; } if (role === 'branch_manager' && !branchId) { showToast('⚠️ اختار الفرع'); return; } if (role === 'super_admin' && currentUserData.role !== 'super_admin') { showToast('⚠️ غير مسموح'); return; }
+  if (!name || !email) { showToast('⚠️ اكمل البيانات'); return; } if (role === 'branch_manager' && !branchId) { showToast('⚠️ اختر الفرع'); return; } if (role === 'super_admin' && currentUserData.role !== 'super_admin') { showToast('⚠️ غير مسموح'); return; }
   try {
     if (isEdit) { await updateDoc(doc(db, 'users', id), { name, role, branchId }); showToast('✅ تم التعديل'); }
     else {
       if (!password || password.length < 6) { showToast('⚠️ الباسورد 6 حروف على الأقل'); return; }
-      showToast('⏳ جاري إنشاء المستخدم...'); const apiKey = firebaseConfig.apiKey;
+      showToast('⏳ جاري الإنشاء...'); const apiKey = firebaseConfig.apiKey;
       const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, returnSecureToken: false }) });
       const data = await res.json();
       if (!res.ok) { const errMsg = (data.error && data.error.message) || 'Signup failed'; if (errMsg === 'EMAIL_EXISTS') throw { code: 'auth/email-already-in-use' }; if (errMsg.indexOf('WEAK_PASSWORD') >= 0) throw { code: 'auth/weak-password' }; if (errMsg.indexOf('INVALID_EMAIL') >= 0) throw { code: 'auth/invalid-email' }; throw new Error(errMsg); }
-      const newUid = data.localId; await setDoc(doc(db, 'users', newUid), { name, email, role, branchId, active: true }); showToast('✅ تم إنشاء المستخدم');
+      const newUid = data.localId; await setDoc(doc(db, 'users', newUid), { name, email, role, branchId, active: true }); showToast('✅ تم الإنشاء');
     }
     closeModal('userModal');
-  } catch(e){ if (e.code === 'auth/email-already-in-use') { showToast('❌ الإيميل مستخدم بالفعل'); } else if (e.code === 'auth/invalid-email') { showToast('❌ إيميل غير صالح'); } else if (e.code === 'auth/weak-password') { showToast('❌ الباسورد ضعيف'); } else { showToast('❌ ' + (e.message || 'خطأ غير معروف')); } }
+  } catch(e){ if (e.code === 'auth/email-already-in-use') { showToast('❌ الإيميل مستخدم'); } else if (e.code === 'auth/invalid-email') { showToast('❌ إيميل غير صالح'); } else if (e.code === 'auth/weak-password') { showToast('❌ باسورد ضعيف'); } else { showToast('❌ ' + (e.message || 'خطأ')); } }
 }
 async function deleteUser(id){
-  if(id === currentUser.uid){ showToast('⚠️ مش هتقدر تحذف نفسك'); return; } const u = users.find(x=>x.id===id); if(u && u.role === 'super_admin' && currentUserData.role !== 'super_admin'){ showToast('⚠️ غير مسموح بمسح حساب Super Admin'); return; } if(!confirm('تأكيد الحذف؟')) return; await window.FB.deleteDoc(window.FB.doc(window.FB.db,'users',id)); showToast('🗑️ تم');
+  if(id === currentUser.uid){ showToast('⚠️ لا يمكنك حذف نفسك'); return; } const u = users.find(x=>x.id===id); if(u && u.role === 'super_admin' && currentUserData.role !== 'super_admin'){ showToast('⚠️ غير مسموح'); return; } if(!confirm('تأكيد الحذف؟')) return; await window.FB.deleteDoc(window.FB.doc(window.FB.db,'users',id)); showToast('🗑️ تم');
 }
 
 function updateSystemStatus(){ const badge = $('systemStatusBadge'); const btn = $('killSwitchBtn'); if(!badge || !btn) return; if(systemOnline){ badge.className='badge badge-green'; badge.innerText='● النظام يعمل'; btn.className='btn btn-danger'; btn.innerText='🔴 إيقاف النظام'; } else { badge.className='badge badge-red'; badge.innerText='● النظام متوقف'; btn.className='btn btn-success'; btn.innerText='🟢 تشغيل النظام'; } const s = $('statSystem'); if(s){ s.innerText = systemOnline ? '✅' : '⛔'; s.style.color = systemOnline ? 'var(--success)' : 'var(--danger)'; } }
@@ -915,7 +846,6 @@ function updateStats(){
 
 window.addEventListener('fb-ready',()=>{ if(!window.FB.getDoc){ import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js").then(mod=>{ window.FB.getDoc = mod.getDoc; }); } });
 
-/* ═══════════ REPORTS SYSTEM ═══════════ */
 let reportData = { orders: [] };
 function initReportFilters() {
   const today = new Date().toISOString().split('T')[0]; const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
@@ -926,18 +856,16 @@ async function generateReport() {
   if (!currentUserData || (currentUserData.role !== 'admin' && currentUserData.role !== 'super_admin')) return;
   const from = $('rep-from').value; const to = $('rep-to').value; const branchId = $('rep-branch').value;
   
-  if (!from || !to) { showToast('⚠️ اختار التاريخ'); return; } 
+  if (!from || !to) { showToast('⚠️ اختر التاريخ'); return; } 
   
-  showToast('⏳ جاري تحميل البيانات...');
+  showToast('⏳ جاري التحميل...');
   const { db, collection, query, where, getDocs } = window.FB;
   
   try {
     let q;
     if (branchId === 'all') {
-      // لو اختار كل الفروع، بنفلتر بالتاريخ بس
       q = query(collection(db, 'orders'), where('dateStr', '>=', from), where('dateStr', '<=', to));
     } else {
-      // لو اختار فرع معين، بنفلتر بالتاريخ والفرع مع بعض
       q = query(collection(db, 'orders'), 
           where('branchId', '==', branchId),
           where('dateStr', '>=', from), 
@@ -950,14 +878,14 @@ async function generateReport() {
     
     reportData.orders = orders; 
     calculateReportStats(orders); 
-    showToast('✅ تم تحديث التقرير');
+    showToast('✅ تم التحديث');
   } catch (e) { 
     console.error(e);
     showToast('❌ ' + e.message); 
   }
 }
 function calculateReportStats(orders) {
-  if (!orders || orders.length === 0) { $('rep-totalSales').innerText = '0 ج'; $('rep-totalOrders').innerText = '0'; $('rep-avgOrder').innerText = '0 ج'; $('rep-totalItems').innerText = '0'; $('topItemsTable').innerHTML = '<tr><td colspan="4" class="empty">مفيش بيانات</td></tr>'; $('branchSalesTable').innerHTML = '<tr><td colspan="3" class="empty">مفيش بيانات</td></tr>'; return; }
+  if (!orders || orders.length === 0) { $('rep-totalSales').innerText = '0 ج'; $('rep-totalOrders').innerText = '0'; $('rep-avgOrder').innerText = '0 ج'; $('rep-totalItems').innerText = '0'; $('topItemsTable').innerHTML = '<tr><td colspan="4" class="empty">لا توجد بيانات</td></tr>'; $('branchSalesTable').innerHTML = '<tr><td colspan="3" class="empty">لا توجد بيانات</td></tr>'; return; }
   let totalSales = 0; let totalItems = 0; const itemsMap = {}; const branchMap = {};
   orders.forEach(o => { totalSales += Number(o.total) || 0; (o.items || []).forEach(i => { totalItems += Number(i.qty) || 0; const key = i.nameAr || i.nameEn; if (!itemsMap[key]) itemsMap[key] = { qty: 0, total: 0 }; itemsMap[key].qty += Number(i.qty) || 0; itemsMap[key].total += (Number(i.price) * Number(i.qty)) || 0; }); const bId = o.branchId || 'unknown'; if (!branchMap[bId]) branchMap[bId] = { name: o.branchNameAr || 'غير معروف', orders: 0, total: 0 }; branchMap[bId].orders += 1; branchMap[bId].total += Number(o.total) || 0; });
   const avgOrder = totalSales / orders.length; $('rep-totalSales').innerText = totalSales.toLocaleString('ar-EG') + ' ج'; $('rep-totalOrders').innerText = orders.length; $('rep-avgOrder').innerText = Math.round(avgOrder) + ' ج'; $('rep-totalItems').innerText = totalItems;
@@ -965,7 +893,7 @@ function calculateReportStats(orders) {
   const sortedBranches = Object.keys(branchMap).map(id => ({ id, ...branchMap[id] })).sort((a, b) => b.total - a.total); $('branchSalesTable').innerHTML = sortedBranches.map(b => `<tr><td>${b.name}</td><td>${b.orders}</td><td style="color:var(--gold)">${b.total} ج</td></tr>`).join('');
 }
 function exportReportToPDF() {
-  if (!reportData.orders || reportData.orders.length === 0) { showToast('⚠️ مفيش بيانات لتحميلها'); return; }
+  if (!reportData.orders || reportData.orders.length === 0) { showToast('⚠️ لا توجد بيانات'); return; }
   const from = $('rep-from').value; const to = $('rep-to').value; const branchName = $('rep-branch').options[$('rep-branch').selectedIndex].text;
   const element = document.createElement('div'); element.style.padding = '30px'; element.style.fontFamily = 'Cairo, sans-serif'; element.style.direction = 'rtl'; element.style.background = '#FFF'; element.style.color = '#1F1611';
   let html = `<div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #C89B5E;padding-bottom:20px;"><h1 style="margin:0;font-size:24px;color:#2B1D14;">☕ ${companyInfo.nameAr || 'الغرباوي'}</h1><p style="margin:5px 0;color:#666;">تقرير المبيعات</p><p style="margin:5px 0;font-size:12px;color:#888;">من: ${from} إلى: ${to} | الفرع: ${branchName}</p></div>`;
