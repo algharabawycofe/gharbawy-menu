@@ -2,1604 +2,409 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم </title>
-<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>الغرباوي - المنيو</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#FAF6F0;--surface:#FFF;--subtle:#F5EEE5;--text:#1F1611;--muted:#A89080;--border:#E8DED2;--gold:#C89B5E;--dark:#2B1D14;--danger:#B33A3A;--success:#4A7C59}
-html.dark{--bg:#1A1310;--surface:#241B16;--subtle:#1F1712;--text:#FAF6F0;--muted:#8A7566;--border:#3A2A20;--gold:#D4A56A;--dark:#FAF6F0}
-*{box-sizing:border-box}
-body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;min-height:100vh}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
-.brand{font-weight:900;font-size:18px}.brand-sub{font-size:11px;color:var(--muted)}
-.user-box{display:flex;align-items:center;gap:10px}
-.role-badge{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:900}
-.role-super_admin{background:linear-gradient(135deg,#B33A3A,#E74C3C);color:#fff}
-.role-admin{background:linear-gradient(135deg,#C89B5E,#E0BE85);color:#1F1611}
-.role-branch_manager{background:linear-gradient(135deg,#4A7C59,#6EBF82);color:#fff}
-.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 65px)}
-.side{background:var(--surface);border-left:1px solid var(--border);padding:16px 10px}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:10px;background:transparent;border:none;cursor:pointer;color:var(--text);font-family:inherit;font-weight:700;font-size:13px;text-align:right;margin-bottom:3px}
-.nav-btn:hover{background:var(--subtle)}
-.nav-btn.active{background:var(--gold);color:#1F1611}
-.main{padding:24px;overflow:auto}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}
-.stat-label{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px}
-.stat-value{font-size:26px;font-weight:900;color:var(--gold)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-input,select,textarea{width:100%;padding:10px 14px;background:var(--subtle);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none}
-input:focus,select:focus,textarea:focus{border-color:var(--gold)}
-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px}
-.btn{padding:9px 16px;border-radius:10px;border:none;font-family:inherit;font-weight:900;font-size:13px;cursor:pointer}
-.btn-primary{background:var(--dark);color:var(--bg)}
-html.dark .btn-primary{background:var(--gold);color:#1F1611}
-.btn-ghost{background:var(--subtle);color:var(--text);border:1px solid var(--border)}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-success{background:var(--success);color:#fff}
-.btn-gold{background:var(--gold);color:#1F1611}
-.btn-sm{padding:5px 10px;font-size:11px}
-table{width:100%;border-collapse:collapse}
-th{text-align:right;padding:10px 12px;font-size:11px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);font-weight:800}
-td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}
-tr:hover td{background:var(--subtle)}
-.thumb{width:42px;height:42px;border-radius:10px;object-fit:cover;background:var(--subtle)}
-.badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:900}
-.badge-green{background:rgba(74,124,89,.15);color:var(--success)}
-.badge-red{background:rgba(179,58,58,.15);color:var(--danger)}
-.badge-gold{background:rgba(200,155,94,.15);color:var(--gold)}
-.badge-blue{background:rgba(60,120,200,.15);color:#3C78C8}
-.badge-gray{background:rgba(150,150,150,.15);color:#888}
-.page{display:none}.page.active{display:block}
-.order-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
-.order-card.new{animation:pulseOrder 1.5s ease}
-@keyframes pulseOrder{0%,100%{box-shadow:0 0 0 0 rgba(200,155,94,0)}50%{box-shadow:0 0 0 12px rgba(200,155,94,.3)}}
-.order-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
-.order-items{font-size:12px;color:var(--muted);line-height:1.8}
-.order-total{font-size:20px;font-weight:900;color:var(--gold)}
-#loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
-#loginCard{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:380px;max-width:92vw}
-#noPermOverlay{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
-#noPermCard{background:var(--surface);border:1px solid var(--danger);border-radius:20px;padding:32px;width:460px;max-width:92vw;text-align:center}
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--dark);color:var(--bg);padding:12px 20px;border-radius:12px;font-weight:700;font-size:13px;z-index:200;box-shadow:0 12px 40px rgba(0,0,0,.2)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:150;padding:20px}
-.modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:600px;max-width:100%;max-height:90vh;overflow:auto}
-.img-preview{width:100%;height:180px;border-radius:12px;object-fit:cover;background:var(--subtle);border:1px dashed var(--border);display:block;margin-bottom:8px}
-.qr-card-canvas{width:100%;max-width:380px;height:auto;display:block;margin:0 auto;border-radius:16px;box-shadow:0 12px 30px rgba(43,29,20,.15)}
-.danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
-.empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
-.pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
-.section-header{font-size:15px;font-weight:900;margin:0 0 6px}
-.section-desc{font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.6}
+:root {
+  --bg: #FAF6F0; --surface: #FFFFFF; --text: #1F1611; --muted: #A89080;
+  --gold: #C89B5E; --dark: #2B1D14; --danger: #B33A3A; --border: #E8DED2;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
+
+/* Header */
+header {
+  background: var(--dark); color: var(--bg); padding: 20px; text-align: center;
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+header h1 { font-size: 24px; font-weight: 900; margin-bottom: 4px; color: var(--gold); }
+header p { font-size: 14px; color: #8A7566; }
+.badge-table {
+  display: inline-block; background: var(--gold); color: var(--dark);
+  padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; margin-top: 8px;
+}
+
+/* Categories */
+.cat-scroll {
+  display: flex; overflow-x: auto; gap: 10px; padding: 15px 20px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky; top: 85px; z-index: 99; scrollbar-width: none;
+}
+.cat-scroll::-webkit-scrollbar { display: none; }
+.cat-btn {
+  padding: 8px 16px; border-radius: 20px; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); font-weight: 700; font-size: 14px; white-space: nowrap; cursor: pointer;
+  transition: 0.2s; display: flex; align-items: center; gap: 6px;
+}
+.cat-btn.active { background: var(--gold); color: var(--dark); border-color: var(--gold); }
+
+/* Items */
+.container { padding: 20px; max-width: 800px; margin: 0 auto; }
+.cat-title { font-size: 20px; font-weight: 900; margin: 20px 0 15px; border-bottom: 2px solid var(--gold); display: inline-block; padding-bottom: 4px; }
+.items-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+@media (max-width: 400px) { .items-grid { grid-template-columns: 1fr; } }
+
+.item-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column;
+  position: relative;
+}
+.item-img { width: 100%; height: 140px; object-fit: cover; background: var(--bg); }
+.item-info { padding: 12px; flex: 1; display: flex; flex-direction: column; }
+.item-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.item-desc { font-size: 12px; color: var(--muted); margin-bottom: 10px; flex: 1; }
+.item-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+.item-price { font-weight: 900; color: var(--gold); font-size: 18px; }
+.item-price span { font-size: 12px; font-weight: 600; }
+.add-btn {
+  background: var(--dark); color: var(--gold); border: none; width: 32px; height: 32px;
+  border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: 0.2s;
+}
+.add-btn:active { transform: scale(0.9); }
+.out-of-stock { opacity: 0.5; pointer-events: none; }
+.out-of-stock::after {
+  content: 'نفد'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: var(--danger); color: #fff; padding: 4px 12px; border-radius: 8px; font-weight: 900;
+}
+
+/* Cart Button */
+.floating-cart {
+  position: fixed; bottom: 20px; left: 20px; right: 20px; max-width: 500px; margin: 0 auto;
+  background: var(--gold); color: var(--dark); padding: 15px 20px; border-radius: 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 900; font-size: 18px; box-shadow: 0 10px 25px rgba(200,155,94,0.4);
+  cursor: pointer; z-index: 100; transform: translateY(150px); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.floating-cart.show { transform: translateY(0); }
+.cart-count { background: var(--dark); color: var(--gold); padding: 2px 8px; border-radius: 10px; font-size: 14px; }
+
+/* Cart Modal */
+.cart-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: 0.3s;
+}
+.cart-modal.open { opacity: 1; pointer-events: all; }
+.cart-content {
+  background: var(--surface); width: 100%; max-width: 500px; max-height: 85vh;
+  border-radius: 24px 24px 0 0; padding: 24px; display: flex; flex-direction: column;
+  transform: translateY(100%); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.cart-modal.open .cart-content { transform: translateY(0); }
+.cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.cart-title { font-size: 20px; font-weight: 900; }
+.close-btn { background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--text); }
+.cart-items { flex: 1; overflow-y: auto; margin-bottom: 20px; }
+.cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.cart-item-info h4 { font-size: 15px; margin-bottom: 4px; }
+.cart-item-info p { font-size: 13px; color: var(--gold); font-weight: 700; }
+.qty-controls { display: flex; align-items: center; gap: 10px; background: var(--bg); padding: 4px 8px; border-radius: 12px; }
+.qty-btn { background: none; border: none; font-size: 18px; font-weight: 900; color: var(--text); cursor: pointer; width: 24px; }
+.qty-num { font-weight: 700; font-size: 15px; width: 20px; text-align: center; }
+.cart-footer { border-top: 2px dashed var(--border); padding-top: 15px; }
+.cart-total { display: flex; justify-content: space-between; font-weight: 900; font-size: 20px; margin-bottom: 15px; }
+.checkout-btn {
+  width: 100%; background: var(--dark); color: var(--gold); border: none;
+  padding: 16px; border-radius: 14px; font-size: 18px; font-weight: 900; cursor: pointer;
+}
+.notes-input {
+  width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--bg); margin-bottom: 15px; font-family: inherit; font-size: 14px; resize: none;
+}
+
+/* Splash Screen */
+.splash { position: fixed; inset: 0; background: var(--dark); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
+.splash.hide { opacity: 0; pointer-events: none; }
+.splash h1 { color: var(--gold); font-size: 32px; margin-top: 20px; animation: pulse 1.5s infinite; }
+.spinner { width: 40px; height: 40px; border: 4px solid rgba(200,155,94,0.3); border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginOverlay">
-  <div id="loginCard">
-    <div style="font-size:40px;text-align:center">☕</div>
-    <h1 style="text-align:center;font-size:20px;font-weight:900;margin:12px 0 4px">لوحة تحكم الغرباوي</h1>
-    <p style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:24px">دخول الأدمن</p>
-    <label>الإيميل</label>
-    <input id="email" type="email" dir="ltr" placeholder="admin@gharbawy.com" style="margin-bottom:12px">
-    <label>الباسورد</label>
-    <input id="password" type="password" dir="ltr" placeholder="••••••••" style="margin-bottom:16px">
-    <button class="btn btn-primary" style="width:100%;padding:14px" onclick="doLogin()">دخول</button>
-    <p id="loginError" style="color:var(--danger);font-size:12px;text-align:center;margin-top:12px;min-height:16px"></p>
-  </div>
+<!-- Splash -->
+<div class="splash" id="splash">
+  <div class="spinner"></div>
+  <h1>الغرباوي</h1>
 </div>
 
-<!-- NO PERMISSION -->
-<div id="noPermOverlay">
-  <div id="noPermCard">
-    <div style="font-size:48px">🚫</div>
-    <h2 style="font-size:20px;font-weight:900;margin:12px 0">لا توجد صلاحيات</h2>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">هذا الحساب غير مسجل في النظام. تواصل مع الأدمن.</p>
-    <button class="btn btn-ghost" onclick="doLogout()">خروج</button>
-  </div>
+<!-- Header -->
+<header>
+  <h1 id="branchName">الغرباوي</h1>
+  <p>امسح، اختار، واستمتع</p>
+  <div class="badge-table" id="tableBadge" style="display:none">طربيزة <span id="tableNum"></span></div>
+</header>
+
+<!-- Categories -->
+<div class="cat-scroll" id="categoriesBar"></div>
+
+<!-- Menu Items -->
+<div class="container" id="menuContainer"></div>
+
+<!-- Floating Cart -->
+<div class="floating-cart" id="floatingCart" onclick="toggleCart()">
+  <span>عرض السلة <span class="cart-count" id="cartCount">0</span></span>
+  <span id="cartTotal">0 ج</span>
 </div>
 
-<!-- MAIN APP -->
-<div id="app" style="display:none">
-  <div class="topbar">
-    <div><div class="brand">☕ الغرباوي — Admin</div><div class="brand-sub" id="userBranchLabel">لوحة التحكم</div></div>
-    <div class="user-box">
-      <span style="font-size:12px;font-weight:700" id="userName">—</span>
-      <span class="role-badge" id="userRoleBadge">—</span>
-      <button class="btn btn-ghost btn-sm" onclick="document.documentElement.classList.toggle('dark')">🌓</button>
-      <button class="btn btn-ghost btn-sm" onclick="doLogout()">خروج</button>
+<!-- Cart Modal -->
+<div class="cart-modal" id="cartModal">
+  <div class="cart-content">
+    <div class="cart-header">
+      <div class="cart-title">سلة الطلبات</div>
+      <button class="close-btn" onclick="toggleCart()">✕</button>
     </div>
-  </div>
-
-  <div class="layout">
-    <aside class="side" id="sidebar">
-      <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard')">📊 نظرة عامة</button>
-      <button class="nav-btn" data-page="branches" data-role="admin" onclick="showPage('branches')">🏢 الفروع</button>
-      <button class="nav-btn" data-page="menus" data-role="admin" onclick="showPage('menus')">📂 المجموعات</button>
-      <button class="nav-btn" data-page="categories" data-role="admin" onclick="showPage('categories')">🏷️ الأقسام</button>
-      <button class="nav-btn" data-page="items" data-role="admin" onclick="showPage('items')">🍽️ المنتجات</button>
-      <button class="nav-btn" data-page="orders" onclick="showPage('orders')">📦 الأوردرات</button>
-      <button class="nav-btn" data-page="users" data-role="admin" onclick="showPage('users')">👥 المستخدمين</button>
-      <button class="nav-btn" data-page="settings" data-role="super" onclick="showPage('settings')">⚙️ الإعدادات</button>
-    </aside>
-
-    <main class="main">
-      <div id="page-dashboard" class="page active">
-        <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">نظرة عامة</h2>
-        <div class="stat-grid">
-          <div class="stat"><div class="stat-label">الفروع</div><div class="stat-value" id="statBranches">—</div></div>
-          <div class="stat"><div class="stat-label">المنتجات</div><div class="stat-value" id="statItems">—</div></div>
-          <div class="stat"><div class="stat-label">أوردرات النهاردة</div><div class="stat-value" id="statOrders">—</div></div>
-          <div class="stat"><div class="stat-label">حالة النظام</div><div class="stat-value" id="statSystem">—</div></div>
-        </div>
-        <div class="card">
-          <h3 style="font-size:14px;font-weight:900;margin:0 0 12px">آخر الأوردرات</h3>
-          <div id="recentOrders"></div>
-        </div>
+    <div class="cart-items" id="cartItemsList"></div>
+    <div class="cart-footer">
+      <textarea class="notes-input" id="orderNotes" placeholder="أي ملاحظات إضافية؟ (اختياري)" rows="2"></textarea>
+      <div class="cart-total">
+        <span>الإجمالي:</span>
+        <span id="modalCartTotal">0 ج</span>
       </div>
-
-      <div id="page-branches" class="page">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h2 style="font-size:22px;font-weight:900;margin:0">الفروع</h2>
-          <button class="btn btn-primary" onclick="openBranchModal()">+ إضافة فرع</button>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <table><thead><tr><th>الكود</th><th>الاسم</th><th>المجموعة</th><th>الطربيزات</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="branchesTable"></tbody></table>
-        </div>
-      </div>
-
-      <div id="page-menus" class="page">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h2 style="font-size:22px;font-weight:900;margin:0">المجموعات</h2>
-          <button class="btn btn-primary" onclick="openMenuModal()">+ إضافة مجموعة</button>
-        </div>
-        <div id="menusList"></div>
-      </div>
-
-      <div id="page-categories" class="page">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h2 style="font-size:22px;font-weight:900;margin:0">الأقسام</h2>
-          <button class="btn btn-primary" onclick="openCategoryModal()">+ إضافة قسم</button>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <table><thead><tr><th>الأيقونة</th><th>الاسم عربي</th><th>المجموعة</th><th>الترتيب</th><th>إجراءات</th></tr></thead><tbody id="categoriesTable"></tbody></table>
-        </div>
-      </div>
-
-      <div id="page-items" class="page">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h2 style="font-size:22px;font-weight:900;margin:0">المنتجات</h2>
-          <button class="btn btn-primary" onclick="openItemModal()">+ إضافة منتج</button>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <table><thead><tr><th>#</th><th>صورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="itemsTable"></tbody></table>
-        </div>
-      </div>
-
-      <div id="page-orders" class="page">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h2 style="font-size:22px;font-weight:900;margin:0">الأوردرات</h2>
-          <button class="btn btn-ghost btn-sm" onclick="clearDoneOrders()">مسح المكتملة</button>
-        </div>
-        <div id="ordersList"></div>
-      </div>
-
-      <div id="page-users" class="page">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h2 style="font-size:22px;font-weight:900;margin:0">المستخدمين</h2>
-          <button class="btn btn-primary" onclick="openUserModal()">+ إضافة مستخدم</button>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <table><thead><tr><th>الاسم</th><th>الإيميل</th><th>الدور</th><th>الفرع</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="usersTable"></tbody></table>
-        </div>
-      </div>
-
-      <div id="page-settings" class="page">
-        <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">الإعدادات</h2>
-
-        <!-- Company Info -->
-        <div class="card">
-          <h3 class="section-header">🏢 بيانات الشركة</h3>
-          <p class="section-desc">البيانات دي بتظهر في الموقع للزباين (الـ Welcome + الفوتر)</p>
-
-          <div class="form-row">
-            <div><label>اسم الشركة (عربي)</label><input id="co-nameAr" placeholder="الغرباوي"></div>
-            <div><label>اسم الشركة (إنجليزي)</label><input id="co-nameEn" dir="ltr" placeholder="Al-Gharbawy"></div>
-          </div>
-          <div class="form-row">
-            <div><label>الهاتف</label><input id="co-phone" dir="ltr" placeholder="01123456789"></div>
-            <div><label>الإيميل</label><input id="co-email" dir="ltr" type="email" placeholder="info@gharbawy.com"></div>
-          </div>
-          <div style="margin-bottom:12px">
-            <label>العنوان</label>
-            <input id="co-address" placeholder="القاهرة، مصر">
-          </div>
-          <div class="form-row">
-            <div><label>السجل التجاري</label><input id="co-cr" dir="ltr" placeholder="12345"></div>
-            <div><label>الرقم الضريبي</label><input id="co-tax" dir="ltr" placeholder="123-456-789"></div>
-          </div>
-          <div style="margin-bottom:12px">
-            <label>ساعات العمل</label>
-            <input id="co-hours" placeholder="يومياً من 8 صباحاً حتى 2 صباحاً">
-          </div>
-          <div style="margin-bottom:12px">
-            <label>اللوجو</label>
-            <img id="co-logo-preview" class="img-preview" src="" style="display:none">
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="file" id="co-logo-file" accept="image/*" style="flex:1">
-              <span style="font-size:11px;color:var(--muted)">أو</span>
-              <input id="co-logo-url" placeholder="رابط الصورة" style="flex:1;font-size:11px">
-            </div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:8px">
-            <button class="btn btn-primary" onclick="saveCompany()">💾 حفظ البيانات</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3 class="section-header">🔴 منطقة الخطر — إيقاف النظام</h3>
-          <p class="section-desc">لو ضغطت على "إيقاف النظام"، الموقع هيتوقف فوراً وكل الزباين هيشوفوا رسالة "النظام متوقف مؤقتاً".</p>
-          <div id="systemStatusBox" style="margin-bottom:14px">
-            <span class="badge badge-green" id="systemStatusBadge">● النظام يعمل</span>
-          </div>
-          <button class="btn btn-danger" id="killSwitchBtn" onclick="toggleSystemStatus()">🔴 إيقاف النظام</button>
-        </div>
-
-        <div class="card">
-          <h3 class="section-header">📊 معلومات النظام</h3>
-          <div style="font-size:13px;color:var(--muted);line-height:2">
-            <div>إجمالي الفروع: <strong id="infoBranches">—</strong></div>
-            <div>إجمالي المستخدمين: <strong id="infoUsers">—</strong></div>
-            <div>إجمالي المنتجات: <strong id="infoItems">—</strong></div>
-            <div>إجمالي الأوردرات: <strong id="infoOrders">—</strong></div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- BRANCH MODAL -->
-<div id="branchModal" class="modal-overlay">
-  <div class="modal">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h3 id="branchModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة فرع</h3>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('branchModal')">✕</button>
-    </div>
-    <input type="hidden" id="b-id">
-    <div class="form-row">
-      <div><label>الكود (للـ QR)</label><input id="b-code" dir="ltr" placeholder="MAADI01"></div>
-      <div><label>المجموعة</label><select id="b-menuId"></select></div>
-    </div>
-    <div class="form-row">
-      <div><label>الاسم عربي</label><input id="b-nameAr"></div>
-      <div><label>الاسم إنجليزي</label><input id="b-nameEn" dir="ltr"></div>
-    </div>
-    <div class="form-row">
-      <div><label>الهاتف</label><input id="b-phone" dir="ltr"></div>
-      <div><label>العنوان</label><input id="b-address"></div>
-    </div>
-    <div style="margin-top:12px">
-      <label>عدد الطربيزات</label>
-      <input id="b-tablesCount" type="number" min="0" value="10" oninput="updateTablesListPreview()">
-      <div style="font-size:11px;color:var(--muted);margin-top:6px">هيتم إنشاء طربيزات من 1 إلى العدد ده</div>
-      <div id="tablesListPreview" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
-      <button class="btn btn-ghost" onclick="closeModal('branchModal')">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveBranch()">حفظ</button>
-    </div>
-  </div>
-</div>
-
-<!-- QR MODAL -->
-<div id="qrModal" class="modal-overlay">
-  <div class="modal" style="width:480px; text-align:center;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 id="qrTitle" style="font-size:17px;font-weight:900;margin:0">QR</h3>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('qrModal')">✕</button>
-    </div>
-    <div style="margin-bottom:12px; text-align:right;">
-      <label>نوع الـ QR</label>
-      <select id="qrType" onchange="renderQRPreview()">
-        <option value="branch">QR عام للفرع (يفتح المنيو)</option>
-        <option value="table">QR لكل طربيزة (يحدد الطربيزة)</option>
-      </select>
-    </div>
-    <div id="qrTableSelectBox" style="display:none;margin-bottom:12px; text-align:right;">
-      <label>اختار الطربيزة</label>
-      <select id="qrTable" onchange="renderQRPreview()"></select>
-    </div>
-    
-    <!-- مكان عرض الكارت -->
-    <div style="display:flex;justify-content:center;padding:12px 0 16px">
-      <div id="qrCode" style="width:100%;display:flex;justify-content:center"></div>
-    </div>
-    
-    <div style="font-size:11px;color:var(--muted);text-align:center;word-break:break-all;margin-bottom:14px" id="qrUrl"></div>
-    <div style="display:flex;gap:8px;justify-content:center">
-      <button class="btn btn-ghost" onclick="printQR()">🖨️ طباعة</button>
-      <button class="btn btn-primary" onclick="downloadQR()">⬇️ تحميل</button>
-    </div>
-  </div>
-</div>
-
-<!-- MENU MODAL -->
-<div id="menuModal" class="modal-overlay">
-  <div class="modal" style="width:520px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h3 id="menuModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة مجموعة</h3>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('menuModal')">✕</button>
-    </div>
-    <input type="hidden" id="mn-id">
-    <div class="form-row">
-      <div><label>الأيقونة</label><input id="mn-icon" placeholder="🍽️" maxlength="4"></div>
-      <div><label>الترتيب</label><input id="mn-order" type="number" value="1"></div>
-    </div>
-    <div class="form-row">
-      <div><label>الاسم عربي</label><input id="mn-nameAr"></div>
-      <div><label>الاسم إنجليزي</label><input id="mn-nameEn" dir="ltr"></div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
-      <button class="btn btn-ghost" onclick="closeModal('menuModal')">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveMenu()">حفظ</button>
-    </div>
-  </div>
-</div>
-
-<!-- CATEGORY MODAL -->
-<div id="categoryModal" class="modal-overlay">
-  <div class="modal" style="width:520px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h3 id="catModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة قسم</h3>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('categoryModal')">✕</button>
-    </div>
-    <input type="hidden" id="c-id">
-    <div><label>المجموعة</label><select id="c-menuId"></select></div>
-    <div class="form-row" style="margin-top:12px">
-      <div><label>الأيقونة</label><input id="c-icon" placeholder="☕" maxlength="4"></div>
-      <div><label>الترتيب</label><input id="c-order" type="number" value="1"></div>
-    </div>
-    <div class="form-row">
-      <div><label>الاسم عربي</label><input id="c-nameAr"></div>
-      <div><label>الاسم إنجليزي</label><input id="c-nameEn" dir="ltr"></div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
-      <button class="btn btn-ghost" onclick="closeModal('categoryModal')">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveCategory()">حفظ</button>
-    </div>
-  </div>
-</div>
-
-<!-- ITEM MODAL -->
-<div id="itemModal" class="modal-overlay">
-  <div class="modal">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h3 id="itemModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة منتج</h3>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('itemModal')">✕</button>
-    </div>
-    <input type="hidden" id="m-id">
-    <div style="margin-bottom:12px">
-      <label>صورة المنتج</label>
-      <img id="m-preview" class="img-preview" src="" alt="">
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="file" id="m-file" accept="image/*" style="flex:1">
-        <span style="font-size:11px;color:var(--muted)">أو</span>
-        <input id="m-imageUrl" placeholder="رابط صورة" style="flex:1;font-size:11px">
-      </div>
-    </div>
-    <div class="form-row">
-      <div><label>المجموعة</label><select id="m-menuId" onchange="onItemMenuChange()"></select></div>
-      <div><label>القسم</label><select id="m-categoryId"></select></div>
-    </div>
-    <div class="form-row">
-      <div><label>الاسم عربي</label><input id="m-nameAr"></div>
-      <div><label>الاسم إنجليزي</label><input id="m-nameEn" dir="ltr"></div>
-    </div>
-    <div class="form-row">
-      <div><label>السعر (جنيه)</label><input id="m-price" type="number"></div>
-      <div><label>الحالة</label><select id="m-inStock"><option value="true">متوفر</option><option value="false">نفد</option></select></div>
-    </div>
-    <div class="form-row">
-      <div><label>وصف عربي</label><input id="m-descAr"></div>
-      <div><label>وصف إنجليزي</label><input id="m-descEn" dir="ltr"></div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
-      <button class="btn btn-ghost" onclick="closeModal('itemModal')">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveItem()">حفظ</button>
-    </div>
-  </div>
-</div>
-
-<!-- USER MODAL -->
-<div id="userModal" class="modal-overlay">
-  <div class="modal" style="width:520px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h3 id="userModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة مستخدم</h3>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('userModal')">✕</button>
-    </div>
-    <input type="hidden" id="u-uid">
-    <div class="form-row">
-      <div><label>الاسم</label><input id="u-name"></div>
-      <div><label>الإيميل</label><input id="u-email" dir="ltr" type="email"></div>
-    </div>
-    <div id="u-passwordBox" style="margin-bottom:12px">
-      <label>الباسورد</label>
-      <input id="u-password" type="text" dir="ltr" placeholder="6 حروف على الأقل">
-      <div class="pwd-box">⚠️ اكتبه في مكان آمن — اليوزر هيدخل بيه. متنساهوش!</div>
-    </div>
-    <div class="form-row">
-      <div>
-        <label>الدور</label>
-        <select id="u-role" onchange="onUserRoleChange()">
-          <option value="admin">Admin (مدير عام)</option>
-          <option value="branch_manager">Branch Manager (مدير فرع)</option>
-          <option value="super_admin" id="optSuperAdmin" style="display:none">Super Admin (مالك)</option>
-        </select>
-      </div>
-      <div id="u-branchBox" style="display:none">
-        <label>الفرع</label>
-        <select id="u-branchId"></select>
-      </div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
-      <button class="btn btn-ghost" onclick="closeModal('userModal')">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveUser()">حفظ</button>
+      <button class="checkout-btn" onclick="submitOrder()" id="checkoutBtn">تأكيد الطلب</button>
     </div>
   </div>
 </div>
 
 <script type="module" src="firebase-config.js"></script>
 <script>
-console.log("🚀 Styled QR Card V2 Loaded"); // للتأكد إن الكود الجديد شغال
+let currentBranch = null;
+let allItems = [];
+let allCategories = [];
+let cart = [];
+let tableNum = null;
 
-const CLOUDINARY_CLOUD = 'meiv47ul';
-const CLOUDINARY_PRESET = 'gharbawy_menu';
-const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
+// 1. قراءة اللينك
+const urlParams = new URLSearchParams(window.location.search);
+const branchCode = urlParams.get('branch');
+tableNum = urlParams.get('table');
 
-let currentUser = null;
-let currentUserData = null;
-let menus = [], categories = [], items = [], branches = [], orders = [], users = [];
-let systemOnline = true;
-let companyInfo = {};
-let unsubs = [];
-
-function $(id){return document.getElementById(id)}
-function onFbReady(cb){if(window.FB_READY)cb();else window.addEventListener('fb-ready',cb,{once:true});}
-
-onFbReady(()=>{
-  const {auth,onAuthStateChanged}=window.FB;
-  onAuthStateChanged(auth, async (user)=>{
-    if(user){
-      currentUser = user;
-      const ok = await loadUserData(user.uid);
-      if(!ok){ showNoPermission(); return; }
-      $('loginOverlay').style.display='none';
-      $('noPermOverlay').style.display='none';
-      $('app').style.display='block';
-      applyRoleUI();
-      subscribeAll();
-      loadCompanyInfo();
-    } else {
-      currentUser = null;
-      currentUserData = null;
-      $('loginOverlay').style.display='flex';
-      $('noPermOverlay').style.display='none';
-      $('app').style.display='none';
-      unsubs.forEach(u=>u&&u());
-      unsubs=[];
-    }
-  });
-});
-
-async function loadUserData(uid){
-  try {
-    const {db, doc, getDoc} = window.FB;
-    if(!getDoc) return false;
-    const snap = await getDoc(doc(db,'users',uid));
-    if(!snap.exists()) return false;
-    currentUserData = { id: uid, ...snap.data() };
-    if(currentUserData.active === false) return false;
-    return true;
-  } catch(e){
-    console.error('loadUserData error', e);
-    return false;
-  }
+if (tableNum) {
+  document.getElementById('tableBadge').style.display = 'inline-block';
+  document.getElementById('tableNum').innerText = tableNum;
 }
 
-function showNoPermission(){
-  $('loginOverlay').style.display='none';
-  $('noPermOverlay').style.display='flex';
-  $('app').style.display='none';
-}
-
-async function doLogin(){
-  const {auth,signInWithEmailAndPassword}=window.FB;
-  $('loginError').innerText='';
-  try{ await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value); }
-  catch(e){ $('loginError').innerText='بيانات غلط'; }
-}
-
-async function doLogout(){
-  await window.FB.signOut(window.FB.auth);
-  location.reload();
-}
-
-function applyRoleUI(){
-  const role = currentUserData.role;
-  const roleNames = {super_admin:'👑 Super Admin', admin:'🛡️ Admin', branch_manager:'👔 مدير فرع'};
-  $('userName').innerText = currentUserData.name || currentUser.email;
-  $('userRoleBadge').className = 'role-badge role-'+role;
-  $('userRoleBadge').innerText = roleNames[role] || role;
-
-  const b = branches.find(x=>x.id===currentUserData.branchId);
-  if(role === 'branch_manager' && currentUserData.branchId){
-    $('userBranchLabel').innerText = b ? b.nameAr : 'فرع';
-  } else {
-    $('userBranchLabel').innerText = 'لوحة التحكم';
-  }
-
-  document.querySelectorAll('#sidebar .nav-btn').forEach(btn=>{
-    const requiredRole = btn.dataset.role;
-    if(!requiredRole){ btn.style.display='flex'; return; }
-    if(role === 'super_admin'){ btn.style.display='flex'; return; }
-    if(role === 'admin' && requiredRole === 'admin'){ btn.style.display='flex'; return; }
-    if(role === 'admin' && requiredRole === 'super'){ btn.style.display='none'; return; }
-    btn.style.display = 'none';
-  });
-
-  showPage('dashboard');
-}
-
-function subscribeAll(){
-  const {db,collection,onSnapshot,query,orderBy,doc}=window.FB;
-  unsubs.forEach(u=>u&&u());
-  unsubs=[];
-
-  unsubs.push(onSnapshot(collection(db,'menus'),s=>{
-    menus = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
-    renderMenus(); refreshSelects(); applyRoleUI();
-  }));
-
-  unsubs.push(onSnapshot(collection(db,'categories'),s=>{
-    categories = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
-    renderCategories(); refreshSelects();
-  }));
-
-  unsubs.push(onSnapshot(collection(db,'menu'),s=>{
-    items = s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id);
-    renderItems(); updateStats();
-  }));
-
-  unsubs.push(onSnapshot(collection(db,'branches'),s=>{
-    branches = s.docs.map(d=>({id:d.id,...d.data()}));
-    renderBranches(); refreshSelects(); applyRoleUI();
-  }));
-
-  unsubs.push(onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),s=>{
-    const prevCount = orders.length;
-    orders = s.docs.map(d=>({id:d.id,...d.data()}));
-    if(prevCount > 0 && orders.length > prevCount){
-      const newOrder = orders[0];
-      const role = currentUserData.role;
-      if(role !== 'branch_manager' || newOrder.branchId === currentUserData.branchId){
-        playNotificationSound();
-        showToast('🔔 أوردر جديد من ' + (newOrder.branchNameAr || 'فرع'));
-      }
-    }
-    renderOrders(); renderRecentOrders(); updateStats();
-  }));
-
-  unsubs.push(onSnapshot(collection(db,'users'),s=>{
-    users = s.docs.map(d=>({id:d.id,...d.data()}));
-    renderUsers(); updateStats();
-  }));
-
-  unsubs.push(onSnapshot(doc(db,'settings','system'),s=>{
-    if(s.exists()){
-      systemOnline = s.data().online !== false;
-    }
-    updateSystemStatus();
-  }));
-}
-
-/* ═══════════ COMPANY INFO ═══════════ */
-function loadCompanyInfo(){
-  const {db,doc,onSnapshot}=window.FB;
-  onSnapshot(doc(db,'settings','company'), s=>{
-    if(s.exists()){
-      companyInfo = s.data();
-      fillCompanyForm(companyInfo);
-    }
-  });
-}
-
-function fillCompanyForm(c){
-  if(!c) return;
-  $('co-nameAr').value = c.nameAr || '';
-  $('co-nameEn').value = c.nameEn || '';
-  $('co-phone').value = c.phone || '';
-  $('co-email').value = c.email || '';
-  $('co-address').value = c.address || '';
-  $('co-cr').value = c.commercialRegister || '';
-  $('co-tax').value = c.taxId || '';
-  $('co-hours').value = c.hours || '';
-  const logoPreview = $('co-logo-preview');
-  if(c.logo){
-    logoPreview.src = c.logo;
-    logoPreview.style.display = 'block';
-  } else {
-    logoPreview.style.display = 'none';
-  }
-  if(c.logo && !c.logo.startsWith('http')){
-    $('co-logo-url').value = '';
-  } else {
-    $('co-logo-url').value = c.logo || '';
-  }
-}
-
-async function saveCompany(){
-  if(currentUserData.role !== 'super_admin'){ showToast('⚠️ Super Admin فقط'); return; }
-  const {db,doc,setDoc}=window.FB;
-
-  const file = $('co-logo-file').files[0];
-  let logoUrl = $('co-logo-url').value.trim() || (companyInfo.logo || '');
-
-  if(file){
-    try{
-      showToast('⏳ جاري رفع اللوجو...');
-      logoUrl = await uploadToCloudinary(file);
-    }catch(e){ showToast('❌ فشل رفع اللوجو'); return; }
-  }
-
-  const data = {
-    nameAr: $('co-nameAr').value.trim(),
-    nameEn: $('co-nameEn').value.trim(),
-    phone: $('co-phone').value.trim(),
-    email: $('co-email').value.trim(),
-    address: $('co-address').value.trim(),
-    commercialRegister: $('co-cr').value.trim(),
-    taxId: $('co-tax').value.trim(),
-    hours: $('co-hours').value.trim(),
-    logo: logoUrl,
-    updatedAt: new Date().toISOString()
-  };
-
-  try{
-    await setDoc(doc(db,'settings','company'), data, {merge:true});
-    showToast('✅ تم حفظ بيانات الشركة');
-    companyInfo = data;
-  }catch(e){
-    console.error(e);
-    showToast('❌ '+e.message);
-  }
-}
-
-function showPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const p = $('page-'+name);
-  if(p) p.classList.add('active');
-  const b = document.querySelector(`[data-page="${name}"]`);
-  if(b) b.classList.add('active');
-}
-
-function closeModal(id){ $(id).classList.remove('open'); }
-function showToast(msg){
-  const t=document.createElement('div');
-  t.className='toast'; t.innerText=msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(),3000);
-}
-
-function playNotificationSound(){
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 0.15].forEach((delay)=>{
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
-      osc.start(ctx.currentTime + delay);
-      osc.stop(ctx.currentTime + delay + 0.12);
-    });
-  } catch(e){ console.error('audio error',e); }
-}
-
-function renderBranches(){
-  const tb=$('branchesTable');
-  if(!branches.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش فروع</td></tr>'; return; }
-  tb.innerHTML = branches.map(b=>{
-    const menu = menus.find(m=>m.id===b.menuId);
-    const tablesCount = (b.tables||[]).length;
-    return `<tr>
-      <td><code style="background:var(--subtle);padding:3px 8px;border-radius:6px">${b.code||'—'}</code></td>
-      <td><strong>${b.nameAr||''}</strong></td>
-      <td>${menu?menu.nameAr:'—'}</td>
-      <td>${tablesCount} طربيزة</td>
-      <td>${b.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-gold btn-sm" onclick="showQR('${b.id}')">📱 QR</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleBranch('${b.id}')">${b.active!==false?'⏸️':'▶️'}</button>
-        <button class="btn btn-primary btn-sm" onclick="openBranchModal('${b.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteBranch('${b.id}')">🗑️</button>
-      </td></tr>`;
-  }).join('');
-}
-
-function updateTablesListPreview(){
-  const n = Number($('b-tablesCount').value)||0;
-  if(n<=0){ $('tablesListPreview').innerText=''; return; }
-  $('tablesListPreview').innerText = `هيتم إنشاء: ${Array.from({length:Math.min(n,30)},(_,i)=>i+1).join(', ')}${n>30?'...':''}`;
-}
-
-function openBranchModal(id){
-  refreshSelect('b-menuId');
-  if(id){
-    const b=branches.find(x=>x.id===id);
-    if(!b) return;
-    $('branchModalTitle').innerText='✏️ تعديل: '+b.nameAr;
-    $('b-id').value=b.id; $('b-code').value=b.code||''; $('b-nameAr').value=b.nameAr||'';
-    $('b-nameEn').value=b.nameEn||''; $('b-menuId').value=b.menuId||''; $('b-phone').value=b.phone||'';
-    $('b-address').value=b.address||'';
-    $('b-tablesCount').value=(b.tables||[]).length;
-  } else {
-    $('branchModalTitle').innerText='إضافة فرع';
-    ['b-id','b-code','b-nameAr','b-nameEn','b-phone','b-address'].forEach(f=>$(f).value='');
-    $('b-tablesCount').value=10;
-  }
-  updateTablesListPreview();
-  $('branchModal').classList.add('open');
-}
-
-async function saveBranch(){
-  const {db,doc,setDoc,updateDoc}=window.FB;
-  const id=$('b-id').value;
-  const code=$('b-code').value.trim().toUpperCase();
-  const nameAr=$('b-nameAr').value.trim();
-  if(!code||!nameAr){ showToast('⚠️ كمل البيانات'); return; }
-  const tablesCount = Number($('b-tablesCount').value)||0;
-  const tables = Array.from({length:tablesCount},(_,i)=>({ number: i+1, active: true }));
-  const data={
-    code, nameAr,
-    nameEn:$('b-nameEn').value.trim()||nameAr,
-    menuId:$('b-menuId').value,
-    phone:$('b-phone').value.trim(),
-    address:$('b-address').value.trim(),
-    tables,
-    active:true
-  };
-  try{
-    if(id) await updateDoc(doc(db,'branches',id),data);
-    else await setDoc(doc(db,'branches',id||code.toLowerCase()),data);
-    closeModal('branchModal');
-    showToast('✅ تم الحفظ');
-  }catch(e){ showToast('❌ '+e.message); }
-}
-
-async function toggleBranch(id){
-  const b=branches.find(x=>x.id===id);
-  const {db,doc,updateDoc}=window.FB;
-  await updateDoc(doc(db,'branches',id),{active:b.active===false});
-  showToast('✅ تم');
-}
-async function deleteBranch(id){
-  if(!confirm('تأكيد حذف الفرع؟')) return;
-  const {db,doc,deleteDoc}=window.FB;
-  await deleteDoc(doc(db,'branches',id));
-  showToast('🗑️ تم');
-}
-
-/* ═══════════ QR (شيك) ═══════════ */
-let currentQRBranch = null;
-let qrRenderToken = 0;
-let currentCardCanvas = null;
-
-function showQR(branchId){
-  currentQRBranch = branches.find(x=>x.id===branchId);
-  if(!currentQRBranch) return;
-  $('qrTitle').innerText='📱 QR — '+currentQRBranch.nameAr;
-  $('qrType').value='branch';
-  const tables = currentQRBranch.tables||[];
-  $('qrTable').innerHTML = tables.map(t=>`<option value="${t.number}">طربيزة ${t.number}</option>`).join('') || '<option>لا توجد طربيزات</option>';
-  $('qrTableSelectBox').style.display='none';
-  renderQRPreview();
-  $('qrModal').classList.add('open');
-}
-
-function renderQRPreview(){
-  if(!currentQRBranch) return;
-  const type = $('qrType').value;
-  let url = `https://algharabawycofe.github.io/gharbawy-menu/index.html?branch=${currentQRBranch.code}`;
-  if(type==='table'){
-    $('qrTableSelectBox').style.display='block';
-    url += `&table=${$('qrTable').value}`;
-  } else {
-    $('qrTableSelectBox').style.display='none';
-  }
-  $('qrUrl').innerText = url;
-  buildStyledQrCard(url);
-}
-
-function buildStyledQrCard(url){
-  const myToken = ++qrRenderToken;
-  currentCardCanvas = null;
-  const container = $('qrCode');
-  container.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:13px">⏳ جاري توليد الـ QR...</div>';
-
-  const holder = document.createElement('div');
-  holder.style.position = 'absolute';
-  holder.style.left = '-9999px';
-  holder.style.top = '0';
-  document.body.appendChild(holder);
-
-  try {
-    new QRCode(holder, {
-      text: url,
-      width: 540,
-      height: 540,
-      colorDark: '#2B1D14',
-      colorLight: '#FFFFFF',
-      correctLevel: QRCode.CorrectLevel.H
-    });
-  } catch(e){
-    console.error(e);
-    document.body.removeChild(holder);
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger)">❌ فشل توليد الـ QR</div>';
+// 2. تشغيل Firebase وجلب البيانات
+window.addEventListener('fb-ready', async () => {
+  const { db, collection, query, where, getDocs, addDoc, serverTimestamp } = window.FB;
+  
+  if (!branchCode) {
+    alert("خطأ: لم يتم تحديد الفرع. يرجى مسح الـ QR مرة أخرى.");
     return;
   }
 
-  setTimeout(() => {
-    if(myToken !== qrRenderToken){ try{document.body.removeChild(holder);}catch(e){} return; }
-    const qrCanvas = holder.querySelector('canvas');
-    if(!qrCanvas){
-      try{document.body.removeChild(holder);}catch(e){}
-      container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger)">❌ فشل توليد الـ QR</div>';
+  try {
+    // جلب الفرع
+    const qBranch = query(collection(db, 'branches'), where('code', '==', branchCode));
+    const branchSnap = await getDocs(qBranch);
+    
+    if (branchSnap.empty) {
+      document.getElementById('splash').innerHTML = '<h1 style="color:red; font-size:20px;">الفرع غير موجود!</h1>';
       return;
     }
 
-    const logoUrl = (companyInfo && companyInfo.logo) || '';
-    if(logoUrl){
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      let done = false;
-      const finish = (loadedImg) => {
-        if(done) return;
-        done = true;
-        try { document.body.removeChild(holder); } catch(e){}
-        if(myToken !== qrRenderToken) return;
-        drawQrCard(qrCanvas, loadedImg, container);
-      };
-      img.onload = () => finish(img);
-      img.onerror = () => finish(null);
-      img.src = logoUrl;
-      setTimeout(() => finish(null), 3000); // safety
-    } else {
-      try { document.body.removeChild(holder); } catch(e){}
-      drawQrCard(qrCanvas, null, container);
-    }
-  }, 100);
-}
+    const bDoc = branchSnap.docs[0];
+    currentBranch = { id: bDoc.id, ...bDoc.data() };
+    document.getElementById('branchName').innerText = currentBranch.nameAr;
+    document.title = currentBranch.nameAr + " - المنيو";
 
-function roundRect(ctx, x, y, w, h, r){
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
+    // جلب الأقسام والمنتجات
+    const [catSnap, itemsSnap] = await Promise.all([
+      getDocs(collection(db, 'categories')),
+      getDocs(collection(db, 'menu'))
+    ]);
 
-function drawQrCard(qrSrc, logoImg, container){
-  const W = 720, H = 960;
-  const card = document.createElement('canvas');
-  card.width = W;
-  card.height = H;
-  card.className = 'qr-card-canvas';
-  const ctx = card.getContext('2d');
+    allCategories = catSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(c => c.menuId === currentBranch.menuId)
+      .sort((a,b) => (a.order || 0) - (b.order || 0));
 
-  // Background gradient
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#FBF8F3');
-  bg.addColorStop(0.5, '#FAF6F0');
-  bg.addColorStop(1, '#F2E8DA');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
+    allItems = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(i => i.menuId === currentBranch.menuId)
+      .sort((a,b) => a.id - b.id);
 
-  // Top gold bar
-  ctx.fillStyle = '#C89B5E';
-  ctx.fillRect(0, 0, W, 6);
-
-  // Subtle inner gold frame
-  ctx.strokeStyle = 'rgba(200,155,94,0.25)';
-  ctx.lineWidth = 1.5;
-  roundRect(ctx, 14, 20, W - 28, H - 34, 12);
-  ctx.stroke();
-
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  const coNameAr = (companyInfo && companyInfo.nameAr) || 'الغرباوي';
-  const coNameEn = ((companyInfo && companyInfo.nameEn) || 'Al-Gharbawy').toUpperCase();
-
-  // Company Arabic name
-  ctx.fillStyle = '#2B1D14';
-  ctx.font = 'bold 46px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText(coNameAr, W/2, 78);
-
-  // Company English name
-  ctx.fillStyle = '#A89080';
-  ctx.font = '600 17px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText(coNameEn, W/2, 122);
-
-  // Gold divider
-  ctx.strokeStyle = '#C89B5E';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(W/2 - 50, 152);
-  ctx.lineTo(W/2 + 50, 152);
-  ctx.stroke();
-
-  // QR Box (with shadow)
-  const qrBoxX = (W - 560) / 2;
-  const qrBoxY = 178;
-  const qrBoxSize = 560;
-
-  ctx.save();
-  ctx.shadowColor = 'rgba(43, 29, 20, 0.18)';
-  ctx.shadowBlur = 40;
-  ctx.shadowOffsetY = 12;
-  ctx.fillStyle = '#FFFFFF';
-  roundRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 28);
-  ctx.fill();
-  ctx.restore();
-
-  // Draw QR inside
-  const pad = 50;
-  ctx.drawImage(qrSrc, qrBoxX + pad, qrBoxY + pad, qrBoxSize - pad*2, qrBoxSize - pad*2);
-
-  // Logo in center
-  if(logoImg){
-    const logoSize = 108;
-    const logoBgSize = 130;
-    const logoCx = qrBoxX + qrBoxSize / 2;
-    const logoCy = qrBoxY + qrBoxSize / 2;
-    const bgX = logoCx - logoBgSize/2;
-    const bgY = logoCy - logoBgSize/2;
-
-    // White rounded bg with shadow
-    ctx.save();
-    ctx.shadowColor = 'rgba(43, 29, 20, 0.12)';
-    ctx.shadowBlur = 20;
-    ctx.shadowOffsetY = 4;
-    ctx.fillStyle = '#FFFFFF';
-    roundRect(ctx, bgX, bgY, logoBgSize, logoBgSize, 22);
-    ctx.fill();
-    ctx.restore();
-
-    // Gold border
-    ctx.strokeStyle = '#C89B5E';
-    ctx.lineWidth = 2.5;
-    roundRect(ctx, bgX + 3, bgY + 3, logoBgSize - 6, logoBgSize - 6, 20);
-    ctx.stroke();
-
-    // Logo image (circular clip)
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(logoCx, logoCy, logoSize/2, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(logoCx - logoSize/2, logoCy - logoSize/2, logoSize, logoSize);
-    ctx.drawImage(logoImg, logoCx - logoSize/2, logoCy - logoSize/2, logoSize, logoSize);
-    ctx.restore();
-  }
-
-  // Branch name
-  const branchName = currentQRBranch.nameAr || 'فرع';
-  ctx.fillStyle = '#1F1611';
-  ctx.font = 'bold 38px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText(branchName, W/2, 805);
-
-  // Table number (if applicable)
-  const type = $('qrType').value;
-  if(type === 'table'){
-    ctx.fillStyle = '#C89B5E';
-    ctx.font = 'bold 24px Tahoma, "Segoe UI", Arial, sans-serif';
-    ctx.fillText('طربيزة ' + $('qrTable').value, W/2, 852);
-  }
-
-  // Footer
-  ctx.fillStyle = '#A89080';
-  ctx.font = '500 17px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText('امسح الكود لفتح المنيو', W/2, 905);
-
-  // Decorative dots
-  ctx.fillStyle = '#C89B5E';
-  for(let i = -2; i <= 2; i++){
-    ctx.beginPath();
-    const dotR = i === 0 ? 4 : 2.5;
-    ctx.arc(W/2 + i*28, 935, dotR, 0, Math.PI*2);
-    ctx.fill();
-  }
-
-  container.innerHTML = '';
-  container.appendChild(card);
-  currentCardCanvas = card;
-}
-
-/* ═══════════ الطباعة النضيفة ═══════════ */
-function printQR(){
-  const canvas = currentCardCanvas || $('qrCode').querySelector('canvas');
-  if(!canvas){ showToast('⚠️ الـ QR لسه بيتولد، استنى ثانية'); return; }
-  
-  const dataUrl = canvas.toDataURL('image/png');
-  const win = window.open('', '_blank');
-  if(!win){ showToast('⚠️ الرجاء السماح بالنوافذ المنبثقة (Pop-ups) للطباعة'); return; }
-  
-  win.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>طباعة QR - ${currentQRBranch.nameAr}</title>
-      <style>
-        body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #fff; }
-        img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        @page { size: auto; margin: 10mm; }
-      </style>
-    </head>
-    <body>
-      <img src="${dataUrl}" onload="window.focus(); window.print(); window.close();" />
-    </body>
-    </html>
-  `);
-  win.document.close();
-}
-
-function downloadQR(){
-  const canvas = currentCardCanvas || $('qrCode').querySelector('canvas');
-  if(!canvas){ showToast('⚠️ الـ QR لسه بيتولد'); return; }
-  try {
-    const link = document.createElement('a');
-    link.download = 'qr-' + currentQRBranch.code +
-      (($('qrType').value === 'table') ? ('-table-' + $('qrTable').value) : '') + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  } catch(e){
+    renderCategories();
+    renderMenu('all');
+    
+    document.getElementById('splash').classList.add('hide');
+  } catch (e) {
     console.error(e);
-    showToast('❌ فشل التحميل');
+    alert("حدث خطأ في تحميل المنيو.");
   }
-}
-
-/* ═══════════ MENUS / CATEGORIES / ITEMS ═══════════ */
-function renderMenus(){
-  const el=$('menusList');
-  if(!menus.length){ el.innerHTML='<div class="card empty">مفيش مجموعات</div>'; return; }
-  el.innerHTML=menus.map(m=>{
-    const cnt=items.filter(i=>i.menuId===m.id).length;
-    const bCnt=branches.filter(b=>b.menuId===m.id).length;
-    return `<div class="card" style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="font-size:20px">${m.icon||'📂'}</div>
-        <div style="font-size:16px;font-weight:900">${m.nameAr}</div>
-        <div style="font-size:12px;color:var(--muted)">${m.nameEn}</div>
-        <div style="margin-top:8px;display:flex;gap:8px">
-          <span class="badge badge-gold">${cnt} منتج</span>
-          <span class="badge badge-blue">${bCnt} فرع</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="openMenuModal('${m.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteMenu('${m.id}')">🗑️</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function openMenuModal(id){
-  if(id){
-    const m=menus.find(x=>x.id===id); if(!m) return;
-    $('menuModalTitle').innerText='✏️ تعديل';
-    $('mn-id').value=m.id; $('mn-icon').value=m.icon||''; $('mn-order').value=m.order||1;
-    $('mn-nameAr').value=m.nameAr||''; $('mn-nameEn').value=m.nameEn||'';
-  } else {
-    $('menuModalTitle').innerText='إضافة مجموعة';
-    $('mn-id').value=''; $('mn-icon').value='📂'; $('mn-order').value=menus.length+1;
-    $('mn-nameAr').value=''; $('mn-nameEn').value='';
-  }
-  $('menuModal').classList.add('open');
-}
-async function saveMenu(){
-  const {db,doc,setDoc,updateDoc}=window.FB;
-  const id=$('mn-id').value;
-  const nameAr=$('mn-nameAr').value.trim();
-  if(!nameAr){ showToast('⚠️ اكتب الاسم'); return; }
-  const data={
-    nameAr, nameEn:$('mn-nameEn').value.trim()||nameAr,
-    icon:$('mn-icon').value.trim()||'📂',
-    order:Number($('mn-order').value)||1,
-    active:true
-  };
-  try{
-    if(id) await updateDoc(doc(db,'menus',id),data);
-    else await setDoc(doc(db,'menus','menu-'+Date.now()),data);
-    closeModal('menuModal'); showToast('✅ تم');
-  }catch(e){ showToast('❌ '+e.message); }
-}
-async function deleteMenu(id){
-  if(!confirm('تأكيد الحذف؟')) return;
-  await window.FB.deleteDoc(window.FB.doc(window.FB.db,'menus',id));
-  showToast('🗑️ تم');
-}
-
-function renderCategories(){
-  const tb=$('categoriesTable');
-  if(!categories.length){ tb.innerHTML='<tr><td colspan="5" class="empty">مفيش أقسام</td></tr>'; return; }
-  tb.innerHTML=categories.map(c=>{
-    const menu=menus.find(m=>m.id===c.menuId);
-    return `<tr>
-      <td style="font-size:20px">${c.icon||'🏷️'}</td>
-      <td><strong>${c.nameAr}</strong></td>
-      <td>${menu?menu.nameAr:'—'}</td>
-      <td>${c.order||0}</td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-primary btn-sm" onclick="openCategoryModal('${c.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">🗑️</button>
-      </td></tr>`;
-  }).join('');
-}
-function openCategoryModal(id){
-  refreshSelect('c-menuId');
-  if(id){
-    const c=categories.find(x=>x.id===id); if(!c) return;
-    $('catModalTitle').innerText='✏️ تعديل';
-    $('c-id').value=c.id; $('c-menuId').value=c.menuId||''; $('c-icon').value=c.icon||'';
-    $('c-order').value=c.order||1; $('c-nameAr').value=c.nameAr||''; $('c-nameEn').value=c.nameEn||'';
-  } else {
-    $('catModalTitle').innerText='إضافة قسم';
-    $('c-id').value=''; $('c-icon').value='🏷️'; $('c-order').value=categories.length+1;
-    $('c-nameAr').value=''; $('c-nameEn').value='';
-  }
-  $('categoryModal').classList.add('open');
-}
-async function saveCategory(){
-  const {db,doc,setDoc,updateDoc}=window.FB;
-  const id=$('c-id').value;
-  const nameAr=$('c-nameAr').value.trim();
-  const menuId=$('c-menuId').value;
-  if(!nameAr||!menuId){ showToast('⚠️ كمل البيانات'); return; }
-  const data={
-    nameAr, nameEn:$('c-nameEn').value.trim()||nameAr,
-    menuId, icon:$('c-icon').value.trim()||'🏷️',
-    order:Number($('c-order').value)||1, active:true
-  };
-  try{
-    if(id) await updateDoc(doc(db,'categories',id),data);
-    else await setDoc(doc(db,'categories','cat-'+Date.now()),data);
-    closeModal('categoryModal'); showToast('✅ تم');
-  }catch(e){ showToast('❌ '+e.message); }
-}
-async function deleteCategory(id){
-  if(!confirm('تأكيد الحذف؟')) return;
-  await window.FB.deleteDoc(window.FB.doc(window.FB.db,'categories',id));
-  showToast('🗑️ تم');
-}
-
-function renderItems(){
-  let list = items;
-  if(currentUserData.role === 'branch_manager'){
-    const bId = currentUserData.branchId;
-    const b = branches.find(x=>x.id===bId);
-    if(b) list = items.filter(i=>i.menuId===b.menuId);
-  }
-  const tb=$('itemsTable');
-  if(!list.length){ tb.innerHTML='<tr><td colspan="7" class="empty">مفيش منتجات</td></tr>'; return; }
-  tb.innerHTML=list.map(it=>{
-    const cat=categories.find(c=>c.id===it.categoryId);
-    return `<tr>
-      <td>${it.id}</td>
-      <td><img class="thumb" src="${it.image}" onerror="this.style.opacity=.2"></td>
-      <td><strong>${it.nameAr}</strong></td>
-      <td>${cat?cat.nameAr:'—'}</td>
-      <td><strong style="color:var(--gold)">${it.price}</strong></td>
-      <td>${it.inStock!==false?'<span class="badge badge-green">متوفر</span>':'<span class="badge badge-red">نفد</span>'}</td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="toggleStock(${it.id})">${it.inStock!==false?'🔴':'🟢'}</button>
-        <button class="btn btn-primary btn-sm" onclick="openItemModal(${it.id})">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteItem(${it.id})">🗑️</button>
-      </td></tr>`;
-  }).join('');
-}
-
-function openItemModal(id){
-  refreshSelect('m-menuId');
-  if(id){
-    const it=items.find(x=>x.id===id); if(!it) return;
-    $('itemModalTitle').innerText='✏️ تعديل';
-    $('m-id').value=it.id; $('m-menuId').value=it.menuId||'';
-    onItemMenuChange();
-    setTimeout(()=>{ $('m-categoryId').value=it.categoryId||''; },50);
-    $('m-nameAr').value=it.nameAr||''; $('m-nameEn').value=it.nameEn||'';
-    $('m-price').value=it.price||0; $('m-descAr').value=it.descAr||''; $('m-descEn').value=it.descEn||'';
-    $('m-inStock').value=it.inStock===false?'false':'true';
-    $('m-imageUrl').value=(it.image||'').startsWith('http')?it.image:'';
-    $('m-preview').src=it.image||'';
-  } else {
-    $('itemModalTitle').innerText='إضافة منتج';
-    $('m-id').value=''; $('m-nameAr').value=''; $('m-nameEn').value='';
-    $('m-price').value=''; $('m-descAr').value=''; $('m-descEn').value='';
-    $('m-file').value=''; $('m-imageUrl').value=''; $('m-preview').src='';
-    $('m-inStock').value='true';
-    onItemMenuChange();
-  }
-  $('itemModal').classList.add('open');
-}
-
-function onItemMenuChange(){
-  const mId=$('m-menuId').value;
-  const filtered=categories.filter(c=>!mId||c.menuId===mId);
-  $('m-categoryId').innerHTML=filtered.map(c=>`<option value="${c.id}">${c.icon||''} ${c.nameAr}</option>`).join('');
-}
-
-async function saveItem(){
-  const {db,doc,setDoc,updateDoc}=window.FB;
-  const id=$('m-id').value;
-  const isEdit=!!id;
-  const nameAr=$('m-nameAr').value.trim();
-  const nameEn=$('m-nameEn').value.trim();
-  const price=Number($('m-price').value);
-  const menuId=$('m-menuId').value;
-  const categoryId=$('m-categoryId').value;
-  if(!nameAr||!nameEn||!price||!menuId||!categoryId){ showToast('⚠️ كمل البيانات'); return; }
-
-  const file=$('m-file').files[0];
-  let imageUrl=$('m-imageUrl').value.trim();
-
-  if(file){
-    try{
-      showToast('⏳ جاري رفع الصورة...');
-      imageUrl=await uploadToCloudinary(file);
-    }catch(e){ showToast('❌ فشل رفع الصورة'); return; }
-  }
-  if(!imageUrl){
-    if(isEdit){ const ex=items.find(i=>i.id===Number(id)); imageUrl=ex?ex.image:'images/hot-coffee/01.jpg'; }
-    else imageUrl='images/hot-coffee/01.jpg';
-  }
-
-  const data={nameAr,nameEn,menuId,categoryId,price,image:imageUrl,
-    descAr:$('m-descAr').value||'', descEn:$('m-descEn').value||'',
-    inStock:$('m-inStock').value==='true'};
-
-  try{
-    if(isEdit) await updateDoc(doc(db,'menu',String(id)),data);
-    else{
-      const maxId=items.reduce((m,i)=>Math.max(m,i.id||0),0);
-      await setDoc(doc(db,'menu',String(maxId+1)),data);
-    }
-    closeModal('itemModal'); showToast('✅ تم');
-  }catch(e){ showToast('❌ '+e.message); }
-}
-
-async function uploadToCloudinary(file){
-  const fd=new FormData();
-  fd.append('file',file); fd.append('upload_preset',CLOUDINARY_PRESET);
-  return new Promise((res,rej)=>{
-    const xhr=new XMLHttpRequest();
-    xhr.open('POST',CLOUDINARY_URL);
-    xhr.onload=()=>{ if(xhr.status>=200&&xhr.status<300){ try{res(JSON.parse(xhr.responseText).secure_url);}catch(e){rej(e);} } else rej(new Error(xhr.status)); };
-    xhr.onerror=()=>rej(new Error('net'));
-    xhr.send(fd);
-  });
-}
-
-async function toggleStock(id){
-  const it=items.find(i=>i.id===id);
-  const {db,doc,updateDoc}=window.FB;
-  await updateDoc(doc(db,'menu',String(id)),{inStock:it.inStock===false});
-  showToast('✅ تم');
-}
-async function deleteItem(id){
-  if(!confirm('تأكيد الحذف؟')) return;
-  await window.FB.deleteDoc(window.FB.doc(window.FB.db,'menu',String(id)));
-  showToast('🗑️ تم');
-}
-
-document.addEventListener('DOMContentLoaded',()=>{
-  const fileIn = $('m-file');
-  if(fileIn) fileIn.addEventListener('change',(e)=>{
-    const f=e.target.files[0]; if(!f) return;
-    const r=new FileReader();
-    r.onload=(ev)=>{ $('m-preview').src=ev.target.result; };
-    r.readAsDataURL(f);
-  });
-  const urlIn = $('m-imageUrl');
-  if(urlIn) urlIn.addEventListener('input',(e)=>{
-    const u=e.target.value.trim();
-    if(u) $('m-preview').src=u;
-  });
-  const coFile = $('co-logo-file');
-  if(coFile) coFile.addEventListener('change',(e)=>{
-    const f=e.target.files[0]; if(!f) return;
-    const r=new FileReader();
-    r.onload=(ev)=>{ const p=$('co-logo-preview'); p.src=ev.target.result; p.style.display='block'; };
-    r.readAsDataURL(f);
-  });
-  const coUrl = $('co-logo-url');
-  if(coUrl) coUrl.addEventListener('input',(e)=>{
-    const u=e.target.value.trim();
-    if(u){ const p=$('co-logo-preview'); p.src=u; p.style.display='block'; }
-  });
 });
 
-function renderOrders(){
-  let list = orders;
-  if(currentUserData.role === 'branch_manager'){
-    list = orders.filter(o=>o.branchId === currentUserData.branchId);
-  }
-  const el=$('ordersList');
-  if(!list.length){ el.innerHTML='<div class="card empty">مفيش أوردرات</div>'; return; }
-  el.innerHTML=list.map((o,idx)=>{
-    const time=o.createdAt?.toDate?o.createdAt.toDate().toLocaleString('ar-EG'):'—';
-    const itemsHtml=(o.items||[]).map(i=>'• '+i.nameAr+' × '+i.qty+' = '+(i.price*i.qty)+' ج'+(i.notes?' <em style="color:var(--gold)">('+i.notes+')</em>':'')).join('<br>');
-    const isNew = o.status !== 'done';
-    const tableLabel = o.table ? `<span class="badge badge-gold">🍽️ طربيزة ${o.table}</span>` : '';
-    return `<div class="order-card ${isNew?'new':''}">
-      <div class="order-head">
-        <div>
-          <strong>${time}</strong><br>
-          <span class="badge badge-blue">🏢 ${o.branchNameAr||'—'}</span>
-          ${tableLabel}
-          <span class="badge ${o.status==='done'?'badge-green':'badge-gold'}">${o.status==='done'?'مكتمل':'جديد'}</span>
-        </div>
-        <div class="order-total">${o.total} ج</div>
-      </div>
-      <div class="order-items">${itemsHtml}</div>
-      ${o.status!=='done'?`<button class="btn btn-success btn-sm" style="margin-top:12px" onclick="markDone('${o.id}')">✓ تم التسليم</button>`:''}
-    </div>`;
-  }).join('');
+// 3. رسم الأقسام
+function renderCategories() {
+  const bar = document.getElementById('categoriesBar');
+  let html = `<button class="cat-btn active" onclick="filterCat('all', this)">🍽️ الكل</button>`;
+  allCategories.forEach(c => {
+    html += `<button class="cat-btn" onclick="filterCat('${c.id}', this)">${c.icon || ''} ${c.nameAr}</button>`;
+  });
+  bar.innerHTML = html;
 }
 
-function renderRecentOrders(){
-  let list = orders;
-  if(currentUserData.role === 'branch_manager'){
-    list = orders.filter(o=>o.branchId === currentUserData.branchId);
-  }
-  const recent = list.slice(0,5);
-  const el=$('recentOrders');
-  if(!recent.length){ el.innerHTML='<div class="empty">مفيش أوردرات</div>'; return; }
-  el.innerHTML = recent.map(o=>{
-    const time=o.createdAt?.toDate?o.createdAt.toDate().toLocaleTimeString('ar-EG'):'—';
-    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
-      <span style="font-size:13px">${time} — ${o.branchNameAr||'—'}${o.table?' — طربيزة '+o.table:''}</span>
-      <strong style="color:var(--gold)">${o.total} ج</strong></div>`;
-  }).join('');
+// 4. فلترة وعرض المنتجات
+function filterCat(catId, btn) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMenu(catId);
 }
 
-async function markDone(id){
-  await window.FB.updateDoc(window.FB.doc(window.FB.db,'orders',id),{status:'done'});
-  showToast('✅ تم');
-}
-async function clearDoneOrders(){
-  if(!confirm('مسح المكتملة؟')) return;
-  const done=orders.filter(o=>o.status==='done');
-  for(const o of done) await window.FB.deleteDoc(window.FB.doc(window.FB.db,'orders',o.id));
-  showToast('🗑️ تم');
-}
-
-function renderUsers(){
-  const tb=$('usersTable');
-  if(!users.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش مستخدمين</td></tr>'; return; }
-  const roleNames={super_admin:'👑 Super Admin',admin:'🛡️ Admin',branch_manager:'👔 مدير فرع'};
-  const visibleUsers = currentUserData.role === 'super_admin' ? users : users.filter(u=>u.role!=='super_admin');
-  tb.innerHTML=visibleUsers.map(u=>{
-    const b=branches.find(x=>x.id===u.branchId);
-    return `<tr>
-      <td><strong>${u.name||'—'}</strong></td>
-      <td dir="ltr" style="font-size:12px">${u.email||'—'}</td>
-      <td><span class="badge ${u.role==='super_admin'?'badge-red':u.role==='admin'?'badge-gold':'badge-green'}">${roleNames[u.role]||u.role}</span></td>
-      <td>${b?b.nameAr:'—'}</td>
-      <td>${u.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-primary btn-sm" onclick="openUserModal('${u.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑️</button>
-      </td></tr>`;
-  }).join('');
-}
-
-function onUserRoleChange(){
-  const role = $('u-role').value;
-  $('u-branchBox').style.display = role==='branch_manager' ? 'block' : 'none';
-  refreshSelect('u-branchId');
-}
-
-function openUserModal(id){
-  refreshSelect('u-branchId');
-  const superOpt = $('optSuperAdmin');
-  if(currentUserData.role === 'super_admin'){
-    superOpt.style.display = 'block';
-  } else {
-    superOpt.style.display = 'none';
+function renderMenu(catId) {
+  const container = document.getElementById('menuContainer');
+  let filteredItems = catId === 'all' ? allItems : allItems.filter(i => i.categoryId === catId);
+  
+  if (filteredItems.length === 0) {
+    container.innerHTML = '<p style="text-align:center; color:var(--muted); margin-top:20px;">لا توجد منتجات في هذا القسم.</p>';
+    return;
   }
 
-  if(id){
-    const u=users.find(x=>x.id===id); if(!u) return;
-    $('userModalTitle').innerText='✏️ تعديل: '+u.name;
-    $('u-uid').value=u.id;
-    $('u-passwordBox').style.display='none';
-    $('u-name').value=u.name||''; $('u-email').value=u.email||'';
-    $('u-email').disabled = true;
-    $('u-role').value=u.role||'admin';
-    onUserRoleChange();
-    setTimeout(()=>{ $('u-branchId').value=u.branchId||''; },50);
-  } else {
-    $('userModalTitle').innerText='إضافة مستخدم';
-    $('u-uid').value='';
-    $('u-passwordBox').style.display='block';
-    $('u-password').value='';
-    $('u-name').value=''; $('u-email').value='';
-    $('u-email').disabled = false;
-    $('u-role').value='admin';
-    onUserRoleChange();
-  }
-  $('userModal').classList.add('open');
-}
-
-async function saveUser(){
-  const { db, doc, setDoc, updateDoc, firebaseConfig } = window.FB;
-  const id = $('u-uid').value;
-  const isEdit = !!id;
-  const name = $('u-name').value.trim();
-  const email = $('u-email').value.trim();
-  const role = $('u-role').value;
-  const branchId = role === 'branch_manager' ? $('u-branchId').value : '';
-  const password = $('u-password') ? $('u-password').value : '';
-
-  if (!name || !email) { showToast('⚠️ كمل البيانات'); return; }
-  if (role === 'branch_manager' && !branchId) { showToast('⚠️ اختار الفرع'); return; }
-
-  if (role === 'super_admin' && currentUserData.role !== 'super_admin') {
-    showToast('⚠️ غير مسموح'); return;
-  }
-
-  try {
-    if (isEdit) {
-      await updateDoc(doc(db, 'users', id), { name, role, branchId });
-      showToast('✅ تم التعديل');
-    } else {
-      if (!password || password.length < 6) { showToast('⚠️ الباسورد 6 حروف على الأقل'); return; }
-
-      showToast('⏳ جاري إنشاء المستخدم...');
-
-      const apiKey = firebaseConfig.apiKey;
-      const res = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, returnSecureToken: false })
-        }
-      );
-      const data = await res.json();
-
-      if (!res.ok) {
-        const errMsg = (data.error && data.error.message) || 'Signup failed';
-        if (errMsg === 'EMAIL_EXISTS') throw { code: 'auth/email-already-in-use' };
-        if (errMsg.indexOf('WEAK_PASSWORD') >= 0) throw { code: 'auth/weak-password' };
-        if (errMsg.indexOf('INVALID_EMAIL') >= 0) throw { code: 'auth/invalid-email' };
-        throw new Error(errMsg);
+  let html = '';
+  
+  if (catId === 'all') {
+    // تجميع حسب القسم
+    allCategories.forEach(cat => {
+      const catItems = filteredItems.filter(i => i.categoryId === cat.id);
+      if (catItems.length > 0) {
+        html += `<div class="cat-title">${cat.icon || ''} ${cat.nameAr}</div>`;
+        html += `<div class="items-grid">`;
+        catItems.forEach(item => html += buildItemCard(item));
+        html += `</div>`;
       }
-
-      const newUid = data.localId;
-
-      await setDoc(doc(db, 'users', newUid), {
-        name, email, role, branchId, active: true
-      });
-
-      showToast('✅ تم إنشاء المستخدم');
-    }
-    closeModal('userModal');
-  } catch(e){
-    console.error('saveUser error:', e);
-    if (e.code === 'auth/email-already-in-use') {
-      showToast('❌ الإيميل مستخدم بالفعل');
-    } else if (e.code === 'auth/invalid-email') {
-      showToast('❌ إيميل غير صالح');
-    } else if (e.code === 'auth/weak-password') {
-      showToast('❌ الباسورد ضعيف');
-    } else {
-      showToast('❌ ' + (e.message || 'خطأ غير معروف'));
-    }
-  }
-}
-
-async function deleteUser(id){
-  if(id === currentUser.uid){ showToast('⚠️ مش هتقدر تحذف نفسك'); return; }
-  const u = users.find(x=>x.id===id);
-  if(u && u.role === 'super_admin' && currentUserData.role !== 'super_admin'){
-    showToast('⚠️ غير مسموح'); return;
-  }
-  if(!confirm('تأكيد الحذف؟ (اليوزر هيفضل في Firebase Auth — امسحه يدوياً من Firebase Console)')) return;
-  await window.FB.deleteDoc(window.FB.doc(window.FB.db,'users',id));
-  showToast('🗑️ تم');
-}
-
-function updateSystemStatus(){
-  const badge = $('systemStatusBadge');
-  const btn = $('killSwitchBtn');
-  if(!badge || !btn) return;
-  if(systemOnline){
-    badge.className='badge badge-green'; badge.innerText='● النظام يعمل';
-    btn.className='btn btn-danger'; btn.innerText='🔴 إيقاف النظام';
-  } else {
-    badge.className='badge badge-red'; badge.innerText='● النظام متوقف';
-    btn.className='btn btn-success'; btn.innerText='🟢 تشغيل النظام';
-  }
-  const s = $('statSystem');
-  if(s){ s.innerText = systemOnline ? '✅' : '⛔'; s.style.color = systemOnline ? 'var(--success)' : 'var(--danger)'; }
-}
-
-async function toggleSystemStatus(){
-  if(currentUserData.role !== 'super_admin'){ showToast('⚠️ Super Admin فقط'); return; }
-  const confirmMsg = systemOnline ? '⚠️ إيقاف النظام كامل؟ كل الزباين هيشوفوا "النظام متوقف مؤقتاً".' : 'تشغيل النظام؟';
-  if(!confirm(confirmMsg)) return;
-  const {db,doc,setDoc}=window.FB;
-  try {
-    await setDoc(doc(db,'settings','system'),{online: !systemOnline},{merge:true});
-    showToast(systemOnline ? '⛔ تم إيقاف النظام' : '✅ تم تشغيل النظام');
-  } catch(e){ showToast('❌ '+e.message); }
-}
-
-function refreshSelect(id,value){
-  const s=$(id); if(!s) return;
-  const cur=value||s.value;
-  if(id==='u-branchId'){
-    s.innerHTML=branches.map(b=>`<option value="${b.id}">${b.nameAr}</option>`).join('');
-  } else {
-    s.innerHTML=menus.map(m=>`<option value="${m.id}">${m.icon||''} ${m.nameAr}</option>`).join('');
-  }
-  if(cur) s.value=cur;
-}
-function refreshSelects(){
-  ['b-menuId','c-menuId','m-menuId'].forEach(id=>refreshSelect(id));
-  refreshSelect('u-branchId');
-}
-
-function updateStats(){
-  $('statBranches').innerText=branches.length;
-  $('statItems').innerText=items.length;
-  const today=new Date().toDateString();
-  let ordersToday = orders.filter(o=>{
-    const d=o.createdAt?.toDate?o.createdAt.toDate():null;
-    return d && d.toDateString()===today;
-  });
-  if(currentUserData.role === 'branch_manager'){
-    ordersToday = ordersToday.filter(o=>o.branchId === currentUserData.branchId);
-  }
-  $('statOrders').innerText=ordersToday.length;
-  if($('infoBranches')) $('infoBranches').innerText=branches.length;
-  if($('infoUsers')) $('infoUsers').innerText=users.length;
-  if($('infoItems')) $('infoItems').innerText=items.length;
-  if($('infoOrders')) $('infoOrders').innerText=orders.length;
-  updateSystemStatus();
-}
-
-window.addEventListener('fb-ready',()=>{
-  if(!window.FB.getDoc){
-    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js").then(mod=>{
-      window.FB.getDoc = mod.getDoc;
     });
+  } else {
+    html += `<div class="items-grid">`;
+    filteredItems.forEach(item => html += buildItemCard(item));
+    html += `</div>`;
   }
-});
+
+  container.innerHTML = html;
+}
+
+function buildItemCard(item) {
+  const isOut = item.inStock === false;
+  return `
+    <div class="item-card ${isOut ? 'out-of-stock' : ''}">
+      <img src="${item.image}" class="item-img" loading="lazy" alt="${item.nameAr}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+      <div class="item-info">
+        <div class="item-name">${item.nameAr}</div>
+        <div class="item-desc">${item.descAr || ''}</div>
+        <div class="item-bottom">
+          <div class="item-price">${item.price} <span>ج.م</span></div>
+          ${!isOut ? `<button class="add-btn" onclick="addToCart('${item.id}')">+</button>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// 5. السلة والطلب
+function addToCart(itemId) {
+  const item = allItems.find(i => i.id === itemId);
+  if (!item) return;
+  
+  const existing = cart.find(i => i.id === itemId);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ ...item, qty: 1 });
+  }
+  
+  updateCartUI();
+}
+
+function changeQty(itemId, delta) {
+  const item = cart.find(i => i.id === itemId);
+  if (!item) return;
+  
+  item.qty += delta;
+  if (item.qty <= 0) {
+    cart = cart.filter(i => i.id !== itemId);
+  }
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const count = cart.reduce((sum, i) => sum + i.qty, 0);
+  const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+  
+  document.getElementById('cartCount').innerText = count;
+  document.getElementById('cartTotal').innerText = total + ' ج';
+  document.getElementById('modalCartTotal').innerText = total + ' ج';
+  
+  const floatBtn = document.getElementById('floatingCart');
+  if (count > 0) floatBtn.classList.add('show');
+  else floatBtn.classList.remove('show');
+  
+  const list = document.getElementById('cartItemsList');
+  if (cart.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:var(--muted); margin-top:20px;">السلة فاضية</p>';
+    return;
+  }
+  
+  list.innerHTML = cart.map(i => `
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <h4>${i.nameAr}</h4>
+        <p>${i.price * i.qty} ج.م</p>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="changeQty('${i.id}', 1)">+</button>
+        <span class="qty-num">${i.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${i.id}', -1)">-</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleCart() {
+  document.getElementById('cartModal').classList.toggle('open');
+}
+
+async function submitOrder() {
+  if (cart.length === 0) return;
+  const btn = document.getElementById('checkoutBtn');
+  btn.innerText = 'جاري الإرسال...';
+  btn.disabled = true;
+
+  const { db, collection, addDoc, serverTimestamp } = window.FB;
+  
+  const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+  const notes = document.getElementById('orderNotes').value.trim();
+
+  const orderData = {
+    branchId: currentBranch.id,
+    branchNameAr: currentBranch.nameAr,
+    table: tableNum || null,
+    items: cart.map(i => ({ nameAr: i.nameAr, price: i.price, qty: i.qty })),
+    total: total,
+    notes: notes,
+    status: 'new',
+    createdAt: serverTimestamp()
+  };
+
+  try {
+    await addDoc(collection(db, 'orders'), orderData);
+    
+    // نجاح
+    document.getElementById('cartModal').classList.remove('open');
+    cart = [];
+    updateCartUI();
+    document.getElementById('orderNotes').value = '';
+    
+    // رسالة نجاح
+    alert("✅ تم إرسال طلبك بنجاح! جاري التحضير...");
+    
+  } catch (e) {
+    console.error(e);
+    alert("❌ حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى.");
+  } finally {
+    btn.innerText = 'تأكيد الطلب';
+    btn.disabled = false;
+  }
+}
 </script>
 </body>
 </html>
