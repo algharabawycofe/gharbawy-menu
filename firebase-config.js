@@ -1,7 +1,7 @@
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
-  onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch
+  onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
@@ -19,14 +19,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// تصدير كل دوال Firebase عشان صفحة العميل ولوحة التحكم يستخدموها
 window.FB = {
   firebaseConfig,
   db: getFirestore(app),
   auth: getAuth(app),
   // Firestore
   collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
-  onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch,
+  onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch, where, // ضفنا where هنا
   // Auth
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, setPersistence, inMemoryPersistence,
