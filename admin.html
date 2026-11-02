@@ -454,8 +454,6 @@ tr:hover td{background:var(--subtle)}
 
 <script type="module" src="firebase-config.js"></script>
 <script>
-console.log("🚀 Styled QR Card V2 Loaded"); // للتأكد إن الكود الجديد شغال
-
 const CLOUDINARY_CLOUD = 'meiv47ul';
 const CLOUDINARY_PRESET = 'gharbawy_menu';
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
@@ -542,12 +540,30 @@ function applyRoleUI(){
     $('userBranchLabel').innerText = 'لوحة التحكم';
   }
 
+  // التحكم في إظهار وإخفاء أزرار القائمة الجانبية
   document.querySelectorAll('#sidebar .nav-btn').forEach(btn=>{
     const requiredRole = btn.dataset.role;
-    if(!requiredRole){ btn.style.display='flex'; return; }
-    if(role === 'super_admin'){ btn.style.display='flex'; return; }
-    if(role === 'admin' && requiredRole === 'admin'){ btn.style.display='flex'; return; }
-    if(role === 'admin' && requiredRole === 'super'){ btn.style.display='none'; return; }
+    
+    if(!requiredRole){ 
+      btn.style.display='flex'; 
+      return; 
+    }
+    
+    if(role === 'super_admin'){ 
+      btn.style.display='flex'; 
+      return; 
+    }
+    
+    if(role === 'admin' && requiredRole === 'admin'){ 
+      btn.style.display='flex'; 
+      return; 
+    }
+    
+    if(role === 'branch_manager' && btn.dataset.page === 'reports'){ 
+      btn.style.display='none'; 
+      return; 
+    }
+
     btn.style.display = 'none';
   });
 
@@ -796,7 +812,7 @@ async function deleteBranch(id){
   showToast('🗑️ تم');
 }
 
-/* ═══════════ QR (شيك) ═══════════ */
+/* ═══════════ QR (Premium Design) ═══════════ */
 let currentQRBranch = null;
 let qrRenderToken = 0;
 let currentCardCanvas = null;
@@ -816,6 +832,7 @@ function showQR(branchId){
 function renderQRPreview(){
   if(!currentQRBranch) return;
   const type = $('qrType').value;
+  // هنا بيوجه على ملف index.html اللي هو المنيو بتاعك
   let url = `https://algharabawycofe.github.io/gharbawy-menu/index.html?branch=${currentQRBranch.code}`;
   if(type==='table'){
     $('qrTableSelectBox').style.display='block';
@@ -831,7 +848,7 @@ function buildStyledQrCard(url){
   const myToken = ++qrRenderToken;
   currentCardCanvas = null;
   const container = $('qrCode');
-  container.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:13px">⏳ جاري توليد الـ QR...</div>';
+  container.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:13px">⏳ جاري التصميم...</div>';
 
   const holder = document.createElement('div');
   holder.style.position = 'absolute';
@@ -842,8 +859,8 @@ function buildStyledQrCard(url){
   try {
     new QRCode(holder, {
       text: url,
-      width: 540,
-      height: 540,
+      width: 600,
+      height: 600,
       colorDark: '#2B1D14',
       colorLight: '#FFFFFF',
       correctLevel: QRCode.CorrectLevel.H
@@ -879,7 +896,7 @@ function buildStyledQrCard(url){
       img.onload = () => finish(img);
       img.onerror = () => finish(null);
       img.src = logoUrl;
-      setTimeout(() => finish(null), 3000); // safety
+      setTimeout(() => finish(null), 3000);
     } else {
       try { document.body.removeChild(holder); } catch(e){}
       drawQrCard(qrCanvas, null, container);
@@ -902,99 +919,89 @@ function roundRect(ctx, x, y, w, h, r){
 }
 
 function drawQrCard(qrSrc, logoImg, container){
-  const W = 720, H = 960;
+  const W = 720, H = 1000; 
   const card = document.createElement('canvas');
   card.width = W;
   card.height = H;
   card.className = 'qr-card-canvas';
   const ctx = card.getContext('2d');
 
-  // Background gradient
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#FBF8F3');
-  bg.addColorStop(0.5, '#FAF6F0');
-  bg.addColorStop(1, '#F2E8DA');
-  ctx.fillStyle = bg;
+  ctx.fillStyle = '#241B16';
   ctx.fillRect(0, 0, W, H);
 
-  // Top gold bar
-  ctx.fillStyle = '#C89B5E';
-  ctx.fillRect(0, 0, W, 6);
-
-  // Subtle inner gold frame
-  ctx.strokeStyle = 'rgba(200,155,94,0.25)';
-  ctx.lineWidth = 1.5;
-  roundRect(ctx, 14, 20, W - 28, H - 34, 12);
+  ctx.strokeStyle = '#C89B5E';
+  ctx.lineWidth = 2;
+  roundRect(ctx, 30, 30, W - 60, H - 60, 20);
+  ctx.stroke();
+  
+  ctx.strokeStyle = 'rgba(200, 155, 94, 0.3)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, 40, 40, W - 80, H - 80, 15);
   ctx.stroke();
 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
   const coNameAr = (companyInfo && companyInfo.nameAr) || 'الغرباوي';
-  const coNameEn = ((companyInfo && companyInfo.nameEn) || 'Al-Gharbawy').toUpperCase();
+  let coNameEn = ((companyInfo && companyInfo.nameEn) || 'Al-Gharbawy').toUpperCase();
+  
+  ctx.fillStyle = '#D4A56A';
+  ctx.font = 'bold 52px Tahoma, "Segoe UI", Arial, sans-serif';
+  ctx.fillText(coNameAr, W/2, 120);
 
-  // Company Arabic name
-  ctx.fillStyle = '#2B1D14';
-  ctx.font = 'bold 46px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText(coNameAr, W/2, 78);
+  ctx.fillStyle = '#8A7566';
+  ctx.font = '600 20px Tahoma, "Segoe UI", Arial, sans-serif';
+  ctx.fillText(coNameEn, W/2, 170);
 
-  // Company English name
-  ctx.fillStyle = '#A89080';
-  ctx.font = '600 17px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText(coNameEn, W/2, 122);
-
-  // Gold divider
   ctx.strokeStyle = '#C89B5E';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(W/2 - 50, 152);
-  ctx.lineTo(W/2 + 50, 152);
+  ctx.moveTo(W/2 - 60, 200);
+  ctx.lineTo(W/2 + 60, 200);
   ctx.stroke();
+  
+  ctx.fillStyle = '#C89B5E';
+  ctx.beginPath();
+  ctx.moveTo(W/2, 195); ctx.lineTo(W/2+6, 200); ctx.lineTo(W/2, 205); ctx.lineTo(W/2-6, 200);
+  ctx.fill();
 
-  // QR Box (with shadow)
-  const qrBoxX = (W - 560) / 2;
-  const qrBoxY = 178;
-  const qrBoxSize = 560;
+  const qrBoxSize = 520;
+  const qrBoxX = (W - qrBoxSize) / 2;
+  const qrBoxY = 240;
 
   ctx.save();
-  ctx.shadowColor = 'rgba(43, 29, 20, 0.18)';
-  ctx.shadowBlur = 40;
-  ctx.shadowOffsetY = 12;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 10;
   ctx.fillStyle = '#FFFFFF';
-  roundRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 28);
+  roundRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 30);
   ctx.fill();
   ctx.restore();
 
-  // Draw QR inside
-  const pad = 50;
+  const pad = 40;
   ctx.drawImage(qrSrc, qrBoxX + pad, qrBoxY + pad, qrBoxSize - pad*2, qrBoxSize - pad*2);
 
-  // Logo in center
   if(logoImg){
-    const logoSize = 108;
-    const logoBgSize = 130;
+    const logoSize = 110;
     const logoCx = qrBoxX + qrBoxSize / 2;
     const logoCy = qrBoxY + qrBoxSize / 2;
-    const bgX = logoCx - logoBgSize/2;
-    const bgY = logoCy - logoBgSize/2;
 
-    // White rounded bg with shadow
     ctx.save();
-    ctx.shadowColor = 'rgba(43, 29, 20, 0.12)';
-    ctx.shadowBlur = 20;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 15;
     ctx.shadowOffsetY = 4;
     ctx.fillStyle = '#FFFFFF';
-    roundRect(ctx, bgX, bgY, logoBgSize, logoBgSize, 22);
+    ctx.beginPath();
+    ctx.arc(logoCx, logoCy, logoSize/2 + 8, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // Gold border
     ctx.strokeStyle = '#C89B5E';
-    ctx.lineWidth = 2.5;
-    roundRect(ctx, bgX + 3, bgY + 3, logoBgSize - 6, logoBgSize - 6, 20);
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(logoCx, logoCy, logoSize/2 + 4, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Logo image (circular clip)
     ctx.save();
     ctx.beginPath();
     ctx.arc(logoCx, logoCy, logoSize/2, 0, Math.PI * 2);
@@ -1005,31 +1012,39 @@ function drawQrCard(qrSrc, logoImg, container){
     ctx.restore();
   }
 
-  // Branch name
   const branchName = currentQRBranch.nameAr || 'فرع';
-  ctx.fillStyle = '#1F1611';
-  ctx.font = 'bold 38px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText(branchName, W/2, 805);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 44px Tahoma, "Segoe UI", Arial, sans-serif';
+  ctx.fillText(branchName, W/2, 830);
 
-  // Table number (if applicable)
   const type = $('qrType').value;
   if(type === 'table'){
+    const tableText = 'طربيزة ' + $('qrTable').value;
+    
+    ctx.font = 'bold 26px Tahoma, "Segoe UI", Arial, sans-serif';
+    const textWidth = ctx.measureText(tableText).width;
+    const badgeW = textWidth + 40;
+    const badgeH = 44;
+    const badgeX = (W - badgeW) / 2;
+    const badgeY = 870;
+    
     ctx.fillStyle = '#C89B5E';
-    ctx.font = 'bold 24px Tahoma, "Segoe UI", Arial, sans-serif';
-    ctx.fillText('طربيزة ' + $('qrTable').value, W/2, 852);
+    roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 22);
+    ctx.fill();
+    
+    ctx.fillStyle = '#241B16';
+    ctx.fillText(tableText, W/2, badgeY + badgeH/2 + 2);
   }
 
-  // Footer
-  ctx.fillStyle = '#A89080';
-  ctx.font = '500 17px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText('امسح الكود لفتح المنيو', W/2, 905);
+  ctx.fillStyle = '#8A7566';
+  ctx.font = '500 22px Tahoma, "Segoe UI", Arial, sans-serif';
+  ctx.fillText('امسح الكود لفتح المنيو', W/2, 940);
 
-  // Decorative dots
   ctx.fillStyle = '#C89B5E';
   for(let i = -2; i <= 2; i++){
     ctx.beginPath();
-    const dotR = i === 0 ? 4 : 2.5;
-    ctx.arc(W/2 + i*28, 935, dotR, 0, Math.PI*2);
+    const dotR = i === 0 ? 4 : 2;
+    ctx.arc(W/2 + i*24, 970, dotR, 0, Math.PI*2);
     ctx.fill();
   }
 
@@ -1399,10 +1414,20 @@ async function clearDoneOrders(){
 function renderUsers(){
   const tb=$('usersTable');
   if(!users.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش مستخدمين</td></tr>'; return; }
+  
   const roleNames={super_admin:'👑 Super Admin',admin:'🛡️ Admin',branch_manager:'👔 مدير فرع'};
-  const visibleUsers = currentUserData.role === 'super_admin' ? users : users.filter(u=>u.role!=='super_admin');
+  
+  const visibleUsers = currentUserData.role === 'super_admin' 
+    ? users 
+    : users.filter(u => u.role !== 'super_admin');
+
   tb.innerHTML=visibleUsers.map(u=>{
     const b=branches.find(x=>x.id===u.branchId);
+    
+    const deleteBtn = (u.role === 'super_admin' && currentUserData.role !== 'super_admin') 
+      ? '' 
+      : `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑️</button>`;
+
     return `<tr>
       <td><strong>${u.name||'—'}</strong></td>
       <td dir="ltr" style="font-size:12px">${u.email||'—'}</td>
@@ -1411,7 +1436,7 @@ function renderUsers(){
       <td>${u.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-primary btn-sm" onclick="openUserModal('${u.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑️</button>
+        ${deleteBtn}
       </td></tr>`;
   }).join('');
 }
@@ -1524,11 +1549,16 @@ async function saveUser(){
 
 async function deleteUser(id){
   if(id === currentUser.uid){ showToast('⚠️ مش هتقدر تحذف نفسك'); return; }
+  
   const u = users.find(x=>x.id===id);
+  
   if(u && u.role === 'super_admin' && currentUserData.role !== 'super_admin'){
-    showToast('⚠️ غير مسموح'); return;
+    showToast('⚠️ غير مسموح بمسح حساب Super Admin'); 
+    return;
   }
+  
   if(!confirm('تأكيد الحذف؟ (اليوزر هيفضل في Firebase Auth — امسحه يدوياً من Firebase Console)')) return;
+  
   await window.FB.deleteDoc(window.FB.doc(window.FB.db,'users',id));
   showToast('🗑️ تم');
 }
