@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم </title>
+<title>لوحة تحكم الغرباوي - Admin</title>
 <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -94,7 +94,7 @@ tr:hover td{background:var(--subtle)}
   <div id="loginCard">
     <div style="font-size:40px;text-align:center">☕</div>
     <h1 style="text-align:center;font-size:20px;font-weight:900;margin:12px 0 4px">لوحة تحكم الغرباوي</h1>
-    <p style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:24px">دخول الأدمن</p>
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:24px">دخول الإدارة (Admin)</p>
     <label>الإيميل</label>
     <input id="email" type="email" dir="ltr" placeholder="admin@gharbawy.com" style="margin-bottom:12px">
     <label>الباسورد</label>
@@ -394,11 +394,10 @@ let features = { callWaiter: false, kds: false, orderTimer: false, charts: false
 let unsubs = [];
 let myChart = null;
 
-// ✅ للتحكم في أول snapshot وأوردرات جديدة
 let isFirstOrdersSnapshot = true;
-
-// ✅ AudioContext مشترك + unlock
 let audioCtx = null;
+
+// حل مشكلة الصوت في المتصفحات الحديثة
 function unlockAudio() {
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -419,6 +418,13 @@ onFbReady(()=>{
       currentUser = user;
       const ok = await loadUserData(user.uid);
       if(!ok){ showNoPermission(); return; }
+
+      // ✅ التوجيه: لو مدير فرع، اطرده لصفحته المخصصة
+      if(currentUserData.role === 'branch_manager'){
+          window.location.href = 'branch.html';
+          return;
+      }
+
       $('loginOverlay').style.display='none';
       $('noPermOverlay').style.display='none';
       $('app').style.display='block';
@@ -426,6 +432,11 @@ onFbReady(()=>{
       subscribeAll();
       loadCompanyInfo();
       loadFeatures();
+
+      setTimeout(() => {
+         showToast('🔊 اضغط في أي مكان بالصفحة لتفعيل صوت الأوردرات');
+      }, 2000);
+
     } else {
       currentUser = null; currentUserData = null;
       $('loginOverlay').style.display='flex'; $('noPermOverlay').style.display='none'; $('app').style.display='none';
@@ -456,15 +467,14 @@ function applyRoleUI(){
   $('userName').innerText = currentUserData.name || currentUser.email;
   $('userRoleBadge').className = 'role-badge role-'+role;
   $('userRoleBadge').innerText = roleNames[role] || role;
-  const b = branches.find(x=>x.id===currentUserData.branchId);
-  if(role === 'branch_manager' && currentUserData.branchId){ $('userBranchLabel').innerText = b ? b.nameAr : 'فرع'; } else { $('userBranchLabel').innerText = 'لوحة التحكم'; }
+  
+  $('userBranchLabel').innerText = 'لوحة التحكم الرئيسية'; 
 
   document.querySelectorAll('#sidebar .nav-btn').forEach(btn=>{
     const requiredRole = btn.dataset.role;
     if(!requiredRole){ btn.style.display='flex'; return; }
     if(role === 'super_admin'){ btn.style.display='flex'; return; }
     if(role === 'admin' && requiredRole === 'admin'){ btn.style.display='flex'; return; }
-    if(role === 'branch_manager' && btn.dataset.page === 'reports'){ btn.style.display='none'; return; }
     btn.style.display = 'none';
   });
   showPage('dashboard');
@@ -496,13 +506,10 @@ async function toggleFeature(featureName, isEnabled) {
   } catch(e) { showToast('❌ ' + e.message); }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ✅ subscribeAll — بعد الإصلاح
-// ═══════════════════════════════════════════════════════════════════════════
 function subscribeAll(){
   const {db, collection, onSnapshot, query, orderBy, where, doc} = window.FB;
   unsubs.forEach(u=>u&&u()); unsubs=[];
-
+  
   isFirstOrdersSnapshot = true;
 
   unsubs.push(onSnapshot(collection(db,'menus'),s=>{ menus = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0)); renderMenus(); refreshSelects(); applyRoleUI(); }));
@@ -510,21 +517,17 @@ function subscribeAll(){
   unsubs.push(onSnapshot(collection(db,'menu'),s=>{ items = s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id); renderItems(); updateStats(); }));
   unsubs.push(onSnapshot(collection(db,'branches'),s=>{ branches = s.docs.map(d=>({id:d.id,...d.data()})); renderBranches(); refreshSelects(); applyRoleUI(); }));
 
-  // ✅ الفلترة حسب الدور
-  const ordersQuery = currentUserData.role === 'branch_manager'
-    ? query(collection(db, 'orders'), where('branchId', '==', currentUserData.branchId), orderBy('createdAt', 'desc'))
-    : query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+  // هنا بنجيب كل الأوردرات لأننا داخلين كـ Admin
+  const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
 
   unsubs.push(onSnapshot(ordersQuery,
     (s) => {
       s.docChanges().forEach(change => {
         if (change.type === 'added' && !isFirstOrdersSnapshot) {
           const newOrder = { id: change.doc.id, ...change.doc.data() };
-          if (currentUserData.role !== 'branch_manager' || newOrder.branchId === currentUserData.branchId) {
-            unlockAudio();
-            playNotificationSound();
-            showToast('🔔 أوردر جديد من ' + (newOrder.branchNameAr || 'فرع'));
-          }
+          unlockAudio();
+          playNotificationSound();
+          showToast('🔔 أوردر جديد من ' + (newOrder.branchNameAr || 'فرع'));
         }
       });
       isFirstOrdersSnapshot = false;
@@ -538,7 +541,6 @@ function subscribeAll(){
     },
     (err) => {
       console.error('❌ Orders snapshot error:', err.code, err.message);
-      showToast('❌ فشل تحميل الأوردرات: ' + (err.code || err.message));
     }
   ));
 
@@ -554,7 +556,10 @@ function subscribeAll(){
     });
   }));
 
-  unsubs.push(onSnapshot(collection(db,'users'),s=>{ users = s.docs.map(d=>({id:d.id,...d.data()})); renderUsers(); updateStats(); }));
+  if (currentUserData.role === 'admin' || currentUserData.role === 'super_admin') {
+      unsubs.push(onSnapshot(collection(db,'users'),s=>{ users = s.docs.map(d=>({id:d.id,...d.data()})); renderUsers(); updateStats(); }));
+  }
+  
   unsubs.push(onSnapshot(doc(db,'settings','system'),s=>{ if(s.exists()) systemOnline = s.data().online !== false; updateSystemStatus(); }));
 }
 
@@ -586,7 +591,6 @@ function showPage(name){
 function closeModal(id){ $(id).classList.remove('open'); }
 function showToast(msg){ const t=document.createElement('div'); t.className='toast'; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
 
-// ✅ playNotificationSound — بعد الإصلاح (AudioContext مشترك)
 function playNotificationSound(){
   try {
     unlockAudio();
@@ -797,7 +801,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 function renderOrders(){
-  let list = orders; if(currentUserData.role === 'branch_manager'){ list = orders.filter(o=>o.branchId === currentUserData.branchId); }
+  let list = orders; 
   const el=$('ordersList'); if(!list.length){ el.innerHTML='<div class="card empty">مفيش أوردرات</div>'; return; }
   el.innerHTML=list.map((o,idx)=>{
     const time=o.createdAt?.toDate?o.createdAt.toDate().toLocaleString('ar-EG'):'—'; const itemsHtml=(o.items||[]).map(i=>'• '+i.nameAr+' × '+i.qty+' = '+(i.price*i.qty)+' ج'+(i.notes?' <em style="color:var(--gold)">('+i.notes+')</em>':'')).join('<br>');
@@ -813,7 +817,7 @@ function renderOrders(){
 }
 
 function renderRecentOrders(){
-  let list = orders; if(currentUserData.role === 'branch_manager'){ list = orders.filter(o=>o.branchId === currentUserData.branchId); }
+  let list = orders; 
   const recent = list.slice(0,5); const el=$('recentOrders'); if(!recent.length){ el.innerHTML='<div class="empty">مفيش أوردرات</div>'; return; }
   el.innerHTML = recent.map(o=>{ const time=o.createdAt?.toDate?o.createdAt.toDate().toLocaleTimeString('ar-EG'):'—'; return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span style="font-size:13px">${time} — ${o.branchNameAr||'—'}${o.table?' — طربيزة '+o.table:''}</span><strong style="color:var(--gold)">${o.total} ج</strong></div>`; }).join('');
 }
@@ -893,7 +897,6 @@ function refreshSelects(){ ['b-menuId','c-menuId','m-menuId'].forEach(id=>refres
 function updateStats(){
   $('statBranches').innerText=branches.length; $('statItems').innerText=items.length;
   const today=new Date().toDateString(); let ordersToday = orders.filter(o=>{ const d=o.createdAt?.toDate?o.createdAt.toDate():null; return d && d.toDateString()===today; });
-  if(currentUserData.role === 'branch_manager'){ ordersToday = ordersToday.filter(o=>o.branchId === currentUserData.branchId); }
   $('statOrders').innerText=ordersToday.length;
   updateSystemStatus();
 }
@@ -906,7 +909,6 @@ function initReportFilters() {
   const today = new Date().toISOString().split('T')[0]; const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
   const fromInput = $('rep-from'); const toInput = $('rep-to'); if(fromInput && !fromInput.value) fromInput.value = firstOfMonth; if(toInput && !toInput.value) toInput.value = today;
   const branchSelect = $('rep-branch'); if (branchSelect && branchSelect.options.length <= 1) { branchSelect.innerHTML = '<option value="all">كل الفروع</option>' + branches.map(b => `<option value="${b.id}">${b.nameAr}</option>`).join(''); }
-  if (currentUserData.role === 'branch_manager') { if(branchSelect) { branchSelect.value = currentUserData.branchId; branchSelect.disabled = true; } }
 }
 async function generateReport() {
   if (!currentUserData || (currentUserData.role !== 'admin' && currentUserData.role !== 'super_admin')) return;
@@ -918,8 +920,7 @@ async function generateReport() {
     if (branchId !== 'all') { queryConstraints.push(where('branchId', '==', branchId)); }
     const q = query(collection(db, 'orders'), ...queryConstraints);
     const snap = await getDocs(q); const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    let filteredOrders = orders; if (currentUserData.role === 'branch_manager') { filteredOrders = orders.filter(o => o.branchId === currentUserData.branchId); }
-    reportData.orders = filteredOrders; calculateReportStats(filteredOrders); showToast('✅ تم تحديث التقرير');
+    reportData.orders = orders; calculateReportStats(orders); showToast('✅ تم تحديث التقرير');
   } catch (e) { showToast('❌ ' + e.message); }
 }
 function calculateReportStats(orders) {
