@@ -913,15 +913,36 @@ function initReportFilters() {
 async function generateReport() {
   if (!currentUserData || (currentUserData.role !== 'admin' && currentUserData.role !== 'super_admin')) return;
   const from = $('rep-from').value; const to = $('rep-to').value; const branchId = $('rep-branch').value;
-  if (!from || !to) { showToast('⚠️ اختار التاريخ'); return; } showToast('⏳ جاري تحميل البيانات...');
+  
+  if (!from || !to) { showToast('⚠️ اختار التاريخ'); return; } 
+  
+  showToast('⏳ جاري تحميل البيانات...');
   const { db, collection, query, where, getDocs } = window.FB;
+  
   try {
-    const queryConstraints = [ where('dateStr', '>=', from), where('dateStr', '<=', to) ];
-    if (branchId !== 'all') { queryConstraints.push(where('branchId', '==', branchId)); }
-    const q = query(collection(db, 'orders'), ...queryConstraints);
-    const snap = await getDocs(q); const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    reportData.orders = orders; calculateReportStats(orders); showToast('✅ تم تحديث التقرير');
-  } catch (e) { showToast('❌ ' + e.message); }
+    let q;
+    if (branchId === 'all') {
+      // لو اختار كل الفروع، بنفلتر بالتاريخ بس
+      q = query(collection(db, 'orders'), where('dateStr', '>=', from), where('dateStr', '<=', to));
+    } else {
+      // لو اختار فرع معين، بنفلتر بالتاريخ والفرع مع بعض
+      q = query(collection(db, 'orders'), 
+          where('branchId', '==', branchId),
+          where('dateStr', '>=', from), 
+          where('dateStr', '<=', to)
+      );
+    }
+    
+    const snap = await getDocs(q); 
+    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    
+    reportData.orders = orders; 
+    calculateReportStats(orders); 
+    showToast('✅ تم تحديث التقرير');
+  } catch (e) { 
+    console.error(e);
+    showToast('❌ ' + e.message); 
+  }
 }
 function calculateReportStats(orders) {
   if (!orders || orders.length === 0) { $('rep-totalSales').innerText = '0 ج'; $('rep-totalOrders').innerText = '0'; $('rep-avgOrder').innerText = '0 ج'; $('rep-totalItems').innerText = '0'; $('topItemsTable').innerHTML = '<tr><td colspan="4" class="empty">مفيش بيانات</td></tr>'; $('branchSalesTable').innerHTML = '<tr><td colspan="3" class="empty">مفيش بيانات</td></tr>'; return; }
