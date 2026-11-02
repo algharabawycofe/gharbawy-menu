@@ -302,7 +302,7 @@ tr:hover td{background:var(--subtle)}
   </div>
 </div>
 
-<!-- Modals (Branch, QR, Menu, Category, Item, User, ItemBranches) -->
+<!-- Modals -->
 <div id="branchModal" class="modal-overlay"><div class="modal">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h3 id="branchModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة فرع</h3><button class="btn btn-ghost btn-sm" onclick="closeModal('branchModal')">✕</button></div>
   <input type="hidden" id="b-id">
@@ -365,7 +365,6 @@ tr:hover td{background:var(--subtle)}
   <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px"><button class="btn btn-ghost" onclick="closeModal('userModal')">إلغاء</button><button class="btn btn-primary" onclick="saveUser()">حفظ</button></div>
 </div></div>
 
-<!-- ITEM BRANCHES MODAL -->
 <div id="itemBranchesModal" class="modal-overlay">
   <div class="modal" style="width:500px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
@@ -394,6 +393,21 @@ let companyInfo = {};
 let features = { callWaiter: false, kds: false, orderTimer: false, charts: false };
 let unsubs = [];
 let myChart = null;
+
+// ✅ NEW: للتحكم في أول snapshot وأوردرات جديدة
+let isFirstOrdersSnapshot = true;
+
+// ✅ NEW: AudioContext مشترك + unlock
+let audioCtx = null;
+function unlockAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch(e) { console.error('audio unlock error', e); }
+}
+document.addEventListener('click', unlockAudio, { once: true });
+document.addEventListener('touchstart', unlockAudio, { once: true });
+document.addEventListener('keydown', unlockAudio, { once: true });
 
 function $(id){return document.getElementById(id)}
 function onFbReady(cb){if(window.FB_READY)cb();else window.addEventListener('fb-ready',cb,{once:true});}
@@ -482,34 +496,66 @@ async function toggleFeature(featureName, isEnabled) {
   } catch(e) { showToast('❌ ' + e.message); }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ✅ subscribeAll — بعد الإصلاح
+// ═══════════════════════════════════════════════════════════════════════════
 function subscribeAll(){
-  const {db,collection,onSnapshot,query,orderBy,doc}=window.FB;
+  // ✅ ضيفنا where للـ destructuring
+  const {db, collection, onSnapshot, query, orderBy, where, doc} = window.FB;
   unsubs.forEach(u=>u&&u()); unsubs=[];
+
+  isFirstOrdersSnapshot = true;   // reset عند كل subscribe جديد
 
   unsubs.push(onSnapshot(collection(db,'menus'),s=>{ menus = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0)); renderMenus(); refreshSelects(); applyRoleUI(); }));
   unsubs.push(onSnapshot(collection(db,'categories'),s=>{ categories = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0)); renderCategories(); refreshSelects(); }));
   unsubs.push(onSnapshot(collection(db,'menu'),s=>{ items = s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id); renderItems(); updateStats(); }));
   unsubs.push(onSnapshot(collection(db,'branches'),s=>{ branches = s.docs.map(d=>({id:d.id,...d.data()})); renderBranches(); refreshSelects(); applyRoleUI(); }));
-  
-  unsubs.push(onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),s=>{
-    const prevCount = orders.length;
-    orders = s.docs.map(d=>({id:d.id,...d.data()}));
-    if(prevCount > 0 && orders.length > prevCount){
-      const newOrder = orders[0];
-      if(currentUserData.role !== 'branch_manager' || newOrder.branchId === currentUserData.branchId){
-        playNotificationSound(); showToast('🔔 أوردر جديد من ' + (newOrder.branchNameAr || 'فرع'));
-      }
+
+  // ✅ BUG FIX #2: فلتر الـ query حسب الدور
+  const ordersQuery = currentUserData.role === 'branch_manager'
+    ? query(
+        collection(db, 'orders'),
+        where('branchId', '==', currentUserData.branchId),
+        orderBy('createdAt', 'desc')
+      )
+    : query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+
+  unsubs.push(onSnapshot(ordersQuery,
+    (s) => {
+      // ✅ BUG FIX #1: استخدام docChanges بدل عدّ length
+      s.docChanges().forEach(change => {
+        if (change.type === 'added' && !isFirstOrdersSnapshot) {
+          const newOrder = { id: change.doc.id, ...change.doc.data() };
+          // مدير الفرع: صوّت بس لو الأوردر بتاعه (احتياطي)
+          if (currentUserData.role !== 'branch_manager' ||
+              newOrder.branchId === currentUserData.branchId) {
+            unlockAudio();   // تأكد الصوت unlocked
+            playNotificationSound();
+            showToast('🔔 أوردر جديد من ' + (newOrder.branchNameAr || 'فرع'));
+          }
+        }
+      });
+      isFirstOrdersSnapshot = false;
+
+      orders = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderOrders();
+      renderRecentOrders();
+      updateStats();
+      if ($('page-kds') && $('page-kds').classList.contains('active')) renderKDS();
+      if (features.charts) renderSalesChart();
+    },
+    (err) => {
+      console.error('❌ Orders snapshot error:', err.code, err.message);
+      showToast('❌ فشل تحميل الأوردرات: ' + (err.code || err.message));
     }
-    renderOrders(); renderRecentOrders(); updateStats();
-    if($('page-kds').classList.contains('active')) renderKDS();
-    if(features.charts) renderSalesChart();
-  }));
+  ));
 
   unsubs.push(onSnapshot(collection(db,'waiter_calls'), s => {
     s.docChanges().forEach(change => {
       if (change.type === 'added') {
         const call = change.doc.data();
         if (call.status === 'pending') {
+          unlockAudio();
           playNotificationSound(); showToast(`🔔 نداء من طربيزة ${call.table} - ${call.branchNameAr}`);
         }
       }
@@ -547,7 +593,26 @@ function showPage(name){
 
 function closeModal(id){ $(id).classList.remove('open'); }
 function showToast(msg){ const t=document.createElement('div'); t.className='toast'; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
-function playNotificationSound(){ try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); [0, 0.15].forEach((delay)=>{ const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value = 880; osc.type = 'sine'; gain.gain.setValueAtTime(0.3, ctx.currentTime + delay); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12); osc.start(ctx.currentTime + delay); osc.stop(ctx.currentTime + delay + 0.12); }); } catch(e){ console.error('audio error',e); } }
+
+// ✅ playNotificationSound — بعد الإصلاح (AudioContext مشترك)
+function playNotificationSound(){
+  try {
+    unlockAudio();
+    if (!audioCtx) return;
+    [0, 0.15].forEach((delay)=>{
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.12);
+      osc.start(audioCtx.currentTime + delay);
+      osc.stop(audioCtx.currentTime + delay + 0.12);
+    });
+  } catch(e){ console.error('audio error',e); }
+}
 
 function renderBranches(){
   const tb=$('branchesTable'); if(!branches.length){ tb.innerHTML='<tr><td colspan="6" class="empty">مفيش فروع</td></tr>'; return; }
