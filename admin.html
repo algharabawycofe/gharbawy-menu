@@ -514,13 +514,11 @@ function subscribeAll(){
   unsubs.push(onSnapshot(collection(db,'menu'),s=>{ items = s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id); renderItems(); updateStats(); }));
   unsubs.push(onSnapshot(collection(db,'branches'),s=>{ branches = s.docs.map(d=>({id:d.id,...d.data()})); renderBranches(); refreshSelects(); applyRoleUI(); }));
 
-  // هنا بنجيب كل الأوردرات لأننا داخلين كـ Admin
- // هنا بنجيب كل الأوردرات (بدون صوت أو تنبيهات للأدمن)
+  // هنا بنجيب كل الأوردرات (بدون صوت أو تنبيهات للأدمن)
   const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
 
   unsubs.push(onSnapshot(ordersQuery,
     (s) => {
-      // تحديث الأوردرات في الشاشة فقط
       orders = s.docs.map(d => ({ id: d.id, ...d.data() }));
       renderOrders();
       renderRecentOrders();
@@ -532,6 +530,7 @@ function subscribeAll(){
       console.error('❌ Orders snapshot error:', err.code, err.message);
     }
   ));
+  
       renderRecentOrders();
       updateStats();
       if ($('page-kds') && $('page-kds').classList.contains('active')) renderKDS();
