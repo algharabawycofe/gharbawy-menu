@@ -514,7 +514,7 @@ function subscribeAll(){
   unsubs.push(onSnapshot(collection(db,'menu'),s=>{ items = s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id); renderItems(); updateStats(); }));
   unsubs.push(onSnapshot(collection(db,'branches'),s=>{ branches = s.docs.map(d=>({id:d.id,...d.data()})); renderBranches(); refreshSelects(); applyRoleUI(); }));
 
-  // هنا بنجيب كل الأوردرات (بدون صوت أو تنبيهات للأدمن)
+    // هنا بنجيب كل الأوردرات (بدون صوت أو تنبيهات للأدمن)
   const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
 
   unsubs.push(onSnapshot(ordersQuery,
@@ -530,12 +530,27 @@ function subscribeAll(){
       console.error('❌ Orders snapshot error:', err.code, err.message);
     }
   ));
+
+  // نداءات الويتر (شيلنا الصوت منها للأدمن)
+  unsubs.push(onSnapshot(collection(db,'waiter_calls'), s => {
+    s.docChanges().forEach(change => {
+      if (change.type === 'added') {
+        const call = change.doc.data();
+        if (call.status === 'pending') {
+          showToast(`🔔 نداء من طربيزة ${call.table} - ${call.branchNameAr}`);
+        }
+      }
+    });
+  }));
+
+  // جلب المستخدمين (للأدمن فقط)
+  if (currentUserData.role === 'admin' || currentUserData.role === 'super_admin') {
+      unsubs.push(onSnapshot(collection(db,'users'),s=>{ users = s.docs.map(d=>({id:d.id,...d.data()})); renderUsers(); updateStats(); }));
+  }
   
-      renderRecentOrders();
-      updateStats();
-      if ($('page-kds') && $('page-kds').classList.contains('active')) renderKDS();
-      if (features.charts) renderSalesChart();
-    },
+  // حالة النظام
+  unsubs.push(onSnapshot(doc(db,'settings','system'),s=>{ if(s.exists()) systemOnline = s.data().online !== false; updateSystemStatus(); }));
+}
     (err) => {
       console.error('❌ Orders snapshot error:', err.code, err.message);
     }
