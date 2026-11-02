@@ -77,6 +77,23 @@ tr:hover td{background:var(--subtle)}
 .pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
 .section-header{font-size:15px;font-weight:900;margin:0 0 6px}
 .section-desc{font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.6}
+
+/* KDS Custom Styles */
+@keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+.kds-board { display: flex; gap: 20px; align-items: flex-start; height: 100%; }
+.kds-column { flex: 1; background: #1A1310; border-radius: 16px; padding: 15px; min-height: 75vh; border: 1px solid #3A2A20; }
+.kds-column-header { text-align: center; font-size: 24px; font-weight: 900; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #3A2A20; }
+.kds-card { background: #241B16; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid #3A2A20; }
+.kds-card.late { border-color: #B33A3A; animation: pulseRed 1.5s infinite; }
+.kds-card-header { display: flex; justify-content: space-between; border-bottom: 1px dashed #3A2A20; padding-bottom: 10px; margin-bottom: 12px; }
+.kds-table { font-size: 32px; font-weight: 900; color: #fff; margin: 0; }
+.kds-time { font-size: 20px; font-weight: 900; }
+.kds-item { display: flex; justify-content: space-between; font-size: 22px; color: #ecf0f1; margin-bottom: 8px; font-weight: 700; }
+.kds-qty { color: #C89B5E; font-size: 26px; }
+.kds-notes { color: #E74C3C; font-size: 18px; font-weight: 900; margin-bottom: 8px; background: rgba(231,76,60,0.1); padding: 5px; border-radius: 6px; }
+.kds-btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 20px; font-weight: 900; cursor: pointer; margin-top: 15px; color: #fff; transition: 0.2s; }
+.kds-btn:hover { opacity: 0.8; transform: scale(0.98); }
+
 @media (max-width: 768px) {
   .layout { display: block; }
   .side { display: flex; overflow-x: auto; padding: 10px; border-left: none; border-bottom: 1px solid var(--border); white-space: nowrap; gap: 8px; }
@@ -84,6 +101,8 @@ tr:hover td{background:var(--subtle)}
   .main { padding: 15px; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
   .form-row { grid-template-columns: 1fr; }
+  .kds-board { flex-direction: column; }
+  .kds-column { min-height: auto; width: 100%; }
 }
 </style>
 </head>
@@ -157,9 +176,8 @@ tr:hover td{background:var(--subtle)}
         </div>
       </div>
 
-      <div id="page-kds" class="page" style="background:#1A1310; color:#fff; min-height:100vh; padding:20px;">
-        <h2 style="color:#C89B5E; font-size:30px; text-align:center; margin-bottom:20px;">📺 شاشة المطبخ</h2>
-        <div id="kdsOrders" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:20px;"></div>
+      <div id="page-kds" class="page" style="background:#130E0B; min-height:100vh;">
+        <div id="kdsOrders"></div>
       </div>
 
       <div id="page-branches" class="page">
@@ -901,16 +919,65 @@ async function clearDoneOrders(){ if(!confirm('مسح المكتملة؟')) retu
 
 function renderKDS() {
   const el = $('kdsOrders'); if(!el) return;
-  const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'preparing');
-  if(!pendingOrders.length) { el.innerHTML = '<div style="text-align:center;color:#888;font-size:20px;">لا توجد أوردرات جديدة ☕</div>'; return; }
-  el.innerHTML = pendingOrders.map(o => {
-    const itemsHtml = (o.items||[]).map(i => `<div style="font-size:18px; margin-bottom:5px;">• ${i.nameAr} <strong style="color:#C89B5E;">× ${i.qty}</strong> ${i.notes ? `<em style="color:#E74C3C;">(${i.notes})</em>` : ''}</div>`).join('');
-    const time = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
-    const elapsedMins = Math.floor((new Date() - time) / 60000);
-    const isLate = elapsedMins > 15;
-    return `<div style="background:#241B16; border:2px solid ${isLate ? '#B33A3A' : '#3A2A20'}; border-radius:16px; padding:20px;"><div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #3A2A20; padding-bottom:10px;"><strong style="font-size:20px;">طربيزة ${o.table || '—'}</strong><span style="color:${isLate ? '#E74C3C' : '#4A7C59'}; font-weight:900;">⏱️ ${elapsedMins} دقيقة</span></div><div>${itemsHtml}</div><button onclick="markDone('${o.id}')" style="width:100%; margin-top:20px; padding:15px; border-radius:12px; background:#4A7C59; color:#fff; font-size:18px; font-weight:900; border:none; cursor:pointer;">✅ تم التحضير</button></div>`;
-  }).join('');
+  
+  const pending = orders.filter(o => o.status === 'pending');
+  const preparing = orders.filter(o => o.status === 'preparing');
+
+  let html = `
+    <div class="kds-board">
+      <div class="kds-column">
+        <h2 class="kds-column-header" style="color: #f1c40f; border-bottom-color: #f1c40f;">🟡 أوردرات جديدة (${pending.length})</h2>
+        <div>${pending.map(o => renderKDSCard(o, 'pending')).join('') || '<div style="text-align:center;color:#666;margin-top:50px;">لا توجد أوردرات جديدة</div>'}</div>
+      </div>
+      <div class="kds-column">
+        <h2 class="kds-column-header" style="color: #3498db; border-bottom-color: #3498db;">🔵 قيد التحضير (${preparing.length})</h2>
+        <div>${preparing.map(o => renderKDSCard(o, 'preparing')).join('') || '<div style="text-align:center;color:#666;margin-top:50px;">لا توجد أوردرات قيد التحضير</div>'}</div>
+      </div>
+    </div>
+  `;
+  el.innerHTML = html;
 }
+
+function renderKDSCard(o, type) {
+  const time = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+  const mins = Math.floor((new Date() - time) / 60000);
+  const isLate = mins > 15;
+  const borderColor = isLate ? '#B33A3A' : '#3A2A20';
+
+  const btn = type === 'pending'
+    ? `<button onclick="updateOrderStatus('${o.id}', 'preparing')" class="kds-btn" style="background: #2980b9;">▶️ ابدأ التحضير</button>`
+    : `<button onclick="updateOrderStatus('${o.id}', 'done')" class="kds-btn" style="background: #27ae60;">✅ تم التحضير</button>`;
+
+  return `
+    <div class="kds-card ${isLate ? 'late' : ''}" style="border-color: ${borderColor};">
+      <div class="kds-card-header">
+        <h3 class="kds-table">طربيزة ${o.table || '—'}</h3>
+        <span class="kds-time" style="color:${isLate ? '#E74C3C' : '#F1C40F'};">⏱️ ${mins} د</span>
+      </div>
+      <div style="margin-bottom: 15px;">
+        ${(o.items || []).map(i => `
+          <div class="kds-item">
+            <span>${i.nameAr}</span>
+            <strong class="kds-qty">× ${i.qty}</strong>
+          </div>
+          ${i.notes ? `<div class="kds-notes">📝 ${i.notes}</div>` : ''}
+        `).join('')}
+      </div>
+      ${btn}
+    </div>
+  `;
+}
+
+async function updateOrderStatus(id, status) {
+  const { db, doc, updateDoc } = window.FB;
+  try {
+    await updateDoc(doc(db, 'orders', id), { status });
+    showToast(`✅ تم تحديث حالة الأوردر`);
+  } catch (e) {
+    showToast(`❌ حدث خطأ: ${e.message}`);
+  }
+}
+
 setInterval(() => { if($('page-kds') && $('page-kds').classList.contains('active')) { renderKDS(); } }, 60000);
 
 function renderSalesChart() {
@@ -1024,12 +1091,12 @@ function calculateReportStats(orders) {
   const sortedBranches = Object.keys(branchMap).map(id => ({ id, ...branchMap[id] })).sort((a, b) => b.total - a.total); $('branchSalesTable').innerHTML = sortedBranches.map(b => `<tr><td>${b.name}</td><td>${b.orders}</td><td style="color:var(--gold)">${b.total} ج</td></tr>`).join('');
 }
 function exportReportToPDF() {
-  if (!reportData.orders || reportData.orders.length === 0) { showToast(' لا توجد بيانات'); return; }
+  if (!reportData.orders || reportData.orders.length === 0) { showToast('⚠️ لا توجد بيانات'); return; }
   const from = $('rep-from').value; const to = $('rep-to').value; const branchName = $('rep-branch').options[$('rep-branch').selectedIndex].text;
   const element = document.createElement('div'); element.style.padding = '30px'; element.style.fontFamily = 'Cairo, sans-serif'; element.style.direction = 'rtl'; element.style.background = '#FFF'; element.style.color = '#1F1611';
   let html = `<div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #C89B5E;padding-bottom:20px;"><h1 style="margin:0;font-size:24px;color:#2B1D14;">☕ ${companyInfo.nameAr || 'الغرباوي'}</h1><p style="margin:5px 0;color:#666;">تقرير المبيعات</p><p style="margin:5px 0;font-size:12px;color:#888;">من: ${from} إلى: ${to} | الفرع: ${branchName}</p></div>`;
   html += `<div style="display:flex;justify-content:space-between;margin-bottom:30px;background:#FAF6F0;padding:15px;border-radius:10px;"><div style="text-align:center;flex:1;"><div style="font-size:12px;color:#666;">إجمالي المبيعات</div><div style="font-size:20px;font-weight:bold;color:#C89B5E;">${$('rep-totalSales').innerText}</div></div><div style="text-align:center;flex:1;border-right:1px solid #ddd;border-left:1px solid #ddd;"><div style="font-size:12px;color:#666;">عدد الأوردرات</div><div style="font-size:20px;font-weight:bold;color:#2B1D14;">${$('rep-totalOrders').innerText}</div></div><div style="text-align:center;flex:1;"><div style="font-size:12px;color:#666;">متوسط الأوردر</div><div style="font-size:20px;font-weight:bold;color:#2B1D14;">${$('rep-avgOrder').innerText}</div></div></div>`;
-  html += `<h3 style="font-size:16px;border-bottom:1px solid #ddd;padding-bottom:5px;"> أعلى 10 منتجات مبيعاً</h3><table style="width:100%;border-collapse:collapse;margin-bottom:30px;font-size:13px;"><thead><tr style="background:#F5EEE5;"><th style="padding:8px;text-align:right;">#</th><th style="padding:8px;text-align:right;">المنتج</th><th style="padding:8px;text-align:right;">الكمية</th><th style="padding:8px;text-align:right;">الإجمالي</th></tr></thead><tbody>`;
+  html += `<h3 style="font-size:16px;border-bottom:1px solid #ddd;padding-bottom:5px;">🔥 أعلى 10 منتجات مبيعاً</h3><table style="width:100%;border-collapse:collapse;margin-bottom:30px;font-size:13px;"><thead><tr style="background:#F5EEE5;"><th style="padding:8px;text-align:right;">#</th><th style="padding:8px;text-align:right;">المنتج</th><th style="padding:8px;text-align:right;">الكمية</th><th style="padding:8px;text-align:right;">الإجمالي</th></tr></thead><tbody>`;
   document.querySelectorAll('#topItemsTable tr').forEach(tr => { html += `<tr>${Array.from(tr.children).map(td => `<td style="padding:8px;border-bottom:1px solid #eee;">${td.innerText}</td>`).join('')}</tr>`; });
   html += `</tbody></table>`;
   html += `<h3 style="font-size:16px;border-bottom:1px solid #ddd;padding-bottom:5px;">🏢 مبيعات الفروع</h3><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#F5EEE5;"><th style="padding:8px;text-align:right;">الفرع</th><th style="padding:8px;text-align:right;">عدد الأوردرات</th><th style="padding:8px;text-align:right;">إجمالي المبيعات</th></tr></thead><tbody>`;
