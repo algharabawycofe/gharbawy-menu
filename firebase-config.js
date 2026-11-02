@@ -1,7 +1,7 @@
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
-  onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch, where
+  onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch, where, getDocs // ✅ ضفنا getDocs هنا
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
@@ -25,7 +25,8 @@ window.FB = {
   auth: getAuth(app),
   // Firestore
   collection, doc, setDoc, updateDoc, deleteDoc, getDoc,
-  onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch, where, // ضفنا where هنا
+  onSnapshot, addDoc, query, orderBy, serverTimestamp, writeBatch, where, 
+  getDocs, // ✅ ضفنا getDocs هنا كمان عشان الكود يقدر يستخدمها
   // Auth
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, setPersistence, inMemoryPersistence,
