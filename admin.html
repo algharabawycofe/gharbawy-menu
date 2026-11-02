@@ -67,8 +67,7 @@ tr:hover td{background:var(--subtle)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:600px;max-width:100%;max-height:90vh;overflow:auto}
 .img-preview{width:100%;height:180px;border-radius:12px;object-fit:cover;background:var(--subtle);border:1px dashed var(--border);display:block;margin-bottom:8px}
-.qr-code-box{background:#fff;padding:20px;border-radius:16px;border:1px solid var(--border)}
-.qr-card-canvas{width:100%;max-width:380px;height:auto;display:block;margin:0 auto;border-radius:20px;box-shadow:0 20px 60px rgba(43,29,20,.18),0 8px 20px rgba(43,29,20,.08)}
+.qr-card-canvas{width:100%;max-width:380px;height:auto;display:block;margin:0 auto;border-radius:16px;box-shadow:0 12px 30px rgba(43,29,20,.15)}
 .danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
 .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
 .pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
@@ -298,28 +297,31 @@ tr:hover td{background:var(--subtle)}
 
 <!-- QR MODAL -->
 <div id="qrModal" class="modal-overlay">
-  <div class="modal" style="width:480px">
+  <div class="modal" style="width:480px; text-align:center;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 id="qrTitle" style="font-size:17px;font-weight:900;margin:0">QR</h3>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('qrModal')">✕</button>
     </div>
-    <div style="margin-bottom:12px">
+    <div style="margin-bottom:12px; text-align:right;">
       <label>نوع الـ QR</label>
       <select id="qrType" onchange="renderQRPreview()">
         <option value="branch">QR عام للفرع (يفتح المنيو)</option>
         <option value="table">QR لكل طربيزة (يحدد الطربيزة)</option>
       </select>
     </div>
-    <div id="qrTableSelectBox" style="display:none;margin-bottom:12px">
+    <div id="qrTableSelectBox" style="display:none;margin-bottom:12px; text-align:right;">
       <label>اختار الطربيزة</label>
       <select id="qrTable" onchange="renderQRPreview()"></select>
     </div>
+    
+    <!-- مكان عرض الكارت -->
     <div style="display:flex;justify-content:center;padding:12px 0 16px">
       <div id="qrCode" style="width:100%;display:flex;justify-content:center"></div>
     </div>
+    
     <div style="font-size:11px;color:var(--muted);text-align:center;word-break:break-all;margin-bottom:14px" id="qrUrl"></div>
     <div style="display:flex;gap:8px;justify-content:center">
-      <button class="btn btn-ghost" onclick="window.print()">🖨️ طباعة</button>
+      <button class="btn btn-ghost" onclick="printQR()">🖨️ طباعة</button>
       <button class="btn btn-primary" onclick="downloadQR()">⬇️ تحميل</button>
     </div>
   </div>
@@ -1032,6 +1034,34 @@ function drawQrCard(qrSrc, logoImg, container){
   container.innerHTML = '';
   container.appendChild(card);
   currentCardCanvas = card;
+}
+
+/* ═══════════ الطباعة النضيفة ═══════════ */
+function printQR(){
+  const canvas = currentCardCanvas || $('qrCode').querySelector('canvas');
+  if(!canvas){ showToast('⚠️ الـ QR لسه بيتولد، استنى ثانية'); return; }
+  
+  const dataUrl = canvas.toDataURL('image/png');
+  const win = window.open('', '_blank');
+  if(!win){ showToast('⚠️ الرجاء السماح بالنوافذ المنبثقة (Pop-ups) للطباعة'); return; }
+  
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>طباعة QR - ${currentQRBranch.nameAr}</title>
+      <style>
+        body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #fff; }
+        img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        @page { size: auto; margin: 10mm; }
+      </style>
+    </head>
+    <body>
+      <img src="${dataUrl}" onload="window.focus(); window.print(); window.close();" />
+    </body>
+    </html>
+  `);
+  win.document.close();
 }
 
 function downloadQR(){
