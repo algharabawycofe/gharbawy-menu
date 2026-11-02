@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة مدير الفرع</title>
+<style>
+:root{--bg:#FAF6F0;--surface:#FFF;--subtle:#F5EEE5;--text:#1F1611;--muted:#A89080;--border:#E8DED2;--gold:#C89B5E;--dark:#2B1D14;--danger:#B33A3A;--success:#4A7C59}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 65px)}
+.side{background:var(--surface);border-left:1px solid var(--border);padding:16px 10px}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:10px;background:transparent;border:none;cursor:pointer;color:var(--text);font-weight:700;font-size:13px;text-align:right;margin-bottom:3px}
+.nav-btn.active{background:var(--gold);color:#1F1611}
+.main{padding:24px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}
+.stat-label{font-size:11px;color:var(--muted);font-weight:700}
+.stat-value{font-size:26px;font-weight:900;color:var(--gold)}
+.page{display:none}.page.active{display:block}
+.btn{padding:9px 16px;border-radius:10px;border:none;font-weight:900;font-size:13px;cursor:pointer}
+.btn-primary{background:var(--dark);color:#fff}.btn-success{background:var(--success);color:#fff}
+.order-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.badge{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:900}
+.badge-gold{background:rgba(200,155,94,.15);color:var(--gold)}
+.badge-green{background:rgba(74,124,89,.15);color:var(--success)}
+#loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
+#loginCard{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:380px;text-align:center}
+input{width:100%;padding:10px;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box}
+</style>
+</head>
+<body>
+
+<div id="loginOverlay">
+  <div id="loginCard">
+    <h2>لوحة مدير الفرع</h2>
+    <input id="email" type="email" placeholder="الإيميل" dir="ltr">
+    <input id="password" type="password" placeholder="الباسورد" dir="ltr">
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">دخول</button>
+    <p id="loginError" style="color:red;font-size:12px"></p>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div><strong>☕ الغرباوي - إدارة الفرع</strong><div id="userBranchLabel" style="font-size:11px;color:var(--muted)"></div></div>
+    <button class="btn btn-primary" onclick="doLogout()">خروج</button>
+  </div>
+
+  <div class="layout">
+    <aside class="side">
+      <button class="nav-btn active" onclick="showPage('dashboard')">📊 نظرة عامة</button>
+      <button class="nav-btn" onclick="showPage('orders')">📦 أوردرات الفرع</button>
+      <button class="nav-btn" id="kdsNavBtn" onclick="showPage('kds')" style="display:none">📺 شاشة المطبخ</button>
+    </aside>
+
+    <main class="main">
+      <div id="page-dashboard" class="page active">
+        <h2 id="welcomeText">مرحباً بك</h2>
+        <div class="stat-grid">
+          <div class="stat"><div class="stat-label">أوردرات النهاردة</div><div class="stat-value" id="statOrders">0</div></div>
+          <div class="stat"><div class="stat-label">حالة النظام</div><div class="stat-value" id="statSystem">✅</div></div>
+        </div>
+        <div class="card">
+          <h3>آخر الأوردرات</h3>
+          <div id="recentOrders"></div>
+        </div>
+      </div>
+
+      <div id="page-orders" class="page">
+        <h2>أوردرات الفرع</h2>
+        <div id="ordersList"></div>
+      </div>
+
+      <div id="page-kds" class="page" style="background:#1A1310;color:#fff;padding:20px;border-radius:14px">
+        <h2 style="color:#C89B5E;text-align:center">📺 شاشة المطبخ</h2>
+        <div id="kdsOrders" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module" src="firebase-config.js"></script>
+<script>
+let currentUserData = null;
+let orders = [], features = {};
+let unsubs = [];
+let audioCtx = null;
+
+// حل مشكلة الصوت
+function unlockAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+document.addEventListener('click', unlockAudio, { once: true });
+
+function playSound(){
+  try {
+    unlockAudio(); if(!audioCtx) return;
+    [0, 0.15].forEach(d => {
+      let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.value = 880; gain.gain.setValueAtTime(0.3, audioCtx.currentTime + d);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d + 0.12);
+      osc.start(audioCtx.currentTime + d); osc.stop(audioCtx.currentTime + d + 0.12);
+    });
+  } catch(e){}
+}
+
+window.addEventListener('fb-ready', () => {
+  const { auth, onAuthStateChanged, db, doc, getDoc } = window.FB;
+  onAuthStateChanged(auth, async (user) => {
+    if(user) {
+      const snap = await getDoc(doc(db,'users',user.uid));
+      if(snap.exists() && snap.data().role === 'branch_manager') {
+        currentUserData = snap.data();
+        document.getElementById('loginOverlay').style.display='none';
+        document.getElementById('app').style.display='block';
+        document.getElementById('userBranchLabel').innerText = currentUserData.name;
+        document.getElementById('welcomeText').innerText = 'مرحباً يا مدير ' + (currentUserData.name || 'الفرع');
+        subscribeData();
+      } else {
+        // لو مش مدير فرع، اطرده
+        window.location.href = 'admin.html';
+      }
+    } else {
+      document.getElementById('loginOverlay').style.display='flex';
+      document.getElementById('app').style.display='none';
+    }
+  });
+});
+
+async function doLogin(){
+  try { await window.FB.signInWithEmailAndPassword(window.FB.auth, document.getElementById('email').value, document.getElementById('password').value); } 
+  catch(e) { document.getElementById('loginError').innerText = 'بيانات غلط'; }
+}
+async function doLogout(){ await window.FB.signOut(window.FB.auth); location.reload(); }
+
+function subscribeData(){
+  const { db, collection, query, where, orderBy, onSnapshot, doc } = window.FB;
+  
+  // جلب الأوردرات الخاصة بالفرع فقط
+  const q = query(collection(db, 'orders'), where('branchId', '==', currentUserData.branchId), orderBy('createdAt', 'desc'));
+  let isFirst = true;
+  
+  unsubs.push(onSnapshot(q, (snap) => {
+    snap.docChanges().forEach(change => {
+      if(change.type === 'added' && !isFirst) {
+        playSound();
+        alert('🔔 أوردر جديد وصلك من طربيزة ' + (change.doc.data().table || ''));
+      }
+    });
+    isFirst = false;
+    orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderOrders(); updateStats();
+    if(document.getElementById('page-kds').classList.contains('active')) renderKDS();
+  }));
+
+  // جلب الميزات
+  unsubs.push(onSnapshot(doc(db, 'settings', 'features'), (snap) => {
+    if(snap.exists()) {
+      features = snap.data();
+      document.getElementById('kdsNavBtn').style.display = features.kds ? 'block' : 'none';
+    }
+  }));
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function updateStats(){
+  const today = new Date().toDateString();
+  const todayOrders = orders.filter(o => o.createdAt && o.createdAt.toDate().toDateString() === today);
+  document.getElementById('statOrders').innerText = todayOrders.length;
+  
+  const recent = orders.slice(0, 5);
+  document.getElementById('recentOrders').innerHTML = recent.map(o => `<div style="padding:8px;border-bottom:1px solid #eee">${o.total} ج - طربيزة ${o.table||'—'}</div>`).join('') || 'لا يوجد أوردرات';
+}
+
+function renderOrders(){
+  document.getElementById('ordersList').innerHTML = orders.map(o => `
+    <div class="order-card">
+      <div style="display:flex;justify-content:space-between">
+        <strong>طربيزة ${o.table || '—'}</strong>
+        <span class="badge badge-gold">${o.total} ج</span>
+      </div>
+      <div style="font-size:12px;margin-top:10px">${o.items.map(i => `• ${i.nameAr} × ${i.qty}`).join('<br>')}</div>
+      ${o.status !== 'done' ? `<button class="btn btn-success" style="width:100%;margin-top:10px" onclick="markDone('${o.id}')">✓ تم التسليم</button>` : '<div style="color:green;margin-top:10px;font-weight:bold">✓ مكتمل</div>'}
+    </div>
+  `).join('') || '<div style="padding:20px;text-align:center">لا يوجد أوردرات</div>';
+}
+
+async function markDone(id){ await window.FB.updateDoc(window.FB.doc(window.FB.db,'orders',id),{status:'done'}); }
+
+function renderKDS(){
+  const pending = orders.filter(o => o.status !== 'done');
+  document.getElementById('kdsOrders').innerHTML = pending.map(o => `
+    <div style="background:#241B16;border:1px solid #3A2A20;padding:15px;border-radius:10px">
+      <h3 style="color:#C89B5E;margin:0 0 10px">طربيزة ${o.table || '—'}</h3>
+      <div style="font-size:16px;margin-bottom:15px">${o.items.map(i => `• ${i.nameAr} × ${i.qty} ${i.notes ? '<em style="color:red">('+i.notes+')</em>' : ''}`).join('<br>')}</div>
+      <button class="btn btn-success" style="width:100%" onclick="markDone('${o.id}')">✓ تحضير</button>
+    </div>
+  `).join('') || '<div style="color:#888;grid-column:1/-1;text-align:center">لا يوجد أوردرات جديدة ☕</div>';
+}
+</script>
+</body>
+</html>
