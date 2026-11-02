@@ -251,6 +251,32 @@ tr:hover td{background:var(--subtle)}
 
       <div id="page-settings" class="page">
         <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">الإعدادات</h2>
+        
+        <div class="card" id="dataManagementSection" style="display:none; border: 2px solid var(--gold);">
+          <h3 class="section-header" style="color:var(--gold)">🗄️ إدارة البيانات (للسوبر أدمن)</h3>
+          <p class="section-desc">يمكنك تصدير البيانات كنسخة احتياطية أو حذفها نهائياً.</p>
+          
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:13px; margin-bottom:10px;">📥 تصدير البيانات (Excel/CSV)</h4>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn btn-gold" onclick="exportDataToCSV('orders')">تصدير الأوردرات</button>
+              <button class="btn btn-gold" onclick="exportDataToCSV('menu')">تصدير المنتجات</button>
+              <button class="btn btn-gold" onclick="exportDataToCSV('users')">تصدير المستخدمين</button>
+              <button class="btn btn-gold" onclick="exportDataToCSV('branches')">تصدير الفروع</button>
+            </div>
+          </div>
+
+          <div style="border-top:1px dashed var(--border); padding-top:20px;">
+            <h4 style="font-size:13px; color:var(--danger); margin-bottom:10px;">🗑️ منطقة الحذف النهائي (لا يمكن التراجع)</h4>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn btn-danger" onclick="deleteData('orders_done')">حذف الأوردرات المكتملة</button>
+              <button class="btn btn-danger" onclick="deleteData('orders_all')">حذف جميع الأوردرات</button>
+              <button class="btn btn-danger" onclick="deleteData('menu')">حذف جميع المنتجات</button>
+              <button class="btn btn-danger" onclick="deleteData('categories')">حذف جميع الأقسام</button>
+            </div>
+          </div>
+        </div>
+
         <div class="card">
           <h3 class="section-header">🏢 بيانات الشركة</h3>
           <p class="section-desc">البيانات التي تظهر في الموقع للزباين</p>
@@ -453,6 +479,13 @@ function applyRoleUI(){
     if(role === 'admin' && requiredRole === 'admin'){ btn.style.display='flex'; return; }
     btn.style.display = 'none';
   });
+
+  if (role === 'super_admin') {
+      if($('dataManagementSection')) $('dataManagementSection').style.display = 'block';
+  } else {
+      if($('dataManagementSection')) $('dataManagementSection').style.display = 'none';
+  }
+
   showPage('dashboard');
 }
 
@@ -507,17 +540,6 @@ function subscribeAll(){
     }
   ));
 
-  unsubs.push(onSnapshot(collection(db,'waiter_calls'), s => {
-    s.docChanges().forEach(change => {
-      if (change.type === 'added') {
-        const call = change.doc.data();
-        if (call.status === 'pending') {
-          showToast(`🔔 نداء من طربيزة ${call.table} - ${call.branchNameAr}`);
-        }
-      }
-    });
-  }));
-
   if (currentUserData.role === 'admin' || currentUserData.role === 'super_admin') {
       unsubs.push(onSnapshot(collection(db,'users'),s=>{ users = s.docs.map(d=>({id:d.id,...d.data()})); renderUsers(); updateStats(); }));
   }
@@ -552,6 +574,115 @@ function showPage(name){
 
 function closeModal(id){ $(id).classList.remove('open'); }
 function showToast(msg){ const t=document.createElement('div'); t.className='toast'; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
+
+function exportDataToCSV(type) {
+  if (currentUserData.role !== 'super_admin') { showToast('⚠️ Super Admin فقط'); return; }
+
+  let data = [];
+  let headers = [];
+  let filename = '';
+
+  if (type === 'orders') {
+    data = orders;
+    headers = ['ID', 'Date', 'Branch', 'Table', 'Total', 'Status', 'Items'];
+    filename = 'orders.csv';
+  } else if (type === 'menu') {
+    data = items;
+    headers = ['ID', 'Name (AR)', 'Name (EN)', 'Price', 'Category ID', 'Stock'];
+    filename = 'products.csv';
+  } else if (type === 'users') {
+    data = users;
+    headers = ['ID', 'Name', 'Email', 'Role', 'Branch ID', 'Active'];
+    filename = 'users.csv';
+  } else if (type === 'branches') {
+    data = branches;
+    headers = ['ID', 'Code', 'Name (AR)', 'Name (EN)', 'Menu ID', 'Active'];
+    filename = 'branches.csv';
+  }
+
+  if (!data || data.length === 0) {
+    showToast('⚠️ لا توجد بيانات لتصديرها');
+    return;
+  }
+
+  let csvContent = "\uFEFF";
+  csvContent += headers.join(",") + "\n";
+
+  data.forEach(item => {
+    let row = [];
+    if (type === 'orders') {
+      row = [
+        item.id,
+        item.dateStr || (item.createdAt ? item.createdAt.toDate().toLocaleString('ar-EG') : ''),
+        `"${item.branchNameAr || ''}"`,
+        item.table || '',
+        item.total || 0,
+        item.status || '',
+        `"${(item.items || []).map(i => `${i.nameAr} (${i.qty})`).join(' | ')}"`
+      ];
+    } else if (type === 'menu') {
+      row = [ item.id, `"${item.nameAr}"`, `"${item.nameEn}"`, item.price, item.categoryId, item.inStock !== false ? 'متوفر' : 'نفد' ];
+    } else if (type === 'users') {
+      row = [ item.id, `"${item.name}"`, item.email, item.role, item.branchId || '', item.active !== false ? 'نشط' : 'موقوف' ];
+    } else if (type === 'branches') {
+      row = [ item.id, item.code, `"${item.nameAr}"`, `"${item.nameEn}"`, item.menuId || '', item.active !== false ? 'نشط' : 'موقوف' ];
+    }
+    csvContent += row.join(",") + "\n";
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('✅ تم تصدير الملف بنجاح');
+}
+
+async function deleteData(type) {
+  if (currentUserData.role !== 'super_admin') { showToast('⚠️ Super Admin فقط'); return; }
+  
+  let confirmMsg = 'هل أنت متأكد من الحذف؟ لا يمكن التراجع عن هذه الخطوة!';
+  if (type === 'orders_done') confirmMsg = 'هل تريد حذف جميع الأوردرات المكتملة؟';
+  if (type === 'orders_all') confirmMsg = 'هل تريد حذف جميع الأوردرات نهائياً؟';
+  if (type === 'menu') confirmMsg = 'هل تريد حذف جميع المنتجات؟';
+  if (type === 'categories') confirmMsg = 'هل تريد حذف جميع الأقسام؟';
+
+  if (!confirm(confirmMsg + '\n\nاضغط موافق للمتابعة')) return;
+  
+  showToast('⏳ جاري الحذف... يرجى الانتظار');
+  const { db, collection, query, where, getDocs, deleteDoc } = window.FB;
+  
+  try {
+    let q;
+    if (type === 'orders_done') q = query(collection(db, 'orders'), where('status', '==', 'done'));
+    else if (type === 'orders_all') q = collection(db, 'orders');
+    else if (type === 'menu') q = collection(db, 'menu');
+    else if (type === 'categories') q = collection(db, 'categories');
+    
+    const snap = await getDocs(q);
+    const deletePromises = [];
+    
+    snap.docs.forEach(d => {
+      deletePromises.push(deleteDoc(d.ref));
+    });
+    
+    await Promise.all(deletePromises);
+    showToast('✅ تم الحذف بنجاح');
+    
+    if(type === 'orders_all') { orders = []; renderOrders(); renderRecentOrders(); updateStats(); }
+    if(type === 'orders_done') { orders = orders.filter(o => o.status !== 'done'); renderOrders(); renderRecentOrders(); updateStats(); }
+    if(type === 'menu') { items = []; renderItems(); updateStats(); }
+    if(type === 'categories') { categories = []; renderCategories(); }
+    
+  } catch(e) {
+    console.error(e);
+    showToast('❌ حدث خطأ أثناء الحذف: ' + e.message);
+  }
+}
 
 function renderBranches(){
   const tb=$('branchesTable'); if(!branches.length){ tb.innerHTML='<tr><td colspan="6" class="empty">لا توجد فروع</td></tr>'; return; }
@@ -893,12 +1024,12 @@ function calculateReportStats(orders) {
   const sortedBranches = Object.keys(branchMap).map(id => ({ id, ...branchMap[id] })).sort((a, b) => b.total - a.total); $('branchSalesTable').innerHTML = sortedBranches.map(b => `<tr><td>${b.name}</td><td>${b.orders}</td><td style="color:var(--gold)">${b.total} ج</td></tr>`).join('');
 }
 function exportReportToPDF() {
-  if (!reportData.orders || reportData.orders.length === 0) { showToast('⚠️ لا توجد بيانات'); return; }
+  if (!reportData.orders || reportData.orders.length === 0) { showToast(' لا توجد بيانات'); return; }
   const from = $('rep-from').value; const to = $('rep-to').value; const branchName = $('rep-branch').options[$('rep-branch').selectedIndex].text;
   const element = document.createElement('div'); element.style.padding = '30px'; element.style.fontFamily = 'Cairo, sans-serif'; element.style.direction = 'rtl'; element.style.background = '#FFF'; element.style.color = '#1F1611';
   let html = `<div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #C89B5E;padding-bottom:20px;"><h1 style="margin:0;font-size:24px;color:#2B1D14;">☕ ${companyInfo.nameAr || 'الغرباوي'}</h1><p style="margin:5px 0;color:#666;">تقرير المبيعات</p><p style="margin:5px 0;font-size:12px;color:#888;">من: ${from} إلى: ${to} | الفرع: ${branchName}</p></div>`;
   html += `<div style="display:flex;justify-content:space-between;margin-bottom:30px;background:#FAF6F0;padding:15px;border-radius:10px;"><div style="text-align:center;flex:1;"><div style="font-size:12px;color:#666;">إجمالي المبيعات</div><div style="font-size:20px;font-weight:bold;color:#C89B5E;">${$('rep-totalSales').innerText}</div></div><div style="text-align:center;flex:1;border-right:1px solid #ddd;border-left:1px solid #ddd;"><div style="font-size:12px;color:#666;">عدد الأوردرات</div><div style="font-size:20px;font-weight:bold;color:#2B1D14;">${$('rep-totalOrders').innerText}</div></div><div style="text-align:center;flex:1;"><div style="font-size:12px;color:#666;">متوسط الأوردر</div><div style="font-size:20px;font-weight:bold;color:#2B1D14;">${$('rep-avgOrder').innerText}</div></div></div>`;
-  html += `<h3 style="font-size:16px;border-bottom:1px solid #ddd;padding-bottom:5px;">🔥 أعلى 10 منتجات مبيعاً</h3><table style="width:100%;border-collapse:collapse;margin-bottom:30px;font-size:13px;"><thead><tr style="background:#F5EEE5;"><th style="padding:8px;text-align:right;">#</th><th style="padding:8px;text-align:right;">المنتج</th><th style="padding:8px;text-align:right;">الكمية</th><th style="padding:8px;text-align:right;">الإجمالي</th></tr></thead><tbody>`;
+  html += `<h3 style="font-size:16px;border-bottom:1px solid #ddd;padding-bottom:5px;"> أعلى 10 منتجات مبيعاً</h3><table style="width:100%;border-collapse:collapse;margin-bottom:30px;font-size:13px;"><thead><tr style="background:#F5EEE5;"><th style="padding:8px;text-align:right;">#</th><th style="padding:8px;text-align:right;">المنتج</th><th style="padding:8px;text-align:right;">الكمية</th><th style="padding:8px;text-align:right;">الإجمالي</th></tr></thead><tbody>`;
   document.querySelectorAll('#topItemsTable tr').forEach(tr => { html += `<tr>${Array.from(tr.children).map(td => `<td style="padding:8px;border-bottom:1px solid #eee;">${td.innerText}</td>`).join('')}</tr>`; });
   html += `</tbody></table>`;
   html += `<h3 style="font-size:16px;border-bottom:1px solid #ddd;padding-bottom:5px;">🏢 مبيعات الفروع</h3><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#F5EEE5;"><th style="padding:8px;text-align:right;">الفرع</th><th style="padding:8px;text-align:right;">عدد الأوردرات</th><th style="padding:8px;text-align:right;">إجمالي المبيعات</th></tr></thead><tbody>`;
