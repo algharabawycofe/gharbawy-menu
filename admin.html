@@ -69,7 +69,8 @@ tr:hover td{background:var(--subtle)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:600px;max-width:100%;max-height:90vh;overflow:auto}
 .img-preview{width:100%;height:180px;border-radius:12px;object-fit:cover;background:var(--subtle);border:1px dashed var(--border);display:block;margin-bottom:8px}
-.qr-code-box{background:#fff;padding:20px;border-radius:16px;border:1px solid var(--border)}
+.qr-code-box{background:#fff;padding:20px;border-radius:16px;border:1px solid var(--border);position:relative;display:flex;justify-content:center;align-items:center;width:fit-content;margin:0 auto}
+.qr-logo-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;background:#fff;border-radius:8px;padding:3px;box-shadow:0 2px 6px rgba(0,0,0,0.2);object-fit:contain;z-index:10}
 .danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
 .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
 .pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
@@ -375,7 +376,7 @@ tr:hover td{background:var(--subtle)}
     </div>
     <div style="font-size:11px;color:var(--muted);text-align:center;word-break:break-all;margin-bottom:14px" id="qrUrl"></div>
     <div style="display:flex;gap:8px;justify-content:center">
-      <button class="btn btn-ghost" onclick="window.print()">🖨️ طباعة</button>
+      <button class="btn btn-ghost" onclick="printQR()">🖨️ طباعة</button>
       <button class="btn btn-primary" onclick="downloadQR()">⬇️ تحميل</button>
     </div>
   </div>
@@ -889,6 +890,7 @@ function renderQRPreview(){
   if(!currentQRBranch) return;
   const type = $('qrType').value;
   let url = `https://algharabawycofe.github.io/gharbawy-menu/index.html?branch=${currentQRBranch.code}`;
+  
   if(type==='table'){
     $('qrTableSelectBox').style.display='block';
     const t = $('qrTable').value;
@@ -896,9 +898,76 @@ function renderQRPreview(){
   } else {
     $('qrTableSelectBox').style.display='none';
   }
+  
   $('qrUrl').innerText = url;
-  $('qrCode').innerHTML='';
-  new QRCode($('qrCode'),{text:url,width:256,height:256,colorDark:'#2B1D14',colorLight:'#FFFFFF',correctLevel:QRCode.CorrectLevel.H});
+  $('qrCode').innerHTML=''; // مسح القديم
+  
+  // توليد الـ QR
+  new QRCode($('qrCode'),{
+    text:url,
+    width:256,
+    height:256,
+    colorDark:'#2B1D14',
+    colorLight:'#FFFFFF',
+    correctLevel:QRCode.CorrectLevel.H 
+  });
+
+  // إضافة اللوجو في النص
+  const logoUrl = companyInfo.logo || 'logo-01.png';
+  const img = document.createElement('img');
+  img.src = logoUrl;
+  img.className = 'qr-logo-overlay';
+  img.onerror = function() { this.style.display = 'none'; };
+  $('qrCode').appendChild(img);
+}
+
+function printQR() {
+  const qrCanvas = $('qrCode').querySelector('canvas') || $('qrCode').querySelector('img');
+  if(!qrCanvas) { showToast('⚠️ مش قادر أطبع الـ QR'); return; }
+  
+  const qrDataUrl = qrCanvas.tagName === 'CANVAS' ? qrCanvas.toDataURL('image/png') : qrCanvas.src;
+
+  const branchName = currentQRBranch.nameAr;
+  const isTable = $('qrType').value === 'table';
+  const tableNum = isTable ? $('qrTable').value : null;
+  const logoUrl = companyInfo.logo || 'logo-01.png';
+  const companyName = companyInfo.nameAr || 'الغرباوي';
+
+  const printWindow = window.open('', '_blank');
+  
+  printWindow.document.write(`
+    <html dir="rtl">
+    <head>
+        <title>طباعة QR - ${branchName}</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap');
+            body { font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; background: #fff; }
+            h1 { font-size: 32px; margin: 0 0 10px; color: #2B1D14; font-weight: 900; }
+            h2 { font-size: 22px; margin: 0 0 40px; color: #6F4E37; font-weight: 700; }
+            .qr-wrap { position: relative; padding: 20px; border: 2px solid #E8DED2; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+            .qr-wrap img.qr-img { display: block; width: 320px; height: 320px; }
+            .qr-wrap img.logo-img { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 65px; height: 65px; background: #fff; padding: 5px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+            p { margin-top: 40px; font-size: 16px; color: #A89080; font-weight: 700; }
+            @media print { @page { margin: 0; } body { height: 100vh; -webkit-print-color-adjust: exact; } }
+        </style>
+    </head>
+    <body>
+        <h1>☕ ${companyName}</h1>
+        <h2>${branchName} ${isTable ? '— طربيزة ' + tableNum : ''}</h2>
+        <div class="qr-wrap">
+            <img src="${qrDataUrl}" class="qr-img">
+            <img src="${logoUrl}" class="logo-img" onerror="this.style.display='none'">
+        </div>
+        <p>امسح الكود للدخول إلى القائمة الرقمية</p>
+        <script>
+            window.onload = function() { 
+                setTimeout(() => { window.print(); window.close(); }, 500);
+            }
+        <\/script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
 }
 
 function downloadQR(){
@@ -1488,18 +1557,25 @@ async function generateReport() {
 
   showToast('⏳ جاري تحميل البيانات...');
 
+  // بناء الاستعلام بالطريقة الصحيحة (Modular SDK)
   const { db, collection, query, where, getDocs } = window.FB;
   
   try {
-    // نبني الاستعلام بناءً على الفلاتر
-    let q = query(collection(db, 'orders'), where('dateStr', '>=', from), where('dateStr', '<=', to));
-    
-    // لو اختار فرع معين
+    // شروط البحث الأساسية (التاريخ)
+    const queryConstraints = [
+        where('dateStr', '>=', from),
+        where('dateStr', '<=', to)
+    ];
+
+    // لو اختار فرع معين، نضيف شرط الفرع
     if (branchId !== 'all') {
-      q = query(collection(db, 'orders'), where('dateStr', '>=', from), where('dateStr', '<=', to), where('branchId', '==', branchId));
+        queryConstraints.push(where('branchId', '==', branchId));
     }
 
+    // ننشئ الاستعلام النهائي
+    const q = query(collection(db, 'orders'), ...queryConstraints);
     const snap = await getDocs(q);
+    
     const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     // لو الأدمن مش سوبر أدمن، نظهر بس أوردرات الفروع المسموح له بيها
