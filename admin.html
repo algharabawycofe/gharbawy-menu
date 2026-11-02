@@ -454,6 +454,8 @@ tr:hover td{background:var(--subtle)}
 
 <script type="module" src="firebase-config.js"></script>
 <script>
+console.log("🚀 Styled QR Card V2 Loaded"); // للتأكد إن الكود الجديد شغال
+
 const CLOUDINARY_CLOUD = 'meiv47ul';
 const CLOUDINARY_PRESET = 'gharbawy_menu';
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
@@ -882,7 +884,7 @@ function buildStyledQrCard(url){
       try { document.body.removeChild(holder); } catch(e){}
       drawQrCard(qrCanvas, null, container);
     }
-  }, 80);
+  }, 100);
 }
 
 function roundRect(ctx, x, y, w, h, r){
