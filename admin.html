@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة التحكم </title>
 <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<!-- مكتبة تحويل التقارير لـ PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root{--bg:#FAF6F0;--surface:#FFF;--subtle:#F5EEE5;--text:#1F1611;--muted:#A89080;--border:#E8DED2;--gold:#C89B5E;--dark:#2B1D14;--danger:#B33A3A;--success:#4A7C59}
 html.dark{--bg:#1A1310;--surface:#241B16;--subtle:#1F1712;--text:#FAF6F0;--muted:#8A7566;--border:#3A2A20;--gold:#D4A56A;--dark:#FAF6F0}
@@ -67,7 +69,7 @@ tr:hover td{background:var(--subtle)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:600px;max-width:100%;max-height:90vh;overflow:auto}
 .img-preview{width:100%;height:180px;border-radius:12px;object-fit:cover;background:var(--subtle);border:1px dashed var(--border);display:block;margin-bottom:8px}
-.qr-card-canvas{width:100%;max-width:380px;height:auto;display:block;margin:0 auto;border-radius:16px;box-shadow:0 12px 30px rgba(43,29,20,.15)}
+.qr-code-box{background:#fff;padding:20px;border-radius:16px;border:1px solid var(--border)}
 .danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
 .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
 .pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
@@ -122,6 +124,7 @@ tr:hover td{background:var(--subtle)}
       <button class="nav-btn" data-page="categories" data-role="admin" onclick="showPage('categories')">🏷️ الأقسام</button>
       <button class="nav-btn" data-page="items" data-role="admin" onclick="showPage('items')">🍽️ المنتجات</button>
       <button class="nav-btn" data-page="orders" onclick="showPage('orders')">📦 الأوردرات</button>
+      <button class="nav-btn" data-page="reports" data-role="admin" onclick="showPage('reports')">📈 التقارير</button>
       <button class="nav-btn" data-page="users" data-role="admin" onclick="showPage('users')">👥 المستخدمين</button>
       <button class="nav-btn" data-page="settings" data-role="super" onclick="showPage('settings')">⚙️ الإعدادات</button>
     </aside>
@@ -187,6 +190,65 @@ tr:hover td{background:var(--subtle)}
         <div id="ordersList"></div>
       </div>
 
+      <!-- صفحة التقارير الجديدة -->
+      <div id="page-reports" class="page">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h2 style="font-size:22px;font-weight:900;margin:0">📈 التقارير والإحصائيات</h2>
+          <button class="btn btn-primary" onclick="exportReportToPDF()">📄 تحميل PDF</button>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="form-row">
+            <div>
+              <label>من تاريخ</label>
+              <input type="date" id="rep-from">
+            </div>
+            <div>
+              <label>إلى تاريخ</label>
+              <input type="date" id="rep-to">
+            </div>
+          </div>
+          <div class="form-row">
+            <div>
+              <label>الفرع</label>
+              <select id="rep-branch">
+                <option value="all">كل الفروع</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end">
+              <button class="btn btn-gold" style="width:100%" onclick="generateReport()">🔄 تحديث التقرير</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-grid" id="reportStats">
+          <div class="stat"><div class="stat-label">إجمالي المبيعات</div><div class="stat-value" id="rep-totalSales">—</div></div>
+          <div class="stat"><div class="stat-label">عدد الأوردرات</div><div class="stat-value" id="rep-totalOrders">—</div></div>
+          <div class="stat"><div class="stat-label">متوسط الأوردر (AOV)</div><div class="stat-value" id="rep-avgOrder">—</div></div>
+          <div class="stat"><div class="stat-label">منتجات مباعة</div><div class="stat-value" id="rep-totalItems">—</div></div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:15px;font-weight:900;margin:0 0 12px">🔥 أعلى 10 منتجات مبيعاً</h3>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>#</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th></tr></thead>
+              <tbody id="topItemsTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:15px;font-weight:900;margin:0 0 12px">🏢 مبيعات الفروع</h3>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>الفرع</th><th>عدد الأوردرات</th><th>إجمالي المبيعات</th></tr></thead>
+              <tbody id="branchSalesTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div id="page-users" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">المستخدمين</h2>
@@ -199,12 +261,9 @@ tr:hover td{background:var(--subtle)}
 
       <div id="page-settings" class="page">
         <h2 style="font-size:22px;font-weight:900;margin:0 0 20px">الإعدادات</h2>
-
-        <!-- Company Info -->
         <div class="card">
           <h3 class="section-header">🏢 بيانات الشركة</h3>
           <p class="section-desc">البيانات دي بتظهر في الموقع للزباين (الـ Welcome + الفوتر)</p>
-
           <div class="form-row">
             <div><label>اسم الشركة (عربي)</label><input id="co-nameAr" placeholder="الغرباوي"></div>
             <div><label>اسم الشركة (إنجليزي)</label><input id="co-nameEn" dir="ltr" placeholder="Al-Gharbawy"></div>
@@ -238,7 +297,6 @@ tr:hover td{background:var(--subtle)}
             <button class="btn btn-primary" onclick="saveCompany()">💾 حفظ البيانات</button>
           </div>
         </div>
-
         <div class="card">
           <h3 class="section-header">🔴 منطقة الخطر — إيقاف النظام</h3>
           <p class="section-desc">لو ضغطت على "إيقاف النظام"، الموقع هيتوقف فوراً وكل الزباين هيشوفوا رسالة "النظام متوقف مؤقتاً".</p>
@@ -247,7 +305,6 @@ tr:hover td{background:var(--subtle)}
           </div>
           <button class="btn btn-danger" id="killSwitchBtn" onclick="toggleSystemStatus()">🔴 إيقاف النظام</button>
         </div>
-
         <div class="card">
           <h3 class="section-header">📊 معلومات النظام</h3>
           <div style="font-size:13px;color:var(--muted);line-height:2">
@@ -297,31 +354,28 @@ tr:hover td{background:var(--subtle)}
 
 <!-- QR MODAL -->
 <div id="qrModal" class="modal-overlay">
-  <div class="modal" style="width:480px; text-align:center;">
+  <div class="modal" style="width:480px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 id="qrTitle" style="font-size:17px;font-weight:900;margin:0">QR</h3>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('qrModal')">✕</button>
     </div>
-    <div style="margin-bottom:12px; text-align:right;">
+    <div style="margin-bottom:12px">
       <label>نوع الـ QR</label>
       <select id="qrType" onchange="renderQRPreview()">
         <option value="branch">QR عام للفرع (يفتح المنيو)</option>
         <option value="table">QR لكل طربيزة (يحدد الطربيزة)</option>
       </select>
     </div>
-    <div id="qrTableSelectBox" style="display:none;margin-bottom:12px; text-align:right;">
+    <div id="qrTableSelectBox" style="display:none;margin-bottom:12px">
       <label>اختار الطربيزة</label>
       <select id="qrTable" onchange="renderQRPreview()"></select>
     </div>
-    
-    <!-- مكان عرض الكارت -->
-    <div style="display:flex;justify-content:center;padding:12px 0 16px">
-      <div id="qrCode" style="width:100%;display:flex;justify-content:center"></div>
+    <div style="display:flex;justify-content:center;padding:20px">
+      <div class="qr-code-box"><div id="qrCode"></div></div>
     </div>
-    
     <div style="font-size:11px;color:var(--muted);text-align:center;word-break:break-all;margin-bottom:14px" id="qrUrl"></div>
     <div style="display:flex;gap:8px;justify-content:center">
-      <button class="btn btn-ghost" onclick="printQR()">🖨️ طباعة</button>
+      <button class="btn btn-ghost" onclick="window.print()">🖨️ طباعة</button>
       <button class="btn btn-primary" onclick="downloadQR()">⬇️ تحميل</button>
     </div>
   </div>
@@ -542,28 +596,30 @@ function applyRoleUI(){
 
   // التحكم في إظهار وإخفاء أزرار القائمة الجانبية
   document.querySelectorAll('#sidebar .nav-btn').forEach(btn=>{
-    const requiredRole = btn.dataset.role;
+    const requiredRole = btn.dataset.role; // بنقرا الـ data-role من الـ HTML
     
     if(!requiredRole){ 
-      btn.style.display='flex'; 
+      btn.style.display='flex'; // لو مفيش شرط، بيظهر للكل
       return; 
     }
     
     if(role === 'super_admin'){ 
-      btn.style.display='flex'; 
+      btn.style.display='flex'; // السوبر أدمن بيشوف كل حاجة
       return; 
     }
     
     if(role === 'admin' && requiredRole === 'admin'){ 
-      btn.style.display='flex'; 
+      btn.style.display='flex'; // الأدمن العادي بيشوف حاجات الـ admin بس
       return; 
     }
     
+    // لو مدير فرع، ميشوفش التقارير (لأنها بتخص الأدمن)
     if(role === 'branch_manager' && btn.dataset.page === 'reports'){ 
       btn.style.display='none'; 
       return; 
     }
 
+    // أي حاجة تانية (زي الإعدادات اللي واخدة data-role="super") تتخفي
     btn.style.display = 'none';
   });
 
@@ -701,6 +757,10 @@ function showPage(name){
   if(p) p.classList.add('active');
   const b = document.querySelector(`[data-page="${name}"]`);
   if(b) b.classList.add('active');
+  
+  if(name === 'reports') {
+    initReportFilters();
+  }
 }
 
 function closeModal(id){ $(id).classList.remove('open'); }
@@ -812,11 +872,7 @@ async function deleteBranch(id){
   showToast('🗑️ تم');
 }
 
-/* ═══════════ QR (Premium Design) ═══════════ */
 let currentQRBranch = null;
-let qrRenderToken = 0;
-let currentCardCanvas = null;
-
 function showQR(branchId){
   currentQRBranch = branches.find(x=>x.id===branchId);
   if(!currentQRBranch) return;
@@ -832,271 +888,28 @@ function showQR(branchId){
 function renderQRPreview(){
   if(!currentQRBranch) return;
   const type = $('qrType').value;
-  // هنا بيوجه على ملف index.html اللي هو المنيو بتاعك
   let url = `https://algharabawycofe.github.io/gharbawy-menu/index.html?branch=${currentQRBranch.code}`;
   if(type==='table'){
     $('qrTableSelectBox').style.display='block';
-    url += `&table=${$('qrTable').value}`;
+    const t = $('qrTable').value;
+    url += `&table=${t}`;
   } else {
     $('qrTableSelectBox').style.display='none';
   }
   $('qrUrl').innerText = url;
-  buildStyledQrCard(url);
-}
-
-function buildStyledQrCard(url){
-  const myToken = ++qrRenderToken;
-  currentCardCanvas = null;
-  const container = $('qrCode');
-  container.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:13px">⏳ جاري التصميم...</div>';
-
-  const holder = document.createElement('div');
-  holder.style.position = 'absolute';
-  holder.style.left = '-9999px';
-  holder.style.top = '0';
-  document.body.appendChild(holder);
-
-  try {
-    new QRCode(holder, {
-      text: url,
-      width: 600,
-      height: 600,
-      colorDark: '#2B1D14',
-      colorLight: '#FFFFFF',
-      correctLevel: QRCode.CorrectLevel.H
-    });
-  } catch(e){
-    console.error(e);
-    document.body.removeChild(holder);
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger)">❌ فشل توليد الـ QR</div>';
-    return;
-  }
-
-  setTimeout(() => {
-    if(myToken !== qrRenderToken){ try{document.body.removeChild(holder);}catch(e){} return; }
-    const qrCanvas = holder.querySelector('canvas');
-    if(!qrCanvas){
-      try{document.body.removeChild(holder);}catch(e){}
-      container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger)">❌ فشل توليد الـ QR</div>';
-      return;
-    }
-
-    const logoUrl = (companyInfo && companyInfo.logo) || '';
-    if(logoUrl){
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      let done = false;
-      const finish = (loadedImg) => {
-        if(done) return;
-        done = true;
-        try { document.body.removeChild(holder); } catch(e){}
-        if(myToken !== qrRenderToken) return;
-        drawQrCard(qrCanvas, loadedImg, container);
-      };
-      img.onload = () => finish(img);
-      img.onerror = () => finish(null);
-      img.src = logoUrl;
-      setTimeout(() => finish(null), 3000);
-    } else {
-      try { document.body.removeChild(holder); } catch(e){}
-      drawQrCard(qrCanvas, null, container);
-    }
-  }, 100);
-}
-
-function roundRect(ctx, x, y, w, h, r){
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
-function drawQrCard(qrSrc, logoImg, container){
-  const W = 720, H = 1000; 
-  const card = document.createElement('canvas');
-  card.width = W;
-  card.height = H;
-  card.className = 'qr-card-canvas';
-  const ctx = card.getContext('2d');
-
-  ctx.fillStyle = '#241B16';
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.strokeStyle = '#C89B5E';
-  ctx.lineWidth = 2;
-  roundRect(ctx, 30, 30, W - 60, H - 60, 20);
-  ctx.stroke();
-  
-  ctx.strokeStyle = 'rgba(200, 155, 94, 0.3)';
-  ctx.lineWidth = 1;
-  roundRect(ctx, 40, 40, W - 80, H - 80, 15);
-  ctx.stroke();
-
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  const coNameAr = (companyInfo && companyInfo.nameAr) || 'الغرباوي';
-  let coNameEn = ((companyInfo && companyInfo.nameEn) || 'Al-Gharbawy').toUpperCase();
-  
-  ctx.fillStyle = '#D4A56A';
-  ctx.font = 'bold 52px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText(coNameAr, W/2, 120);
-
-  ctx.fillStyle = '#8A7566';
-  ctx.font = '600 20px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText(coNameEn, W/2, 170);
-
-  ctx.strokeStyle = '#C89B5E';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(W/2 - 60, 200);
-  ctx.lineTo(W/2 + 60, 200);
-  ctx.stroke();
-  
-  ctx.fillStyle = '#C89B5E';
-  ctx.beginPath();
-  ctx.moveTo(W/2, 195); ctx.lineTo(W/2+6, 200); ctx.lineTo(W/2, 205); ctx.lineTo(W/2-6, 200);
-  ctx.fill();
-
-  const qrBoxSize = 520;
-  const qrBoxX = (W - qrBoxSize) / 2;
-  const qrBoxY = 240;
-
-  ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-  ctx.shadowBlur = 30;
-  ctx.shadowOffsetY = 10;
-  ctx.fillStyle = '#FFFFFF';
-  roundRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 30);
-  ctx.fill();
-  ctx.restore();
-
-  const pad = 40;
-  ctx.drawImage(qrSrc, qrBoxX + pad, qrBoxY + pad, qrBoxSize - pad*2, qrBoxSize - pad*2);
-
-  if(logoImg){
-    const logoSize = 110;
-    const logoCx = qrBoxX + qrBoxSize / 2;
-    const logoCy = qrBoxY + qrBoxSize / 2;
-
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 15;
-    ctx.shadowOffsetY = 4;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(logoCx, logoCy, logoSize/2 + 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    ctx.strokeStyle = '#C89B5E';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(logoCx, logoCy, logoSize/2 + 4, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(logoCx, logoCy, logoSize/2, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(logoCx - logoSize/2, logoCy - logoSize/2, logoSize, logoSize);
-    ctx.drawImage(logoImg, logoCx - logoSize/2, logoCy - logoSize/2, logoSize, logoSize);
-    ctx.restore();
-  }
-
-  const branchName = currentQRBranch.nameAr || 'فرع';
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 44px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText(branchName, W/2, 830);
-
-  const type = $('qrType').value;
-  if(type === 'table'){
-    const tableText = 'طربيزة ' + $('qrTable').value;
-    
-    ctx.font = 'bold 26px Tahoma, "Segoe UI", Arial, sans-serif';
-    const textWidth = ctx.measureText(tableText).width;
-    const badgeW = textWidth + 40;
-    const badgeH = 44;
-    const badgeX = (W - badgeW) / 2;
-    const badgeY = 870;
-    
-    ctx.fillStyle = '#C89B5E';
-    roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 22);
-    ctx.fill();
-    
-    ctx.fillStyle = '#241B16';
-    ctx.fillText(tableText, W/2, badgeY + badgeH/2 + 2);
-  }
-
-  ctx.fillStyle = '#8A7566';
-  ctx.font = '500 22px Tahoma, "Segoe UI", Arial, sans-serif';
-  ctx.fillText('امسح الكود لفتح المنيو', W/2, 940);
-
-  ctx.fillStyle = '#C89B5E';
-  for(let i = -2; i <= 2; i++){
-    ctx.beginPath();
-    const dotR = i === 0 ? 4 : 2;
-    ctx.arc(W/2 + i*24, 970, dotR, 0, Math.PI*2);
-    ctx.fill();
-  }
-
-  container.innerHTML = '';
-  container.appendChild(card);
-  currentCardCanvas = card;
-}
-
-/* ═══════════ الطباعة النضيفة ═══════════ */
-function printQR(){
-  const canvas = currentCardCanvas || $('qrCode').querySelector('canvas');
-  if(!canvas){ showToast('⚠️ الـ QR لسه بيتولد، استنى ثانية'); return; }
-  
-  const dataUrl = canvas.toDataURL('image/png');
-  const win = window.open('', '_blank');
-  if(!win){ showToast('⚠️ الرجاء السماح بالنوافذ المنبثقة (Pop-ups) للطباعة'); return; }
-  
-  win.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>طباعة QR - ${currentQRBranch.nameAr}</title>
-      <style>
-        body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #fff; }
-        img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        @page { size: auto; margin: 10mm; }
-      </style>
-    </head>
-    <body>
-      <img src="${dataUrl}" onload="window.focus(); window.print(); window.close();" />
-    </body>
-    </html>
-  `);
-  win.document.close();
+  $('qrCode').innerHTML='';
+  new QRCode($('qrCode'),{text:url,width:256,height:256,colorDark:'#2B1D14',colorLight:'#FFFFFF',correctLevel:QRCode.CorrectLevel.H});
 }
 
 function downloadQR(){
-  const canvas = currentCardCanvas || $('qrCode').querySelector('canvas');
-  if(!canvas){ showToast('⚠️ الـ QR لسه بيتولد'); return; }
-  try {
-    const link = document.createElement('a');
-    link.download = 'qr-' + currentQRBranch.code +
-      (($('qrType').value === 'table') ? ('-table-' + $('qrTable').value) : '') + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  } catch(e){
-    console.error(e);
-    showToast('❌ فشل التحميل');
-  }
+  const canvas=$('qrCode').querySelector('canvas');
+  if(!canvas) return;
+  const link=document.createElement('a');
+  link.download='qr-'+currentQRBranch.code+(($('qrType').value==='table')?('-table-'+$('qrTable').value):'')+'.png';
+  link.href=canvas.toDataURL('image/png');
+  link.click();
 }
 
-/* ═══════════ MENUS / CATEGORIES / ITEMS ═══════════ */
 function renderMenus(){
   const el=$('menusList');
   if(!menus.length){ el.innerHTML='<div class="card empty">مفيش مجموعات</div>'; return; }
@@ -1417,6 +1230,7 @@ function renderUsers(){
   
   const roleNames={super_admin:'👑 Super Admin',admin:'🛡️ Admin',branch_manager:'👔 مدير فرع'};
   
+  // الفلترة هنا: لو اللي داخل سوبر أدمن، يشوف الكل. غير كده، يشوف الكل ما عدا السوبر أدمن
   const visibleUsers = currentUserData.role === 'super_admin' 
     ? users 
     : users.filter(u => u.role !== 'super_admin');
@@ -1424,6 +1238,7 @@ function renderUsers(){
   tb.innerHTML=visibleUsers.map(u=>{
     const b=branches.find(x=>x.id===u.branchId);
     
+    // زرار المسح (Delete) ميتعرضش للسوبر أدمن عشان محدش يمسحه بالغلط من غير السوبر
     const deleteBtn = (u.role === 'super_admin' && currentUserData.role !== 'super_admin') 
       ? '' 
       : `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑️</button>`;
@@ -1449,6 +1264,7 @@ function onUserRoleChange(){
 
 function openUserModal(id){
   refreshSelect('u-branchId');
+  // Show/hide super admin option based on current user role
   const superOpt = $('optSuperAdmin');
   if(currentUserData.role === 'super_admin'){
     superOpt.style.display = 'block';
@@ -1492,6 +1308,7 @@ async function saveUser(){
   if (!name || !email) { showToast('⚠️ كمل البيانات'); return; }
   if (role === 'branch_manager' && !branchId) { showToast('⚠️ اختار الفرع'); return; }
 
+  // Prevent non-super-admin from creating super admins
   if (role === 'super_admin' && currentUserData.role !== 'super_admin') {
     showToast('⚠️ غير مسموح'); return;
   }
@@ -1552,6 +1369,7 @@ async function deleteUser(id){
   
   const u = users.find(x=>x.id===id);
   
+  // حماية: لو الحساب اللي بنمسحه سوبر أدمن، واللي بيمسح مش سوبر أدمن، نرفض العملية
   if(u && u.role === 'super_admin' && currentUserData.role !== 'super_admin'){
     showToast('⚠️ غير مسموح بمسح حساب Super Admin'); 
     return;
@@ -1630,6 +1448,224 @@ window.addEventListener('fb-ready',()=>{
     });
   }
 });
+
+/* ═══════════ REPORTS SYSTEM ═══════════ */
+let reportData = { orders: [] };
+
+function initReportFilters() {
+  const today = new Date().toISOString().split('T')[0];
+  const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+  
+  const fromInput = $('rep-from');
+  const toInput = $('rep-to');
+  if(fromInput && !fromInput.value) fromInput.value = firstOfMonth;
+  if(toInput && !toInput.value) toInput.value = today;
+
+  // ملء قائمة الفروع
+  const branchSelect = $('rep-branch');
+  if (branchSelect && branchSelect.options.length <= 1) {
+    branchSelect.innerHTML = '<option value="all">كل الفروع</option>' + 
+      branches.map(b => `<option value="${b.id}">${b.nameAr}</option>`).join('');
+  }
+  
+  // لو مدير فرع، نقفل الفلتر على فرعه
+  if (currentUserData.role === 'branch_manager') {
+    if(branchSelect) {
+      branchSelect.value = currentUserData.branchId;
+      branchSelect.disabled = true;
+    }
+  }
+}
+
+async function generateReport() {
+  if (!currentUserData || (currentUserData.role !== 'admin' && currentUserData.role !== 'super_admin')) return;
+
+  const from = $('rep-from').value;
+  const to = $('rep-to').value;
+  const branchId = $('rep-branch').value;
+
+  if (!from || !to) { showToast('⚠️ اختار التاريخ'); return; }
+
+  showToast('⏳ جاري تحميل البيانات...');
+
+  const { db, collection, query, where, getDocs } = window.FB;
+  
+  try {
+    // نبني الاستعلام بناءً على الفلاتر
+    let q = query(collection(db, 'orders'), where('dateStr', '>=', from), where('dateStr', '<=', to));
+    
+    // لو اختار فرع معين
+    if (branchId !== 'all') {
+      q = query(collection(db, 'orders'), where('dateStr', '>=', from), where('dateStr', '<=', to), where('branchId', '==', branchId));
+    }
+
+    const snap = await getDocs(q);
+    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // لو الأدمن مش سوبر أدمن، نظهر بس أوردرات الفروع المسموح له بيها
+    let filteredOrders = orders;
+    if (currentUserData.role === 'branch_manager') {
+      filteredOrders = orders.filter(o => o.branchId === currentUserData.branchId);
+    }
+
+    reportData.orders = filteredOrders;
+    calculateReportStats(filteredOrders);
+    showToast('✅ تم تحديث التقرير');
+
+  } catch (e) {
+    console.error(e);
+    showToast('❌ ' + e.message);
+  }
+}
+
+function calculateReportStats(orders) {
+  if (!orders || orders.length === 0) {
+    $('rep-totalSales').innerText = '0 ج';
+    $('rep-totalOrders').innerText = '0';
+    $('rep-avgOrder').innerText = '0 ج';
+    $('rep-totalItems').innerText = '0';
+    $('topItemsTable').innerHTML = '<tr><td colspan="4" class="empty">مفيش بيانات</td></tr>';
+    $('branchSalesTable').innerHTML = '<tr><td colspan="3" class="empty">مفيش بيانات</td></tr>';
+    return;
+  }
+
+  let totalSales = 0;
+  let totalItems = 0;
+  const itemsMap = {}; // { itemName: { qty, total } }
+  const branchMap = {}; // { branchId: { name, orders, total } }
+
+  orders.forEach(o => {
+    totalSales += Number(o.total) || 0;
+    
+    // تجميع المنتجات
+    (o.items || []).forEach(i => {
+      totalItems += Number(i.qty) || 0;
+      const key = i.nameAr || i.nameEn;
+      if (!itemsMap[key]) itemsMap[key] = { qty: 0, total: 0 };
+      itemsMap[key].qty += Number(i.qty) || 0;
+      itemsMap[key].total += (Number(i.price) * Number(i.qty)) || 0;
+    });
+
+    // تجميع الفروع
+    const bId = o.branchId || 'unknown';
+    if (!branchMap[bId]) branchMap[bId] = { name: o.branchNameAr || 'غير معروف', orders: 0, total: 0 };
+    branchMap[bId].orders += 1;
+    branchMap[bId].total += Number(o.total) || 0;
+  });
+
+  const avgOrder = totalSales / orders.length;
+
+  $('rep-totalSales').innerText = totalSales.toLocaleString('ar-EG') + ' ج';
+  $('rep-totalOrders').innerText = orders.length;
+  $('rep-avgOrder').innerText = Math.round(avgOrder) + ' ج';
+  $('rep-totalItems').innerText = totalItems;
+
+  // أعلى 10 منتجات
+  const sortedItems = Object.keys(itemsMap).map(name => ({ name, ...itemsMap[name] })).sort((a, b) => b.qty - a.qty).slice(0, 10);
+  $('topItemsTable').innerHTML = sortedItems.map((it, idx) => `
+    <tr>
+      <td>${idx + 1}</td>
+      <td>${it.name}</td>
+      <td><strong>${it.qty}</strong></td>
+      <td style="color:var(--gold)">${it.total} ج</td>
+    </tr>
+  `).join('');
+
+  // مبيعات الفروع
+  const sortedBranches = Object.keys(branchMap).map(id => ({ id, ...branchMap[id] })).sort((a, b) => b.total - a.total);
+  $('branchSalesTable').innerHTML = sortedBranches.map(b => `
+    <tr>
+      <td>${b.name}</td>
+      <td>${b.orders}</td>
+      <td style="color:var(--gold)">${b.total} ج</td>
+    </tr>
+  `).join('');
+}
+
+/* ═══════════ PDF EXPORT ═══════════ */
+function exportReportToPDF() {
+  if (!reportData.orders || reportData.orders.length === 0) {
+    showToast('⚠️ مفيش بيانات لتحميلها');
+    return;
+  }
+
+  const from = $('rep-from').value;
+  const to = $('rep-to').value;
+  const branchName = $('rep-branch').options[$('rep-branch').selectedIndex].text;
+  
+  // إنشاء حاوية مؤقتة للـ PDF
+  const element = document.createElement('div');
+  element.style.padding = '30px';
+  element.style.fontFamily = 'Cairo, sans-serif';
+  element.style.direction = 'rtl';
+  element.style.background = '#FFF';
+  element.style.color = '#1F1611';
+
+  // الهيدر
+  let html = `
+    <div style="text-align:center; margin-bottom: 20px; border-bottom: 2px solid #C89B5E; padding-bottom: 20px;">
+      <h1 style="margin:0; font-size: 24px; color:#2B1D14;">☕ ${companyInfo.nameAr || 'الغرباوي'}</h1>
+      <p style="margin: 5px 0; color: #666;">تقرير المبيعات</p>
+      <p style="margin: 5px 0; font-size: 12px; color: #888;">من: ${from} إلى: ${to} | الفرع: ${branchName}</p>
+    </div>
+  `;
+
+  // الإحصائيات
+  html += `
+    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; background: #FAF6F0; padding: 15px; border-radius: 10px;">
+      <div style="text-align:center; flex:1;">
+        <div style="font-size: 12px; color: #666;">إجمالي المبيعات</div>
+        <div style="font-size: 20px; font-weight: bold; color: #C89B5E;">${$('rep-totalSales').innerText}</div>
+      </div>
+      <div style="text-align:center; flex:1; border-right: 1px solid #ddd; border-left: 1px solid #ddd;">
+        <div style="font-size: 12px; color: #666;">عدد الأوردرات</div>
+        <div style="font-size: 20px; font-weight: bold; color: #2B1D14;">${$('rep-totalOrders').innerText}</div>
+      </div>
+      <div style="text-align:center; flex:1;">
+        <div style="font-size: 12px; color: #666;">متوسط الأوردر</div>
+        <div style="font-size: 20px; font-weight: bold; color: #2B1D14;">${$('rep-avgOrder').innerText}</div>
+      </div>
+    </div>
+  `;
+
+  // جدول المنتجات
+  html += `
+    <h3 style="font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">🔥 أعلى 10 منتجات مبيعاً</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px;">
+      <thead><tr style="background: #F5EEE5;"><th style="padding: 8px; text-align: right;">#</th><th style="padding: 8px; text-align: right;">المنتج</th><th style="padding: 8px; text-align: right;">الكمية</th><th style="padding: 8px; text-align: right;">الإجمالي</th></tr></thead>
+      <tbody>
+  `;
+  document.querySelectorAll('#topItemsTable tr').forEach(tr => {
+    html += `<tr>${Array.from(tr.children).map(td => `<td style="padding: 8px; border-bottom: 1px solid #eee;">${td.innerText}</td>`).join('')}</tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // جدول الفروع
+  html += `
+    <h3 style="font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">🏢 مبيعات الفروع</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="background: #F5EEE5;"><th style="padding: 8px; text-align: right;">الفرع</th><th style="padding: 8px; text-align: right;">عدد الأوردرات</th><th style="padding: 8px; text-align: right;">إجمالي المبيعات</th></tr></thead>
+      <tbody>
+  `;
+  document.querySelectorAll('#branchSalesTable tr').forEach(tr => {
+    html += `<tr>${Array.from(tr.children).map(td => `<td style="padding: 8px; border-bottom: 1px solid #eee;">${td.innerText}</td>`).join('')}</tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // الفوتر
+  html += `<div style="text-align: center; margin-top: 40px; font-size: 10px; color: #999;">تم إنشاء هذا التقرير بواسطة نظام ${companyInfo.nameAr || 'الغرباوي'} - ${new Date().toLocaleString('ar-EG')}</div>`;
+
+  element.innerHTML = html;
+
+  // تحويل لـ PDF
+  html2pdf().set({
+    margin: 10,
+    filename: `Report_${from}_to_${to}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(element).save();
+}
 </script>
 </body>
 </html>
