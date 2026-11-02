@@ -433,10 +433,7 @@ onFbReady(()=>{
       loadCompanyInfo();
       loadFeatures();
 
-      setTimeout(() => {
-         showToast('🔊 اضغط في أي مكان بالصفحة لتفعيل صوت الأوردرات');
-      }, 2000);
-
+    
     } else {
       currentUser = null; currentUserData = null;
       $('loginOverlay').style.display='flex'; $('noPermOverlay').style.display='none'; $('app').style.display='none';
@@ -518,22 +515,23 @@ function subscribeAll(){
   unsubs.push(onSnapshot(collection(db,'branches'),s=>{ branches = s.docs.map(d=>({id:d.id,...d.data()})); renderBranches(); refreshSelects(); applyRoleUI(); }));
 
   // هنا بنجيب كل الأوردرات لأننا داخلين كـ Admin
+ // هنا بنجيب كل الأوردرات (بدون صوت أو تنبيهات للأدمن)
   const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
 
   unsubs.push(onSnapshot(ordersQuery,
     (s) => {
-      s.docChanges().forEach(change => {
-        if (change.type === 'added' && !isFirstOrdersSnapshot) {
-          const newOrder = { id: change.doc.id, ...change.doc.data() };
-          unlockAudio();
-          playNotificationSound();
-          showToast('🔔 أوردر جديد من ' + (newOrder.branchNameAr || 'فرع'));
-        }
-      });
-      isFirstOrdersSnapshot = false;
-
+      // تحديث الأوردرات في الشاشة فقط
       orders = s.docs.map(d => ({ id: d.id, ...d.data() }));
       renderOrders();
+      renderRecentOrders();
+      updateStats();
+      if ($('page-kds') && $('page-kds').classList.contains('active')) renderKDS();
+      if (features.charts) renderSalesChart();
+    },
+    (err) => {
+      console.error('❌ Orders snapshot error:', err.code, err.message);
+    }
+  ));
       renderRecentOrders();
       updateStats();
       if ($('page-kds') && $('page-kds').classList.contains('active')) renderKDS();
