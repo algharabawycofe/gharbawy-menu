@@ -41,12 +41,20 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 
 .branch-select-screen { position: fixed; inset: 0; z-index: 900; display: none; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px; } .branch-select-screen.show { display: flex; } .branch-select-card { width: min(92vw, 480px); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); } .branch-option { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; width: 100%; text-align: inherit; color: var(--text-primary); }
 
-/* صفحة عرض الأوردر للويتر (فول سكرين شيك) */
+/* زر استدعاء الويتر (الجرس) العائم */
+#callWaiterBtn { display: none; position: fixed; bottom: 30px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; }
+#callWaiterBtn.pending { animation: pulseBtn 1.5s infinite; opacity: 0.7; pointer-events: none; }
+@keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(200,155,94,0.8); } 100% { transform: scale(1); } }
+
+/* صفحة عرض الأوردر للويتر */
 #waiterDisplayScreen { position: fixed; inset: 0; background: #1A1310; color: #FAF6F0; z-index: 2000; display: none; flex-direction: column; align-items: center; padding: 30px 20px; overflow-y: auto; text-align: center; }
 #waiterDisplayScreen.show { display: flex; }
 </style>
 </head>
 <body>
+
+<!-- زر الجرس لاستدعاء الويتر -->
+<button id="callWaiterBtn" onclick="callWaiter()" title="استدعاء الويتر">🛎️</button>
 
 <!-- شاشة عرض الأوردر للويتر -->
 <div id="waiterDisplayScreen">
@@ -134,6 +142,7 @@ let currentLang = localStorage.getItem('gharbaoui_lang') || 'ar';
 let cart = JSON.parse(localStorage.getItem('gharbaoui_cart')) || [];
 let activeCategory = 'all', allCategories = [], allItems = [], allBranches = [];
 let currentBranch = null, currentMenuId = null, currentTable = null;
+let activeWaiterCallId = null;
 let audioCtx = null;
 
 function initAudio() {
@@ -143,18 +152,19 @@ function initAudio() {
 document.addEventListener('click', initAudio, { once: true });
 document.addEventListener('touchstart', initAudio, { once: true });
 
-function playCustomerSuccessSound() {
+function playClientBellSound() {
   try {
     initAudio(); if (!audioCtx) return;
-    [0, 0.15, 0.3].forEach((delay, idx) => {
+    [0, 0.2].forEach(delay => {
       let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime([600, 800, 1050][idx], audioCtx.currentTime + delay);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime + delay);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + delay + 0.15);
       gain.gain.setValueAtTime(0.8, audioCtx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.35);
       osc.connect(gain); gain.connect(audioCtx.destination);
       osc.start(audioCtx.currentTime + delay);
-      osc.stop(audioCtx.currentTime + delay + 0.3);
+      osc.stop(audioCtx.currentTime + delay + 0.35);
     });
   } catch(e) {}
 }
@@ -217,7 +227,17 @@ function readTableFromUrl() {
 }
 
 function subscribeAll() {
-  const { db, collection, onSnapshot, query, where } = window.FB;
+  const { db, collection, onSnapshot, query, where, doc } = window.FB;
+  
+  // تفعيل ظهور زر الجرس للويتر حسب الإعدادات
+  onSnapshot(doc(db, 'settings', 'features'), (snap) => {
+    if (snap.exists() && snap.data().callWaiter) { 
+      document.getElementById('callWaiterBtn').style.display = 'flex'; 
+    } else { 
+      document.getElementById('callWaiterBtn').style.display = 'none'; 
+    }
+  });
+
   onSnapshot(collection(db, 'branches'), (snap) => {
     allBranches = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.active !== false);
     checkBranchFromUrl();
@@ -231,15 +251,17 @@ function subscribeAll() {
     renderCustomerMenu();
   });
 
+  // الاستماع لتحديثات حالة الأوردر للعميل (إشعارات فورية عند بدء التحضير أو الاكتمال)
   if (currentTable) {
     onSnapshot(query(collection(db, 'orders'), where('table', '==', currentTable)), (snap) => {
       snap.docChanges().forEach(ch => {
-        if (ch.type === 'modified') {
+        if (ch.type === 'modified' || ch.type === 'added') {
           const data = ch.doc.data();
           if (data.status === 'done') {
-            playCustomerSuccessSound();
+            playClientBellSound();
             showToast(currentLang === 'ar' ? `🎉 أوردر طربيزة ${currentTable} جاهز وفي طريقه إليك بالهناء والشفاء!` : `🎉 Your order for table ${currentTable} is ready and on the way!`, '☕');
           } else if (data.status === 'preparing') {
+            playClientBellSound();
             showToast(currentLang === 'ar' ? `👨‍🍳 جاري تحضير طلبك الآن في الفرع...` : `👨‍🍳 Your order is being prepared...`, '🔥');
           }
         }
@@ -312,6 +334,45 @@ function filterMenu() {
   }).join('');
 }
 
+// دالة زر استدعاء الويتر العائم (الجرس)
+async function callWaiter() {
+  if (!currentBranch) return;
+  const { db, collection, addDoc, onSnapshot, doc } = window.FB;
+  const btn = document.getElementById('callWaiterBtn');
+  
+  playClientBellSound();
+
+  try {
+    const docRef = await addDoc(collection(db, 'waiter_calls'), {
+      branchId: currentBranch.id,
+      branchNameAr: currentBranch.nameAr,
+      table: currentTable || 'غير محدد',
+      createdAt: new Date(),
+      status: 'pending'
+    });
+    activeWaiterCallId = docRef.id;
+    btn.classList.add('pending');
+    showToast(currentLang === 'ar' ? 'تم استدعاء الويتر، جاري الاستجابة...' : 'Waiter called, awaiting response...', '🛎️');
+
+    const unsubCall = onSnapshot(doc(db, 'waiter_calls', activeWaiterCallId), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.status === 'done' || data.responded === true) {
+          playClientBellSound();
+          showToast(currentLang === 'ar' ? 'الويتر في طريقه إليك 🚶‍♂️☕' : 'Waiter is on the way! 🚶‍♂️☕', '🏃‍♂️');
+          btn.style.display = 'none';
+          btn.classList.remove('pending');
+          activeWaiterCallId = null;
+          unsubCall();
+        }
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    btn.classList.remove('pending');
+  }
+}
+
 function addToCart(id) {
   const item = allItems.find(x => x.id === id);
   if (!item) return;
@@ -381,7 +442,6 @@ function changeQty(idx, delta) {
   renderCartItems();
 }
 
-// الزر الواحد: يرسل الأوردر للفرع + يفتح شاشة العرض الشيك للويتر في نفس اللحظة
 async function submitAndShowToWaiter() {
   if (!currentBranch || !cart.length) return;
   const { db, collection, addDoc } = window.FB;
@@ -390,7 +450,6 @@ async function submitAndShowToWaiter() {
   const tableNum = currentTable || 'غير محدد';
 
   try {
-    // 1. إرسال الأوردر للفرع (لسيستم الكاشير والمطبخ)
     await addDoc(collection(db, 'orders'), {
       branchId: currentBranch.id,
       branchNameAr: currentBranch.nameAr,
@@ -401,14 +460,12 @@ async function submitAndShowToWaiter() {
       createdAt: new Date()
     });
 
-    // 2. تفريغ السلة
     cart = [];
     localStorage.removeItem('gharbaoui_cart');
     updateCartBadge();
     closeCartModal();
-    playCustomerSuccessSound();
+    playClientBellSound();
 
-    // 3. فتح صفحة العرض الشيك للويتر (Full Screen Display)
     document.getElementById('displayBranchName').innerText = currentBranch.nameAr || '';
     document.getElementById('displayTableNum').innerText = tableNum;
     document.getElementById('displayTotal').innerText = total + ' جنيه';
