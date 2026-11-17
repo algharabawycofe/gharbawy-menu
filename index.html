@@ -23,10 +23,14 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 .search-wrap { position: relative; flex: 1; } .search-input { width: 100%; padding: 12px 16px 12px 42px; background: var(--bg-surface); border: 1.5px solid var(--border); border-radius: 16px; font-size: 13px; color: var(--text-primary); outline: none; font-family: inherit; } html[dir="rtl"] .search-input { padding: 12px 42px 12px 16px; } .search-input:focus { border-color: var(--coffee-gold); } .search-icon { position: absolute; top: 50%; transform: translateY(-50%); inset-inline-start: 14px; color: var(--text-muted); pointer-events: none; }
 .cat-tab { padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); font-family: inherit; display: inline-flex; align-items: center; gap: 6px; } .cat-tab .cat-count { font-size: 10px; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--coffee-gold) 15%, transparent); color: var(--coffee-gold); font-weight: 900; } .cat-tab.active { background: var(--coffee-dark); color: var(--bg-primary); border-color: var(--coffee-dark); }
 
-/* قسم العروض البانر المتحرك أو المميز */
-.promo-banner { background: linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium)); color: #FAF6F0; border-radius: 20px; padding: 16px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-md); border: 1px solid var(--coffee-gold); }
-.promo-banner h3 { margin: 0 0 4px; font-size: 15px; font-weight: 900; color: var(--coffee-gold-light); }
-.promo-banner p { margin: 0; font-size: 12px; color: #E8DED2; font-weight: 600; }
+/* قسم السلايدر الخاص بالعروض الترويجية */
+.offers-slider-container { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 16px; scroll-snap-type: x mandatory; }
+.offer-card { min-width: 280px; max-width: 320px; flex: 0 0 auto; background: linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium)); border-radius: 20px; overflow: hidden; border: 1.5px solid var(--coffee-gold); display: flex; align-items: center; padding: 14px; gap: 12px; box-shadow: var(--shadow-md); scroll-snap-align: start; color: #FAF6F0; }
+.offer-card img { width: 70px; height: 70px; border-radius: 14px; object-fit: cover; background: var(--bg-subtle); flex-shrink: 0; }
+.offer-info { flex: 1; min-width: 0; }
+.offer-title { font-size: 14px; font-weight: 900; color: var(--coffee-gold-light); margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.offer-desc { font-size: 11px; color: #E8DED2; margin: 0 0 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.offer-price { font-size: 13px; font-weight: 900; color: var(--coffee-gold); }
 
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; } @media (min-width: 700px) { .menu-grid { grid-template-columns: 1fr 1fr 1fr; gap: 14px; } }
 .menu-card { background: var(--bg-surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden; position: relative; display: flex; flex-direction: column; } .menu-card:hover { border-color: var(--coffee-gold); box-shadow: var(--shadow-md); } .menu-card.out-of-stock { opacity: 0.55; }
@@ -47,22 +51,18 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 
 .branch-select-screen { position: fixed; inset: 0; z-index: 900; display: none; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px; } .branch-select-screen.show { display: flex; } .branch-select-card { width: min(92vw, 480px); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); } .branch-option { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; width: 100%; text-align: inherit; color: var(--text-primary); }
 
-/* زر استدعاء الويتر (الجرس) العائم */
 #callWaiterBtn { display: none; position: fixed; bottom: 30px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; }
 #callWaiterBtn.pending { animation: pulseBtn 1.5s infinite; opacity: 0.7; pointer-events: none; }
 @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(200,155,94,0.8); } 100% { transform: scale(1); } }
 
-/* صفحة عرض الأوردر للويتر */
 #waiterDisplayScreen { position: fixed; inset: 0; background: #1A1310; color: #FAF6F0; z-index: 2000; display: none; flex-direction: column; align-items: center; padding: 30px 20px; overflow-y: auto; text-align: center; }
 #waiterDisplayScreen.show { display: flex; }
 </style>
 </head>
 <body>
 
-<!-- زر الجرس لاستدعاء الويتر -->
 <button id="callWaiterBtn" onclick="callWaiter()" title="استدعاء الويتر">🛎️</button>
 
-<!-- شاشة عرض الأوردر للويتر -->
 <div id="waiterDisplayScreen">
   <button onclick="closeWaiterDisplay()" style="position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.1); border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer;">✕</button>
   <div style="font-size: 48px; margin-bottom: 8px;">☕</div>
@@ -82,7 +82,6 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
   <p style="margin-top: 14px; font-size: 13px; color: var(--coffee-gold); font-weight: 900;">☕ شكراً لطلبك</p>
 </div>
 
-<!-- شاشة اختيار الفرع -->
 <div id="branchSelectScreen" class="branch-select-screen">
   <div class="branch-select-card">
     <div style="font-size: 48px; margin-bottom: 8px;">☕</div>
@@ -92,7 +91,6 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
   </div>
 </div>
 
-<!-- شاشة الترحيب -->
 <div id="welcomeScreen" class="welcome-screen">
   <div class="welcome-card">
     <div class="welcome-logo-wrap"><img id="welcomeLogo" src="logo-01.png" alt="Al-Gharbawy" onerror="this.style.display='none';"></div>
@@ -119,14 +117,8 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 </header>
 
 <main class="app-main">
-  <!-- قسم العروض والخصومات المميزة -->
-  <div class="promo-banner">
-    <div>
-      <h3 id="promoTitle">🔥 عروض بن الغرباوي الخاصة</h3>
-      <p id="promoDesc">اطلب دلوقتي واستمتع بأحلى الأجواء والقهوة المضبوطة!</p>
-    </div>
-    <div style="font-size: 32px;">☕</div>
-  </div>
+  <!-- منطقة العروض المتحركة (Slider) -->
+  <div id="offersSlider" class="offers-slider-container" style="display: none;"></div>
 
   <div style="position: sticky; top: 62px; background: var(--bg-primary); padding: 12px 0; z-index: 40;">
     <div style="display: flex; gap: 8px; margin-bottom: 10px;">
@@ -155,7 +147,7 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 <script>
 let currentLang = localStorage.getItem('gharbaoui_lang') || 'ar';
 let cart = JSON.parse(localStorage.getItem('gharbaoui_cart')) || [];
-let activeCategory = 'all', allCategories = [], allItems = [], allBranches = [];
+let activeCategory = 'all', allCategories = [], allItems = [], allBranches = [], allOffers = [];
 let currentBranch = null, currentMenuId = null, currentTable = null;
 let activeWaiterCallId = null;
 let audioCtx = null;
@@ -207,6 +199,7 @@ function toggleLanguage() {
   localStorage.setItem('gharbaoui_lang', currentLang);
   applyLanguage();
   renderCustomerMenu();
+  renderOffersSlider();
 }
 
 function applyLanguage() {
@@ -223,8 +216,6 @@ function applyLanguage() {
     document.getElementById('branchSelectSub').innerText = 'Choose your current branch to view the correct menu';
     document.getElementById('searchInput').placeholder = 'Search menu...';
     document.getElementById('cartModalTitle').innerText = '📋 Current Orders';
-    document.getElementById('promoTitle').innerText = '🔥 Al-Gharbawy Special Offers';
-    document.getElementById('promoDesc').innerText = 'Order now and enjoy the best coffee atmosphere!';
   } else {
     document.getElementById('welcomeTitle').innerText = 'أهلاً وسهلاً بيك';
     document.getElementById('welcomeSubtitle').innerHTML = 'منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.';
@@ -233,8 +224,6 @@ function applyLanguage() {
     document.getElementById('branchSelectSub').innerText = 'اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح';
     document.getElementById('searchInput').placeholder = 'ابحث في القائمة...';
     document.getElementById('cartModalTitle').innerText = '📋 طلباتي الحالية';
-    document.getElementById('promoTitle').innerText = '🔥 عروض بن الغرباوي الخاصة';
-    document.getElementById('promoDesc').innerText = 'اطلب دلوقتي واستمتع بأحلى الأجواء والقهوة المضبوطة!';
   }
 }
 
@@ -268,8 +257,12 @@ function subscribeAll() {
     allCategories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderCustomerMenu();
   });
+  // الاستماع المباشر لجدول العروض (Offers)
+  onSnapshot(collection(db, 'offers'), (snap) => {
+    allOffers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderOffersSlider();
+  });
 
-  // الاستماع لتحديثات الأوردر للعميل وإرسال إشعارات فورية صوتية وبصرية
   if (currentTable) {
     onSnapshot(query(collection(db, 'orders'), where('table', '==', currentTable)), (snap) => {
       snap.docChanges().forEach(ch => {
@@ -305,6 +298,38 @@ function selectBranch(branch) {
   currentBranch = branch; currentMenuId = branch.menuId;
   document.getElementById('branchSelectScreen').classList.remove('show');
   renderCustomerMenu();
+  renderOffersSlider();
+}
+
+function renderOffersSlider() {
+  const slider = document.getElementById('offersSlider');
+  if (!currentBranch || !allOffers.length) {
+    slider.style.display = 'none';
+    return;
+  }
+  // فلترة العروض النشطة الخاصة بالفرع الحالي أو العامة (التي ليس لها فرع محدد أو الفرع هو نفسه)
+  const branchOffers = allOffers.filter(o => o.active !== false && (!o.branchId || o.branchId === currentBranch.id));
+  
+  if (!branchOffers.length) {
+    slider.style.display = 'none';
+    return;
+  }
+
+  slider.style.display = 'flex';
+  slider.innerHTML = branchOffers.map(o => {
+    const title = currentLang === 'ar' ? (o.titleAr || '') : (o.titleEn || o.titleAr || '');
+    const desc = currentLang === 'ar' ? (o.descAr || '') : (o.descEn || o.descAr || '');
+    return `
+      <div class="offer-card">
+        <img src="${o.image || ''}" onerror="this.style.display='none'">
+        <div class="offer-info">
+          <h4 class="offer-title">${title}</h4>
+          <p class="offer-desc">${desc}</p>
+          ${o.price ? `<div class="offer-price">${o.price} ج</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function getBranchItems() { if (!currentMenuId) return []; return allItems.filter(i => i.menuId === currentMenuId); }
