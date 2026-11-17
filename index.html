@@ -52,12 +52,10 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 .branch-select-screen { position: fixed; inset: 0; z-index: 900; display: none; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px; } .branch-select-screen.show { display: flex; } .branch-select-card { width: min(92vw, 480px); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); } .branch-select-card h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; } .branch-select-card p { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; } .branch-option { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; width: 100%; text-align: inherit; color: var(--text-primary); } .branch-option:hover { border-color: var(--coffee-gold); background: color-mix(in srgb, var(--coffee-gold) 8%, var(--bg-subtle)); } .branch-option strong { font-weight: 900; font-size: 14px; display: block; } .branch-option small { font-size: 11px; color: var(--text-muted); }
 .system-offline-overlay { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; } .system-offline-overlay.show { display: flex; }
 
-/* Call Waiter Button Styling with Active Wait State */
-#callWaiterBtn { display: none; position: fixed; bottom: 100px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; transition: transform 0.3s ease; }
+#callWaiterBtn { display: none; position: fixed; bottom: 100px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; }
 #callWaiterBtn.pending { animation: pulseBtn 1.5s infinite; opacity: 0.7; pointer-events: none; }
 @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(200,155,94,0.8); } 100% { transform: scale(1); } }
 
-/* Custom Modal styling */
 .custom-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
 .custom-modal-backdrop.show { display: flex; }
 .custom-modal { background: var(--bg-surface); padding: 24px; border-radius: 24px; width: min(90vw, 360px); text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-lg); }
@@ -79,7 +77,6 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 
 <div id="toastContainer" class="toast-container"></div>
 
-<!-- Custom Confirmation Modal -->
 <div id="customModalBackdrop" class="custom-modal-backdrop">
   <div class="custom-modal">
     <h3 id="customModalTitle">تأكيد</h3>
@@ -190,9 +187,7 @@ function debounce(fn, w) { let t; return function(...a) { clearTimeout(t); t = s
 
 window.addEventListener('DOMContentLoaded', () => {
   initDarkMode(); applyLanguageUI(); updateCartBadge(); renderSkeleton(); initWelcome(); readTableFromUrl(); setupScrollBehavior();
-  onFbReady(() => {
-    subscribeAll();
-  });
+  onFbReady(() => { subscribeAll(); });
   if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 });
 
@@ -357,14 +352,7 @@ async function showOrderToWaiter() {
       createdAt: serverTimestamp(),
       dateStr: todayStr
     });
-
-    // تفريغ السلة أوتوماتيك وإغلاق النافذة
-    cart = [];
-    saveCart();
-    renderCartModalItems();
-    renderCustomerMenu();
-    closeCartModal();
-
+    cart = []; saveCart(); renderCartModalItems(); renderCustomerMenu(); closeCartModal();
   } catch (e) { console.error('Order save failed', e); }
 
   const companyName = currentLang === 'ar' ? (companyInfo.nameAr || 'الغرباوي') : (companyInfo.nameEn || 'Al-Gharbawy'); const branchName = currentBranch ? (currentLang === 'en' ? (currentBranch.nameEn || currentBranch.nameAr) : currentBranch.nameAr) : ''; const tableLabel = tableNum ? (currentLang === 'en' ? `Table ${tableNum}` : `طربيزة ${tableNum}`) : '';
@@ -377,7 +365,6 @@ async function callWaiter() {
   if (!currentBranch) return;
   const { db, collection, addDoc, onSnapshot, doc } = window.FB;
   const btn = $('callWaiterBtn');
-  
   try {
     const docRef = await addDoc(collection(db, 'waiter_calls'), {
       branchId: currentBranch.id,
@@ -387,28 +374,22 @@ async function callWaiter() {
       status: 'pending'
     });
     activeWaiterCallId = docRef.id;
-    
-    // إخفاء أو تحويل الجرس لحالة الانتظار لحد ما الويتر يرد
     btn.classList.add('pending');
     showToast(currentLang === 'ar' ? 'تم استدعاء الويتر، جاري الاستجابة...' : 'Waiter called, awaiting response...', '🛎️');
 
     const unsubCall = onSnapshot(doc(db, 'waiter_calls', activeWaiterCallId), (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        if (data.status === 'acknowledged' || data.responded === true) {
-          // الويتر ضغط صح! إخفاء الجرس تماماً أو إظهار رسالة الويتر جاي
+        if (data.status === 'done' || data.responded === true) {
           showToast(currentLang === 'ar' ? 'الويتر في طريقه إليك 🚶‍♂️☕' : 'Waiter is on the way! 🚶‍♂️☕', '🏃‍♂️');
-          btn.style.display = 'none'; // يختفي الجرس من عند العميل تماماً
+          btn.style.display = 'none';
+          btn.classList.remove('pending');
           activeWaiterCallId = null;
           unsubCall();
         }
       }
     });
-
-  } catch (e) { 
-    console.error(e); 
-    btn.classList.remove('pending');
-  }
+  } catch (e) { console.error(e); btn.classList.remove('pending'); }
 }
 
 function openItemDetails(id) { const item = getBranchItems().find(i => i.id === id); if (!item) return; currentSheetItem = item; currentSheetQty = 1; renderItemSheet(); $('itemBackdrop').classList.add('open'); $('itemSheet').classList.add('open'); }
@@ -435,11 +416,7 @@ async function initFeaturedCarousel() {
     if (currentOffers.length > 0) {
       featuredItems = [];
       $('featuredSection').classList.remove('hidden-init');
-      renderOfferSlides();
-      renderOfferDots();
-      showOfferSlide(0);
-      startAutoplay();
-      return;
+      renderOfferSlides(); renderOfferDots(); showOfferSlide(0); startAutoplay(); return;
     }
   } catch(e) { console.error('Error loading offers', e); }
 
@@ -452,10 +429,7 @@ async function initFeaturedCarousel() {
   featuredItems = shuffled.slice(0, 10);
   currentOffers = [];
   $('featuredSection').classList.remove('hidden-init');
-  renderSlides();
-  renderDots();
-  showSlide(0);
-  startAutoplay();
+  renderSlides(); renderDots(); showSlide(0); startAutoplay();
 }
 
 function renderOfferSlides() {
@@ -465,13 +439,11 @@ function renderOfferSlides() {
     </div>
   `).join('');
 }
-
 function renderOfferDots() {
   $('slideDots').innerHTML = currentOffers.map((_, i) => `
     <button onclick="event.stopPropagation(); goToSlide(${i})" style="width: 7px; height: 7px; border-radius: 9999px; background: rgba(255,255,255,0.4); border: none; cursor: pointer; padding: 0;"></button>
   `).join('');
 }
-
 function showOfferSlide(index) {
   if (currentOffers.length === 0) return;
   currentSlide = (index + currentOffers.length) % currentOffers.length;
@@ -499,7 +471,6 @@ function showOfferSlide(index) {
     </div>
   `;
 }
-
 function openOfferDetails(offerId) {
   const offer = currentOffers.find(o => o.id === offerId);
   if (!offer) return;
