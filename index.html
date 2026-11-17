@@ -15,7 +15,7 @@ html.dark { --bg-primary: #1A1310; --bg-surface: #241B16; --bg-subtle: #1F1712; 
 body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary); color: var(--text-primary); margin: 0; min-height: 100vh; }
 @media (max-width: 768px) { body { padding-bottom: 90px; } }
 .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-.app-header { background: color-mix(in srgb, var(--bg-surface) 92%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; transition: all 0.3s ease; }
+.app-header { background: color-mix(in srgb, var(--bg-surface) 92%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
 .icon-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--bg-subtle); border: 1.5px solid var(--border); color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; font-family: inherit; } .icon-btn:hover { background: var(--coffee-gold); color: #FFF; border-color: var(--coffee-gold); }
 .cart-btn-header { background: linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium)); color: #FFF; padding: 0 14px; height: 38px; border-radius: 12px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; cursor: pointer; position: relative; border: none; font-family: inherit; }
 .cart-badge { position: absolute; top: -6px; inset-inline-end: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--coffee-gold); color: #1F1611; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-surface); }
@@ -24,51 +24,62 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 .pill-btn { padding: 12px 16px; background: var(--bg-surface); border: 1.5px solid var(--border); border-radius: 16px; color: var(--text-primary); font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; font-family: inherit; } .pill-btn.active { background: var(--coffee-gold); border-color: var(--coffee-gold); color: #1F1611; }
 .cat-tab { padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); font-family: inherit; display: inline-flex; align-items: center; gap: 6px; } .cat-tab .cat-count { font-size: 10px; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--coffee-gold) 15%, transparent); color: var(--coffee-gold); font-weight: 900; } .cat-tab.active { background: var(--coffee-dark); color: var(--bg-primary); border-color: var(--coffee-dark); }
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; } @media (min-width: 700px) { .menu-grid { grid-template-columns: 1fr 1fr 1fr; gap: 14px; } }
-.menu-card { background: var(--bg-surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden; cursor: pointer; position: relative; display: flex; flex-direction: column; opacity: 0; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, border-color 0.25s ease; } .menu-card.visible { opacity: 1; transform: translateY(0); } .menu-card:hover { transform: translateY(-4px); border-color: var(--coffee-gold); box-shadow: var(--shadow-md); } .menu-card.out-of-stock { opacity: 0.55; }
+.menu-card { background: var(--bg-surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden; cursor: pointer; position: relative; display: flex; flex-direction: column; } .menu-card:hover { border-color: var(--coffee-gold); box-shadow: var(--shadow-md); } .menu-card.out-of-stock { opacity: 0.55; }
 .menu-card-img-wrap { position: relative; width: 100%; aspect-ratio: 1 / 1; background: var(--bg-subtle); overflow: hidden; } .menu-card-img { width: 100%; height: 100%; object-fit: cover; }
 .menu-card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
-.cat-chip { display: inline-block; font-size: 9px; font-weight: 800; color: var(--coffee-gold); background: color-mix(in srgb, var(--coffee-gold) 12%, transparent); padding: 2px 7px; border-radius: 5px; align-self: flex-start; margin-bottom: 6px; }
 .menu-card-title { font-size: 13px; font-weight: 900; color: var(--text-primary); margin: 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em; }
-.menu-card-desc { font-size: 10px; color: var(--text-muted); margin: 3px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .menu-card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 8px; gap: 6px; }
-.menu-card-price { font-size: 14px; font-weight: 900; color: var(--coffee-gold); white-space: nowrap; } .menu-card-price small { font-size: 9px; font-weight: 700; }
-.fav-btn { background: rgba(255,255,255,0.9); border: none; font-size: 14px; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: 8px; inset-inline-end: 8px; z-index: 3; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.add-btn { padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 900; border: none; cursor: pointer; display: flex; align-items: center; gap: 3px; font-family: inherit; white-space: nowrap; } .add-btn.primary { background: linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light)); color: #1F1611; } .add-btn.remove { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
-.stock-badge { position: absolute; top: 8px; inset-inline-start: 8px; background: var(--danger); color: #fff; font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 6px; z-index: 3; } .unavailable-label { font-size: 10px; font-weight: 900; color: var(--danger); }
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: color-mix(in srgb, var(--bg-surface) 94%, transparent); backdrop-filter: blur(20px); border-top: 1px solid var(--border); padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; z-index: 45; } @media (min-width: 769px) { .bottom-nav { display: none; } } .nav-item { background: none; border: none; padding: 8px 4px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; color: var(--text-muted); font-family: inherit; position: relative; } .nav-item.active { color: var(--coffee-gold); background: color-mix(in srgb, var(--coffee-gold) 10%, transparent); } .nav-icon { font-size: 20px; line-height: 1; } .nav-label { font-size: 10px; font-weight: 700; } .nav-badge { position: absolute; top: 4px; inset-inline-end: calc(50% - 18px); min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--coffee-gold); color: #1F1611; font-size: 9px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-surface); }
+.menu-card-price { font-size: 14px; font-weight: 900; color: var(--coffee-gold); white-space: nowrap; }
+.add-btn { padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 900; border: none; cursor: pointer; display: flex; align-items: center; gap: 3px; font-family: inherit; background: linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light)); color: #1F1611; }
+
 .sheet-backdrop { position: fixed; inset: 0; background: rgba(26,19,16,0.7); z-index: 60; opacity: 0; pointer-events: none; backdrop-filter: blur(6px); } .sheet-backdrop.open { opacity: 1; pointer-events: auto; } .bottom-sheet { position: fixed; inset-inline: 0; bottom: 0; max-height: 90vh; background: var(--bg-surface); border-radius: 28px 28px 0 0; z-index: 61; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; overflow: hidden; } .bottom-sheet.open { transform: translateY(0); } .sheet-handle { width: 40px; height: 4px; background: var(--border-strong); border-radius: 2px; margin: 10px auto 0; } .sheet-scroll { overflow-y: auto; flex: 1; } .sheet-footer { background: var(--bg-surface); border-top: 1px solid var(--border); padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; }
-.qty-btn { width: 36px; height: 36px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg-surface); color: var(--text-primary); font-size: 18px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; } .primary-btn { padding: 14px 20px; border-radius: 14px; border: none; background: linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium)); color: #FFF; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; } .secondary-btn { padding: 14px 20px; border-radius: 14px; background: var(--bg-subtle); color: var(--text-primary); font-size: 13px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; border: 1.5px solid var(--border); } .notes-input { width: 100%; padding: 12px 14px; background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 12px; font-size: 13px; color: var(--text-primary); font-family: inherit; outline: none; resize: none; }
-.toast-container { position: fixed; top: 80px; inset-inline-end: 16px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; } .toast { background: var(--coffee-dark); color: var(--bg-primary); padding: 12px 16px; border-radius: 14px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 10px; pointer-events: auto; max-width: 300px; box-shadow: var(--shadow-lg); animation: toastIn 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+.primary-btn { padding: 14px 20px; border-radius: 14px; border: none; background: linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium)); color: #FFF; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; }
+.toast-container { position: fixed; top: 80px; inset-inline-end: 16px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; } .toast { background: var(--coffee-dark); color: var(--bg-primary); padding: 12px 16px; border-radius: 14px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 10px; pointer-events: auto; max-width: 300px; box-shadow: var(--shadow-lg); }
+
 .welcome-screen { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 8%, rgba(200,155,94,.12), transparent 26%), linear-gradient(180deg, #FBF7F1 0%, #F4EDE3 100%); } .welcome-screen.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .65s, visibility .65s; } .welcome-card { width: min(92vw, 560px); padding: 18px 26px 22px; text-align: center; }
 .welcome-logo-wrap { width: 154px; height: 154px; margin: 0 auto 24px; border-radius: 50%; display: grid; place-items: center; position: relative; } .welcome-logo-wrap img { width: 116px; height: 116px; object-fit: contain; position: relative; z-index: 2; }
 .welcome-title { margin: 0; color: #2B1D14; font-size: clamp(34px, 8vw, 52px); font-weight: 900; } .welcome-subtitle { margin: 14px auto 0; max-width: 420px; color: #6F4E37; font-size: 14px; line-height: 2; font-weight: 600; } .welcome-enter-btn { min-width: 230px; padding: 14px 28px; border-radius: 14px; color: #FFFDF9; background: #2B1D14; font-size: 14px; font-weight: 900; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 8px 20px rgba(43,29,20,.15); }
+
 .branch-select-screen { position: fixed; inset: 0; z-index: 900; display: none; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px; } .branch-select-screen.show { display: flex; } .branch-select-card { width: min(92vw, 480px); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); } .branch-option { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; width: 100%; text-align: inherit; color: var(--text-primary); }
 
-#callWaiterBtn { display: none; position: fixed; bottom: 100px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; }
+#callWaiterBtn { display: none; position: fixed; bottom: 30px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; }
 #callWaiterBtn.pending { animation: pulseBtn 1.5s infinite; opacity: 0.7; pointer-events: none; }
 @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(200,155,94,0.8); } 100% { transform: scale(1); } }
 </style>
 </head>
 <body>
 
-<button id="callWaiterBtn" onclick="callWaiter()">🛎️</button>
+<button id="callWaiterBtn" onclick="callWaiter()" title="استدعاء الويتر">🛎️</button>
 
-<div id="branchSelectScreen" class="branch-select-screen"><div class="branch-select-card"><div style="font-size: 48px; margin-bottom: 8px;">☕</div><h2 id="branchSelectTitle">اختار الفرع</h2><p id="branchSelectSub">اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح</p><div id="branchList"></div></div></div>
+<div id="branchSelectScreen" class="branch-select-screen">
+  <div class="branch-select-card">
+    <div style="font-size: 48px; margin-bottom: 8px;">☕</div>
+    <h2>اختار الفرع</h2>
+    <p style="color: var(--text-muted); font-size: 13px;">اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح</p>
+    <div id="branchList" style="margin-top: 16px;"></div>
+  </div>
+</div>
 
-<div id="welcomeScreen" class="welcome-screen"><div class="welcome-card"><div class="welcome-logo-wrap"><img id="welcomeLogo" src="logo-01.png" alt="Al-Gharbawy" onerror="this.style.display='none';"></div><h1 class="welcome-title" id="welcomeTitle">أهلاً وسهلاً بيك</h1><p class="welcome-subtitle" id="welcomeSubtitle">منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.</p><div style="margin-top: 24px;"><button type="button" class="welcome-enter-btn" id="welcomeEnterBtn" onclick="enterWelcome()">تفضل على القائمة</button></div></div></div>
+<div id="welcomeScreen" class="welcome-screen">
+  <div class="welcome-card">
+    <div class="welcome-logo-wrap"><img id="welcomeLogo" src="logo-01.png" alt="Al-Gharbawy" onerror="this.style.display='none';"></div>
+    <h1 class="welcome-title">أهلاً وسهلاً بيك</h1>
+    <p class="welcome-subtitle">منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.</p>
+    <div style="margin-top: 24px;"><button type="button" class="welcome-enter-btn" onclick="enterWelcome()">تفضل على القائمة</button></div>
+  </div>
+</div>
 
 <div id="toastContainer" class="toast-container"></div>
 
-<header class="app-header" id="appHeader">
+<header class="app-header">
   <div style="max-width: 860px; margin: 0 auto; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
     <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-      <div class="header-logo-wrap" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;"><img id="headerLogo" src="logo-01.png" alt="Al-Gharbawy" style="width: 100%; height: 100%; object-fit: contain;"></div>
-      <div><h1 id="brandTitle" style="font-size: 14px; font-weight: 900; margin: 0; color: var(--text-primary);">Al-Gharbawy</h1><p id="brandSub" style="font-size: 10px; color: var(--text-muted); margin: 2px 0 0;">Digital Menu</p></div>
+      <div style="width: 42px; height: 42px;"><img id="headerLogo" src="logo-01.png" alt="Al-Gharbawy" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none';"></div>
+      <div><h1 style="font-size: 14px; font-weight: 900; margin: 0;">Al-Gharbawy</h1><p style="font-size: 10px; color: var(--text-muted); margin: 2px 0 0;">Digital Menu</p></div>
     </div>
     <div style="display: flex; align-items: center; gap: 6px;">
-      <button onclick="openCartModal()" class="cart-btn-header"><span style="font-size: 14px;">🛒</span><span id="cartCountBadge" class="cart-badge" style="display: none;">0</span></button>
-      <button onclick="toggleDarkMode()" class="icon-btn" id="darkModeBtn">🌙</button>
-      <button onclick="toggleLanguage()" class="icon-btn"><span id="langBtnText" style="font-size: 12px; font-weight: 900;">AR</span></button>
+      <button onclick="openCartModal()" class="cart-btn-header">🛒 <span id="cartCountBadge" class="cart-badge" style="display: none;">0</span></button>
+      <button onclick="document.documentElement.classList.toggle('dark')" class="icon-btn">🌙</button>
     </div>
   </div>
 </header>
@@ -76,32 +87,38 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 <main class="app-main">
   <div style="position: sticky; top: 62px; background: var(--bg-primary); padding: 12px 0; z-index: 40;">
     <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-      <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchInput" oninput="filterMenu()" placeholder="ابحث في القائمة..." class="search-input"></div>
-      <button onclick="toggleFavoritesFilter()" id="favFilterBtn" class="pill-btn">🤍 <span id="favFilterText">المفضلة</span></button>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" oninput="filterMenu()" placeholder="ابحث في القائمة..." class="search-input">
+      </div>
     </div>
     <div id="categoryTabs" class="no-scrollbar" style="display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px;"></div>
   </div>
   <div id="customerMenuGrid" class="menu-grid"></div>
 </main>
 
-<div id="itemBackdrop" class="sheet-backdrop" onclick="closeItemSheet()"></div><div id="itemSheet" class="bottom-sheet"><div class="sheet-handle"></div><div class="sheet-scroll" id="itemSheetContent"></div></div>
-<div id="cartBackdrop" class="sheet-backdrop" onclick="closeCartModal()"></div><div id="cartSheet" class="bottom-sheet"><div class="sheet-handle"></div><div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;"><h2 id="cartModalTitle" style="font-size: 15px; font-weight: 900; margin: 0;">📋 طلباتي الحالية</h2><button onclick="closeCartModal()" class="icon-btn" style="width: 32px; height: 32px;">✕</button></div><div class="sheet-scroll" style="padding: 16px 20px;"><div id="cartItemsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div></div><div class="sheet-footer" id="cartFooter"></div></div>
+<div id="cartBackdrop" class="sheet-backdrop" onclick="closeCartModal()"></div>
+<div id="cartSheet" class="bottom-sheet">
+  <div class="sheet-handle"></div>
+  <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+    <h2 style="font-size: 15px; font-weight: 900; margin: 0;">📋 طلباتي الحالية</h2>
+    <button onclick="closeCartModal()" class="icon-btn" style="width: 32px; height: 32px;">✕</button>
+  </div>
+  <div class="sheet-scroll" style="padding: 16px 20px;"><div id="cartItemsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div></div>
+  <div class="sheet-footer" id="cartFooter"></div>
+</div>
 
 <script type="module" src="firebase-config.js"></script>
 <script>
-let currentLang = localStorage.getItem('gharbaoui_lang') || 'ar';
-let favorites = JSON.parse(localStorage.getItem('gharbaoui_favorites')) || [];
 let cart = JSON.parse(localStorage.getItem('gharbaoui_cart')) || [];
-let showOnlyFavorites = false; let activeCategory = 'all';
-let allMenus = [], allCategories = [], allItems = [], allBranches = [];
+let activeCategory = 'all', allCategories = [], allItems = [], allBranches = [];
 let currentBranch = null, currentMenuId = null, currentTable = null;
 let activeWaiterCallId = null;
 
-function $(id) { return document.getElementById(id); }
 function onFbReady(cb) { if (window.FB_READY) cb(); else window.addEventListener('fb-ready', cb, { once: true }); }
 
 function showToast(msg, icon = '✅') {
-  const c = $('toastContainer');
+  const c = document.getElementById('toastContainer');
   const t = document.createElement('div');
   t.className = 'toast';
   t.innerHTML = `<span style="font-size:16px">${icon}</span><span>${msg}</span>`;
@@ -109,7 +126,7 @@ function showToast(msg, icon = '✅') {
   setTimeout(() => t.remove(), 3500);
 }
 
-// دالة تشغيل صوت تفاعلي للعميل
+// دالة تشغيل صوت تفاعلي للعميل عند الضغط أو استجابة الويتر
 function playClientBellSound() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -138,8 +155,8 @@ function readTableFromUrl() {
 function subscribeAll() {
   const { db, collection, onSnapshot, doc } = window.FB;
   onSnapshot(doc(db, 'settings', 'features'), (snap) => {
-    if (snap.exists() && snap.data().callWaiter) { $('callWaiterBtn').style.display = 'flex'; }
-    else { $('callWaiterBtn').style.display = 'none'; }
+    if (snap.exists() && snap.data().callWaiter) { document.getElementById('callWaiterBtn').style.display = 'flex'; }
+    else { document.getElementById('callWaiterBtn').style.display = 'none'; }
   });
   onSnapshot(collection(db, 'branches'), (snap) => {
     allBranches = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.active !== false);
@@ -164,13 +181,13 @@ function checkBranchFromUrl() {
 }
 
 function showBranchSelector() {
-  $('branchSelectScreen').classList.add('show');
-  $('branchList').innerHTML = allBranches.map(b => `<button class="branch-option" onclick="selectBranchById('${b.id}')"><strong>${b.nameAr}</strong><small>${b.code}</small></button>`).join('');
+  document.getElementById('branchSelectScreen').classList.add('show');
+  document.getElementById('branchList').innerHTML = allBranches.map(b => `<button class="branch-option" onclick="selectBranchById('${b.id}')"><strong>${b.nameAr}</strong><small>${b.code}</small></button>`).join('');
 }
 function selectBranchById(id) { selectBranch(allBranches.find(x => x.id === id)); }
 function selectBranch(branch) {
   currentBranch = branch; currentMenuId = branch.menuId;
-  $('branchSelectScreen').classList.remove('show');
+  document.getElementById('branchSelectScreen').classList.remove('show');
   renderCustomerMenu();
 }
 
@@ -181,34 +198,42 @@ function getItemPrice(item) { if (!currentBranch) return item.price; const overr
 function renderCustomerMenu() {
   if (!currentBranch) return;
   const cats = getBranchCategories(); const items = getBranchItems();
-  $('categoryTabs').innerHTML = `<button onclick="filterCategory('all')" class="cat-tab ${activeCategory === 'all' && !showOnlyFavorites ? 'active' : ''}">الكل <span class="cat-count">${items.length}</span></button>` +
-    cats.map(c => `<button onclick="filterCategory('${c.id}')" class="cat-tab ${activeCategory === c.id && !showOnlyFavorites ? 'active' : ''}">${c.nameAr} <span class="cat-count">${items.filter(i => i.categoryId === c.id).length}</span></button>`).join('');
+  document.getElementById('categoryTabs').innerHTML = `<button onclick="filterCategory('all')" class="cat-tab ${activeCategory === 'all' ? 'active' : ''}">الكل <span class="cat-count">${items.length}</span></button>` +
+    cats.map(c => `<button onclick="filterCategory('${c.id}')" class="cat-tab ${activeCategory === c.id ? 'active' : ''}">${c.nameAr} <span class="cat-count">${items.filter(i => i.categoryId === c.id).length}</span></button>`).join('');
   filterMenu();
 }
 
-function filterCategory(catId) { showOnlyFavorites = false; activeCategory = catId; renderCustomerMenu(); }
-function toggleFavoritesFilter() { showOnlyFavorites = !showOnlyFavorites; renderCustomerMenu(); }
+function filterCategory(catId) { activeCategory = catId; renderCustomerMenu(); }
 
 function filterMenu() {
   if (!currentBranch) return;
-  const searchVal = ($('searchInput').value || '').toLowerCase().trim();
+  const searchVal = (document.getElementById('searchInput').value || '').toLowerCase().trim();
   const items = getBranchItems();
   const filtered = items.filter(item => {
-    const matchesCategory = showOnlyFavorites ? favorites.includes(item.id) : (activeCategory === 'all' || item.categoryId === activeCategory);
+    const matchesCategory = (activeCategory === 'all' || item.categoryId === activeCategory);
     return matchesCategory && ((item.nameAr || '').toLowerCase().includes(searchVal) || (item.descAr || '').toLowerCase().includes(searchVal));
   });
 
-  $('customerMenuGrid').innerHTML = filtered.map(item => {
+  document.getElementById('customerMenuGrid').innerHTML = filtered.map(item => {
     const isBranchOutOfStock = currentBranch?.stockOverrides?.[item.id] === false;
     const inStock = isBranchOutOfStock ? false : (item.inStock !== false);
-    return `<div class="menu-card ${inStock ? '' : 'out-of-stock'}"><div class="menu-card-img-wrap"><img src="${item.image}" class="menu-card-img" loading="lazy"></div><div class="menu-card-body"><h3 class="menu-card-title">${item.nameAr}</h3><div class="menu-card-bottom"><span class="menu-card-price">${getItemPrice(item)} ج</span></div></div></div>`;
+    return `<div class="menu-card ${inStock ? '' : 'out-of-stock'}">
+      <div class="menu-card-img-wrap"><img src="${item.image}" class="menu-card-img" loading="lazy" onerror="this.src='' "></div>
+      <div class="menu-card-body">
+        <h3 class="menu-card-title">${item.nameAr}</h3>
+        <div class="menu-card-bottom">
+          <span class="menu-card-price">${getItemPrice(item)} ج</span>
+          ${inStock ? `<button class="add-btn" onclick="addToCart(${item.id})">+ إضافة</button>` : `<span style="font-size:11px;color:var(--danger);font-weight:900;">نفد</span>`}
+        </div>
+      </div>
+    </div>`;
   }).join('');
 }
 
 async function callWaiter() {
   if (!currentBranch) return;
   const { db, collection, addDoc, onSnapshot, doc } = window.FB;
-  const btn = $('callWaiterBtn');
+  const btn = document.getElementById('callWaiterBtn');
   
   playClientBellSound(); // صوت عند الضغط
 
@@ -243,10 +268,97 @@ async function callWaiter() {
   }
 }
 
-function enterWelcome() { $('welcomeScreen').classList.add('is-hidden'); }
-function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
-function toggleLanguage() { currentLang = currentLang === 'ar' ? 'en' : 'ar'; }
-function openCartModal() {} function closeCartModal() {} function closeItemSheet() {}
+function addToCart(id) {
+  const item = allItems.find(x => x.id === id);
+  if (!item) return;
+  const existing = cart.find(x => x.id === id);
+  if (existing) { existing.qty += 1; }
+  else { cart.push({ id: item.id, nameAr: item.nameAr, price: getItemPrice(item), qty: 1 }); }
+  localStorage.setItem('gharbaoui_cart', JSON.stringify(cart));
+  updateCartBadge();
+  showToast('تمت الإضافة للسلة');
+}
+
+function updateCartBadge() {
+  const badge = document.getElementById('cartCountBadge');
+  const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+  if (totalQty > 0) { badge.style.display = 'flex'; badge.innerText = totalQty; }
+  else { badge.style.display = 'none'; }
+}
+
+function openCartModal() {
+  document.getElementById('cartSheet').classList.add('open');
+  document.getElementById('cartBackdrop').classList.add('open');
+  renderCartItems();
+}
+function closeCartModal() {
+  document.getElementById('cartSheet').classList.remove('open');
+  document.getElementById('cartBackdrop').classList.remove('open');
+}
+
+function renderCartItems() {
+  const c = document.getElementById('cartItemsContainer');
+  const footer = document.getElementById('cartFooter');
+  if (!cart.length) {
+    c.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:30px;">سلة الطلبات فارغة</div>';
+    footer.innerHTML = '';
+    return;
+  }
+  c.innerHTML = cart.map((i, idx) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-subtle);padding:10px 14px;border-radius:12px;">
+      <div><strong>${i.nameAr}</strong><div style="font-size:11px;color:var(--coffee-gold);">${i.price * i.qty} ج</div></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="changeQty(${idx}, -1)" class="icon-btn" style="width:28px;height:28px;">-</button>
+        <span style="font-weight:900;">${i.qty}</span>
+        <button onclick="changeQty(${idx}, 1)" class="icon-btn" style="width:28px;height:28px;">+</button>
+      </div>
+    </div>
+  `).join('');
+
+  const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+  footer.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-weight:900;font-size:15px;margin-bottom:6px;">
+      <span>الإجمالي:</span>
+      <span style="color:var(--coffee-gold);">${total} ج</span>
+    </div>
+    <button class="primary-btn" onclick="submitOrder()">إرسال الطلب للفرع 🚀</button>
+  `;
+}
+
+function changeQty(idx, delta) {
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) cart.splice(idx, 1);
+  localStorage.setItem('gharbaoui_cart', JSON.stringify(cart));
+  updateCartBadge();
+  renderCartItems();
+}
+
+async function submitOrder() {
+  if (!currentBranch || !cart.length) return;
+  const { db, collection, addDoc } = window.FB;
+  const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+  try {
+    await addDoc(collection(db, 'orders'), {
+      branchId: currentBranch.id,
+      branchNameAr: currentBranch.nameAr,
+      table: currentTable || 'غير محدد',
+      items: cart,
+      total: total,
+      status: 'pending',
+      createdAt: new Date()
+    });
+    cart = [];
+    localStorage.removeItem('gharbaoui_cart');
+    updateCartBadge();
+    closeCartModal();
+    showToast('✅ تم إرسال طلبك للفرع بنجاح!', '🎉');
+  } catch (e) {
+    console.error(e);
+    showToast('حدث خطأ أثناء إرسال الطلب', '❌');
+  }
+}
+
+enterWelcome = () => document.getElementById('welcomeScreen').classList.add('is-hidden');
 </script>
 </body>
 </html>
