@@ -399,16 +399,30 @@ function renderCartItems() {
 
   const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
   const totalText = currentLang === 'ar' ? 'الإجمالي:' : 'Total:';
-  const sendText = currentLang === 'ar' ? 'إرسال الطلب للفرع 🚀' : 'Send Order 🚀';
+  const waiterOfferText = currentLang === 'ar' ? 'عرض للويتر 📺' : 'Show to Waiter 📺';
+  
   footer.innerHTML = `
-    <div style="display:flex;justify-content:space-between;font-weight:900;font-size:15px;margin-bottom:6px;">
+    <div style="margin-bottom: 8px;">
+      <input type="text" id="orderNote" placeholder="ملاحظات على الطلب للويتر (اختياري)..." style="width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg-subtle); color:var(--text-primary); font-family:inherit; font-size:12px; outline:none;">
+    </div>
+    <div style="display:flex;justify-content:space-between;font-weight:900;font-size:15px;margin-bottom:8px;">
       <span>${totalText}</span>
       <span style="color:var(--coffee-gold);">${total} ج</span>
     </div>
-    <button class="primary-btn" onclick="submitOrder()">${sendText}</button>
+    <div style="display: flex; gap: 8px;">
+      <button class="primary-btn" style="flex: 2;" onclick="submitOrder()">${currentLang === 'ar' ? 'إرسال الطلب للفرع 🚀' : 'Send Order 🚀'}</button>
+      <button class="primary-btn" style="flex: 1; background: linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light)); color: #1F1611;" onclick="showOrderToWaiter()">${waiterOfferText}</button>
+    </div>
   `;
 }
 
+// دالة عرض الطلب مباشرة للويتر (عرض شاشة الطلب أو إشعار مباشر)
+function showOrderToWaiter() {
+  if (!cart.length) return;
+  playClientBellSound();
+  showToast(currentLang === 'ar' ? '📺 تم عرض تفاصيل الطلب للويتر على الشاشة' : '📺 Order shown to waiter', '☕');
+  // يمكنك فتح نافذة أو تركيز الشاشة ليراها الويتر مباشرة
+}
 function changeQty(idx, delta) {
   cart[idx].qty += delta;
   if (cart[idx].qty <= 0) cart.splice(idx, 1);
