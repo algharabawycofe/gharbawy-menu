@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم</title>
+<title>لوحة التحكم - الغرباوي</title>
 <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -149,6 +149,7 @@ tr:hover td{background:var(--subtle)}
       <button class="nav-btn" data-page="menus" data-role="admin" onclick="showPage('menus')">📂 المجموعات</button>
       <button class="nav-btn" data-page="categories" data-role="admin" onclick="showPage('categories')">🏷️ الأقسام</button>
       <button class="nav-btn" data-page="items" data-role="admin" onclick="showPage('items')">🍽️ المنتجات</button>
+      <button class="nav-btn" data-page="offers" data-role="admin" onclick="showPage('offers')">🔥 العروض والترويج</button>
       <button class="nav-btn" data-page="orders" onclick="showPage('orders')">📦 الأوردرات</button>
       <button class="nav-btn" data-page="reports" data-role="admin" onclick="showPage('reports')">📈 التقارير</button>
       <button class="nav-btn" data-page="users" data-role="admin" onclick="showPage('users')">👥 المستخدمين</button>
@@ -215,6 +216,16 @@ tr:hover td{background:var(--subtle)}
         </div>
         <div class="card" style="padding:0;overflow:hidden">
           <table><thead><tr><th>#</th><th>صورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الحالة العامة</th><th>إجراءات</th></tr></thead><tbody id="itemsTable"></tbody></table>
+        </div>
+      </div>
+
+      <div id="page-offers" class="page">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h2 style="font-size:22px;font-weight:900;margin:0">🔥 العروض والترويج (السلايدر)</h2>
+          <button class="btn btn-primary" onclick="openOfferModal()">+ إضافة عرض جديد</button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table><thead><tr><th>صورة</th><th>العنوان</th><th>الفرع المستهدف</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="offersTable"></tbody></table>
         </div>
       </div>
 
@@ -393,6 +404,18 @@ tr:hover td{background:var(--subtle)}
   <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px"><button class="btn btn-ghost" onclick="closeModal('itemModal')">إلغاء</button><button class="btn btn-primary" onclick="saveItem()">حفظ</button></div>
 </div></div>
 
+<!-- نافذة إدارة عرض سلايدر جديد -->
+<div id="offerModal" class="modal-overlay"><div class="modal">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h3 id="offerModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة عرض ترويجي</h3><button class="btn btn-ghost btn-sm" onclick="closeModal('offerModal')">✕</button></div>
+  <input type="hidden" id="o-id">
+  <div style="margin-bottom:12px"><label>صورة العرض</label><img id="o-preview" class="img-preview" src=""><div style="display:flex;gap:8px;align-items:center"><input type="file" id="o-file" accept="image/*" style="flex:1"><span style="font-size:11px;color:var(--muted)">أو</span><input id="o-imageUrl" style="flex:1;font-size:11px"></div></div>
+  <div class="form-row"><div><label>عنوان العرض (عربي)</label><input id="o-titleAr"></div><div><label>عنوان العرض (إنجليزي)</label><input id="o-titleEn" dir="ltr"></div></div>
+  <div class="form-row"><div><label>الوصف (عربي)</label><input id="o-descAr"></div><div><label>الوصف (إنجليزي)</label><input id="o-descEn" dir="ltr"></div></div>
+  <div class="form-row"><div><label>السعر (ج)</label><input id="o-price" type="number"></div><div><label>الفرع المستهدف</label><select id="o-branchId"><option value="all">🌟 كل الفروع (عام)</option></select></div></div>
+  <div style="margin-top:12px"><label>حالة العرض</label><select id="o-active"><option value="true">نشط (يعرض في المنيو)</option><option value="false">موقوف</option></select></div>
+  <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px"><button class="btn btn-ghost" onclick="closeModal('offerModal')">إلغاء</button><button class="btn btn-primary" onclick="saveOffer()">حفظ العرض</button></div>
+</div></div>
+
 <div id="userModal" class="modal-overlay"><div class="modal" style="width:520px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h3 id="userModalTitle" style="font-size:17px;font-weight:900;margin:0">إضافة مستخدم</h3><button class="btn btn-ghost btn-sm" onclick="closeModal('userModal')">✕</button></div>
   <input type="hidden" id="u-uid">
@@ -427,7 +450,7 @@ const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/imag
 
 let currentUser = null;
 let currentUserData = null;
-let menus = [], categories = [], items = [], branches = [], orders = [], users = [];
+let menus = [], categories = [], items = [], branches = [], orders = [], users = [], offers = [];
 let systemOnline = true;
 let companyInfo = {};
 let features = { callWaiter: false, kds: false, orderTimer: false, charts: false };
@@ -541,6 +564,7 @@ function subscribeAll(){
   unsubs.push(onSnapshot(collection(db,'categories'),s=>{ categories = s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0)); renderCategories(); refreshSelects(); }));
   unsubs.push(onSnapshot(collection(db,'menu'),s=>{ items = s.docs.map(d=>({id:Number(d.id),...d.data()})).sort((a,b)=>a.id-b.id); renderItems(); updateStats(); }));
   unsubs.push(onSnapshot(collection(db,'branches'),s=>{ branches = s.docs.map(d=>({id:d.id,...d.data()})); renderBranches(); refreshSelects(); applyRoleUI(); }));
+  unsubs.push(onSnapshot(collection(db,'offers'),s=>{ offers = s.docs.map(d=>({id:d.id,...d.data()})); renderOffers(); }));
 
   const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
 
@@ -817,6 +841,124 @@ async function saveItem(){
   const data={nameAr,nameEn,menuId,categoryId,price,image:imageUrl, descAr:$('m-descAr').value||'', descEn:$('m-descEn').value||'', inStock:$('m-inStock').value==='true'};
   try{ if(isEdit) await updateDoc(doc(db,'menu',String(id)),data); else{ const maxId=items.reduce((m,i)=>Math.max(m,i.id||0),0); await setDoc(doc(db,'menu',String(maxId+1)),data); } closeModal('itemModal'); showToast('✅ تم'); }catch(e){ showToast('❌ '+e.message); }
 }
+
+/* ==================== دوال إدارة العروض (Offers) ==================== */
+function renderOffers(){
+  const tb=$('offersTable'); 
+  if(!offers.length){ tb.innerHTML='<tr><td colspan="6" class="empty">لا توجد عروض مضافة حالياً</td></tr>'; return; }
+  tb.innerHTML=offers.map(o=>{
+    const branch = branches.find(b=>b.id === o.branchId);
+    const branchName = o.branchId === 'all' ? '🌟 كل الفروع' : (branch ? branch.nameAr : 'فرع غير معروف');
+    return `<tr>
+      <td><img class="thumb" src="${o.image}" onerror="this.style.opacity=.2"></td>
+      <td><strong>${o.titleAr || '—'}</strong><br><small style="color:var(--muted)">${o.titleEn || ''}</small></td>
+      <td><span class="badge badge-blue">${branchName}</span></td>
+      <td><strong style="color:var(--gold)">${o.price || 0} ج</strong></td>
+      <td>${o.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-primary btn-sm" onclick="openOfferModal('${o.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteOffer('${o.id}')">🗑️</button>
+      </td></tr>`;
+  }).join('');
+}
+
+function openOfferModal(id){
+  const branchSelect = $('o-branchId');
+  branchSelect.innerHTML = '<option value="all">🌟 كل الفروع (عام)</option>' + branches.map(b => `<option value="${b.id}">${b.nameAr}</option>`).join('');
+
+  if(id){
+    const o = offers.find(x=>x.id === id);
+    if(!o) return;
+    $('offerModalTitle').innerText='✏️ تعديل العرض الترويجي';
+    $('o-id').value = o.id;
+    $('o-titleAr').value = o.titleAr || '';
+    $('o-titleEn').value = o.titleEn || '';
+    $('o-descAr').value = o.descAr || '';
+    $('o-descEn').value = o.descEn || '';
+    $('o-price').value = o.price || 0;
+    $('o-branchId').value = o.branchId || 'all';
+    $('o-active').value = o.active !== false ? 'true' : 'false';
+    $('o-imageUrl').value = (o.image||'').startsWith('http') ? o.image : '';
+    $('o-preview').src = o.image || '';
+  } else {
+    $('offerModalTitle').innerText='إضافة عرض ترويجي جديد';
+    $('o-id').value='';
+    ['o-titleAr','o-titleEn','o-descAr','o-descEn','o-price','o-imageUrl','o-file'].forEach(f=>$(f).value='');
+    $('o-preview').src='';
+    $('o-branchId').value='all';
+    $('o-active').value='true';
+  }
+  $('offerModal').classList.add('open');
+}
+
+async function saveOffer(){
+  const {db, doc, setDoc, updateDoc} = window.FB;
+  const id = $('o-id').value;
+  const isEdit = !!id;
+  const titleAr = $('o-titleAr').value.trim();
+  const price = Number($('o-price').value);
+  const branchId = $('o-branchId').value;
+
+  if(!titleAr || !price){ showToast('⚠️ يرجى إدخال عنوان العرض والسعر على الأقل'); return; }
+
+  const file = $('o-file').files[0];
+  let imageUrl = $('o-imageUrl').value.trim();
+
+  if(file){
+    try{
+      showToast('⏳ جاري رفع صورة العرض...');
+      imageUrl = await uploadToCloudinary(file);
+    } catch(e){
+      showToast('❌ فشل رفع الصورة');
+      return;
+    }
+  }
+
+  if(!imageUrl){
+    if(isEdit){
+      const ex = offers.find(o => o.id === id);
+      imageUrl = ex ? ex.image : '';
+    } else {
+      imageUrl = 'images/hot-coffee/01.jpg'; // صورة افتراضية في حال عدم الرفع
+    }
+  }
+
+  const data = {
+    titleAr,
+    titleEn: $('o-titleEn').value.trim() || titleAr,
+    descAr: $('o-descAr').value.trim(),
+    descEn: $('o-descEn').value.trim(),
+    price,
+    image: imageUrl,
+    branchId,
+    active: $('o-active').value === 'true',
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    if(isEdit){
+      await updateDoc(doc(db, 'offers', id), data);
+    } else {
+      await setDoc(doc(db, 'offers', 'offer-' + Date.now()), data);
+    }
+    closeModal('offerModal');
+    showToast('✅ تم حفظ العرض بنجاح');
+  } catch(e){
+    showToast('❌ ' + e.message);
+  }
+}
+
+async function deleteOffer(id){
+  if(!confirm('هل أنت متأكد من حذف هذا العرض من السلايدر؟')) return;
+  try {
+    await window.FB.deleteDoc(window.FB.doc(window.FB.db, 'offers', id));
+    showToast('🗑️ تم حذف العرض بنجاح');
+  } catch(e){
+    showToast('❌ حدث خطأ أثناء الحذف: ' + e.message);
+  }
+}
+/* ==================================================================== */
+
 async function uploadToCloudinary(file){
   const fd=new FormData(); fd.append('file',file); fd.append('upload_preset',CLOUDINARY_PRESET);
   return new Promise((res,rej)=>{ const xhr=new XMLHttpRequest(); xhr.open('POST',CLOUDINARY_URL); xhr.onload=()=>{ if(xhr.status>=200&&xhr.status<300){ try{res(JSON.parse(xhr.responseText).secure_url);}catch(e){rej(e);} } else rej(new Error(xhr.status)); }; xhr.onerror=()=>rej(new Error('net')); xhr.send(fd); });
@@ -888,6 +1030,10 @@ async function saveItemBranches() {
 document.addEventListener('DOMContentLoaded',()=>{
   const fileIn = $('m-file'); if(fileIn) fileIn.addEventListener('change',(e)=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=(ev)=>{ $('m-preview').src=ev.target.result; }; r.readAsDataURL(f); });
   const urlIn = $('m-imageUrl'); if(urlIn) urlIn.addEventListener('input',(e)=>{ const u=e.target.value.trim(); if(u) $('m-preview').src=u; });
+  
+  const offerFile = $('o-file'); if(offerFile) offerFile.addEventListener('change',(e)=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=(ev)=>{ $('o-preview').src=ev.target.result; }; r.readAsDataURL(f); });
+  const offerUrl = $('o-imageUrl'); if(offerUrl) offerUrl.addEventListener('input',(e)=>{ const u=e.target.value.trim(); if(u) $('o-preview').src=u; });
+
   const coFile = $('co-logo-file'); if(coFile) coFile.addEventListener('change',(e)=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=(ev)=>{ const p=$('co-logo-preview'); p.src=ev.target.result; p.style.display='block'; }; r.readAsDataURL(f); });
   const coUrl = $('co-logo-url'); if(coUrl) coUrl.addEventListener('input',(e)=>{ const u=e.target.value.trim(); if(u){ const p=$('co-logo-preview'); p.src=u; p.style.display='block'; } });
 });
