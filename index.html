@@ -123,7 +123,7 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 let currentLang = localStorage.getItem('gharbaoui_lang') || 'ar';
 let favorites = JSON.parse(localStorage.getItem('gharbaoui_favorites')) || [];
 let cart = JSON.parse(localStorage.getItem('gharbaoui_cart')) || [];
-let showOnlyFavorites = false; let currentSlide = 0; let activeCategory = 'all'; let featuredItems = []; let autoplayTimer = null; let isCarouselPaused = false; let currentSheetItem = null; let currentSheetQty = 1; const DARK_KEY = 'gharbaoui_dark_mode';
+let showOnlyFavorites = false; let currentSlide = 0; let activeCategory = 'all'; let featuredItems = []; let currentOffers = []; let autoplayTimer = null; let isCarouselPaused = false; let currentSheetItem = null; let currentSheetQty = 1; const DARK_KEY = 'gharbaoui_dark_mode';
 let allMenus = []; let allCategories = []; let allItems = []; let allBranches = []; let currentBranch = null; let currentMenuId = null; let currentTable = null; let systemOnline = true; let companyInfo = {}; let unsubscribes = [];
 let features = { callWaiter: false };
 
@@ -152,7 +152,7 @@ function subscribeAll() {
   onSnapshot(doc(db, 'settings', 'company'), (snap) => { if (snap.exists()) { companyInfo = snap.data(); applyCompanyInfo(companyInfo); } });
   unsubscribes.push(onSnapshot(collection(db, 'menus'), (snap) => { allMenus = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.order||0)-(b.order||0)); checkBranchFromUrl(); }));
   unsubscribes.push(onSnapshot(collection(db, 'categories'), (snap) => { allCategories = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.order||0)-(b.order||0)); renderCustomerMenu(); }));
-  unsubscribes.push(onSnapshot(collection(db, 'menu'), (snap) => { allItems = snap.docs.map(d => ({ ...d.data(), id: Number(d.id) })).sort((a,b) => a.id-b.id); renderCustomerMenu(); if (currentBranch && featuredItems.length === 0) initFeaturedCarousel(); }));
+  unsubscribes.push(onSnapshot(collection(db, 'menu'), (snap) => { allItems = snap.docs.map(d => ({ ...d.data(), id: Number(d.id) })).sort((a,b) => a.id-b.id); renderCustomerMenu(); if (currentBranch && featuredItems.length === 0 && currentOffers.length === 0) initFeaturedCarousel(); }));
   unsubscribes.push(onSnapshot(collection(db, 'branches'), (snap) => { allBranches = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.active !== false); checkBranchFromUrl(); }));
 }
 
@@ -182,7 +182,7 @@ function selectBranch(branch) {
   currentBranch = branch; currentMenuId = branch.menuId; localStorage.setItem('gharbaoui_last_branch', branch.id);
   $('branchSelectScreen').classList.remove('show'); $('changeBranchBtn').style.display = 'flex'; $('brandSub').innerText = currentLang === 'en' ? (branch.nameEn || branch.nameAr) : branch.nameAr;
   const lastBranchForCart = localStorage.getItem('gharbaoui_cart_branch'); if (lastBranchForCart && lastBranchForCart !== branch.id) { cart = []; localStorage.setItem('gharbaoui_cart', JSON.stringify(cart)); updateCartBadge(); }
-  localStorage.setItem('gharbaoui_cart_branch', branch.id); featuredItems = []; initFeaturedCarousel(); renderCustomerMenu();
+  localStorage.setItem('gharbaoui_cart_branch', branch.id); featuredItems = []; currentOffers = []; initFeaturedCarousel(); renderCustomerMenu();
 }
 function changeBranch() { if (allBranches.length <= 1) return; if (!confirm(currentLang === 'ar' ? 'هتغيّر الفرع؟ السلة هتتفضى.' : 'Change branch? Cart will be cleared.')) return; localStorage.removeItem('gharbaoui_last_branch'); localStorage.removeItem('gharbaoui_cart_branch'); window.location.search = ''; }
 function getBranchItems() { if (!currentMenuId) return []; return allItems.filter(i => i.menuId === currentMenuId); }
@@ -202,8 +202,9 @@ function applyLanguageUI() {
   }
   if (currentBranch) { $('brandSub').innerText = currentLang === 'en' ? (currentBranch.nameEn || currentBranch.nameAr) : currentBranch.nameAr; }
   if (Object.keys(companyInfo).length > 0) applyCompanyInfo(companyInfo); updateWelcomeLanguage(); if ($('cartSheet')?.classList.contains('open')) renderCartModalItems();
+  if (currentOffers.length > 0) showOfferSlide(currentSlide); else if (featuredItems.length > 0) showSlide(currentSlide);
 }
-function toggleLanguage() { currentLang = currentLang === 'ar' ? 'en' : 'ar'; localStorage.setItem('gharbaoui_lang', currentLang); applyLanguageUI(); renderCustomerMenu(); if (featuredItems.length > 0) showSlide(currentSlide); if ($('branchSelectScreen').classList.contains('show')) showBranchSelector(); }
+function toggleLanguage() { currentLang = currentLang === 'ar' ? 'en' : 'ar'; localStorage.setItem('gharbaoui_lang', currentLang); applyLanguageUI(); renderCustomerMenu(); if (currentOffers.length > 0) showOfferSlide(currentSlide); else if (featuredItems.length > 0) showSlide(currentSlide); if ($('branchSelectScreen').classList.contains('show')) showBranchSelector(); }
 
 function updateWelcomeLanguage() {
   const isAr = currentLang === 'ar'; const eyebrow = $('welcomeEyebrow'); if (!eyebrow) return;
@@ -211,7 +212,7 @@ function updateWelcomeLanguage() {
   $('welcomeSubtitle').innerHTML = isAr ? 'منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.' : 'We are glad you are here ☕<br>Take your time, explore the menu, and choose what you love.';
   $('welcomeEnterBtn').innerText = isAr ? 'تفضل على القائمة' : 'View Menu'; $('welcomeLangBtn').innerText = isAr ? 'EN' : 'AR'; $('welcomeFooter').innerText = isAr ? 'بنحضّرها بحب… عشان مزاجك يستاهل ☕' : 'Made with care… because your mood deserves it ☕';
 }
-function toggleWelcomeLanguage() { currentLang = currentLang === 'ar' ? 'en' : 'ar'; localStorage.setItem('gharbaoui_lang', currentLang); applyLanguageUI(); renderCustomerMenu(); if (featuredItems.length > 0) showSlide(currentSlide); }
+function toggleWelcomeLanguage() { currentLang = currentLang === 'ar' ? 'en' : 'ar'; localStorage.setItem('gharbaoui_lang', currentLang); applyLanguageUI(); renderCustomerMenu(); if (currentOffers.length > 0) showOfferSlide(currentSlide); else if (featuredItems.length > 0) showSlide(currentSlide); }
 function enterWelcome() { const w = $('welcomeScreen'); if (!w) return; w.classList.add('is-hidden'); setTimeout(() => { w.style.display = 'none'; }, 700); sessionStorage.setItem('gharbaoui_welcome_seen', '1'); }
 function initWelcome() { updateWelcomeLanguage(); if (sessionStorage.getItem('gharbaoui_welcome_seen') === '1') { $('welcomeScreen').style.display = 'none'; } }
 
@@ -303,10 +304,92 @@ function renderItemSheet() {
 function changeSheetQty(d) { currentSheetQty = Math.max(1, currentSheetQty + d); renderItemSheet(); }
 function confirmAddToCart() { if (!currentSheetItem) return; const notes = ($('sheetNotes')?.value || '').trim(); addToCart(currentSheetItem, notes, currentSheetQty); closeItemSheet(); showToast(currentLang === 'en' ? 'Added' : 'تمت الإضافة', '🛒'); }
 
-function initFeaturedCarousel() {
-  if (!currentBranch) return; const items = getBranchItems().filter(i => { const isBranchOut = currentBranch?.stockOverrides?.[i.id] === false; return !isBranchOut && i.inStock !== false; }); if (items.length === 0) { $('featuredSection').classList.add('hidden-init'); return; }
-  const shuffled = [...items].sort(() => Math.random() - 0.5); featuredItems = shuffled.slice(0, 10); $('featuredSection').classList.remove('hidden-init'); renderSlides(); renderDots(); showSlide(0); startAutoplay();
+async function initFeaturedCarousel() {
+  if (!currentBranch) return; const { db, collection, getDocs } = window.FB;
+  
+  try {
+    const snap = await getDocs(collection(db, 'offers'));
+    const allOffers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    currentOffers = allOffers.filter(o => o.active !== false && (o.branchId === 'all' || o.branchId === currentBranch.id));
+    
+    if (currentOffers.length > 0) {
+      featuredItems = [];
+      $('featuredSection').classList.remove('hidden-init');
+      renderOfferSlides();
+      renderOfferDots();
+      showOfferSlide(0);
+      startAutoplay();
+      return;
+    }
+  } catch(e) {
+    console.error('Error loading offers, falling back to featured items:', e);
+  }
+
+  const items = getBranchItems().filter(i => {
+    const isBranchOut = currentBranch?.stockOverrides?.[i.id] === false;
+    return !isBranchOut && i.inStock !== false;
+  });
+  
+  if (items.length === 0) {
+    $('featuredSection').classList.add('hidden-init');
+    return;
+  }
+  
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  featuredItems = shuffled.slice(0, 10);
+  currentOffers = [];
+  $('featuredSection').classList.remove('hidden-init');
+  renderSlides();
+  renderDots();
+  showSlide(0);
+  startAutoplay();
 }
+
+function renderOfferSlides() {
+  $('slidesContainer').innerHTML = currentOffers.map((offer, i) => `
+    <div class="carousel-slide" data-slide="${i}" style="position: absolute; inset: 0; opacity: 0; transition: opacity 1s; pointer-events: none;">
+      <img src="${offer.image}" style="width: 100%; height: 100%; object-fit: cover;" loading="${i === 0 ? 'eager' : 'lazy'}">
+    </div>
+  `).join('');
+}
+
+function renderOfferDots() {
+  $('slideDots').innerHTML = currentOffers.map((_, i) => `
+    <button onclick="event.stopPropagation(); goToSlide(${i})" style="width: 7px; height: 7px; border-radius: 9999px; background: rgba(255,255,255,0.4); border: none; cursor: pointer; padding: 0;"></button>
+  `).join('');
+}
+
+function showOfferSlide(index) {
+  if (currentOffers.length === 0) return;
+  currentSlide = (index + currentOffers.length) % currentOffers.length;
+  
+  document.querySelectorAll('.carousel-slide').forEach((el, i) => {
+    el.style.opacity = i === currentSlide ? '1' : '0';
+    el.style.pointerEvents = i === currentSlide ? 'auto' : 'none';
+  });
+  
+  document.querySelectorAll('#slideDots button').forEach((el, i) => {
+    el.style.background = i === currentSlide ? '#C89B5E' : 'rgba(255,255,255,0.4)';
+    el.style.width = i === currentSlide ? '22px' : '7px';
+  });
+  
+  const offer = currentOffers[currentSlide];
+  const title = currentLang === 'en' ? (offer.titleEn || offer.titleAr) : offer.titleAr;
+  const desc = currentLang === 'en' ? (offer.descEn || offer.descAr) : (offer.descAr || '');
+  const currency = currentLang === 'en' ? 'EGP' : 'جنيه';
+  
+  $('slideContent').innerHTML = `
+    <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+      <span style="background: linear-gradient(135deg, #B33A3A, #E74C3C); color: #fff; padding: 5px 12px; border-radius: 8px; font-size: 10px; font-weight: 900;">🔥 ${currentLang === 'en' ? 'Special Offer' : 'عرض خاص'}</span>
+    </div>
+    <h2 style="font-size: 24px; font-weight: 900; margin: 0 0 4px; color: #fff;">${title}</h2>
+    <p style="font-size: 12px; color: rgba(255,255,255,0.8); margin: 0 0 12px; max-width: 460px;">${desc}</p>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <span style="font-size: 24px; font-weight: 900; color: #E0BE85;">${offer.price} <span style="font-size: 12px;">${currency}</span></span>
+    </div>
+  `;
+}
+
 function renderSlides() { $('slidesContainer').innerHTML = featuredItems.map((item, i) => `<div class="carousel-slide" data-slide="${i}" onclick="openItemDetails(${item.id})" style="position: absolute; inset: 0; opacity: 0; transition: opacity 1s; pointer-events: none; cursor: pointer;"><img src="${item.image}" style="width: 100%; height: 100%; object-fit: cover;" loading="${i === 0 ? 'eager' : 'lazy'}"></div>`).join(''); }
 function renderDots() { $('slideDots').innerHTML = featuredItems.map((_, i) => `<button onclick="event.stopPropagation(); goToSlide(${i})" style="width: 7px; height: 7px; border-radius: 9999px; background: rgba(255,255,255,0.4); border: none; cursor: pointer; padding: 0;"></button>`).join(''); }
 function showSlide(index) {
@@ -316,10 +399,23 @@ function showSlide(index) {
   const item = featuredItems[currentSlide]; const name = currentLang === 'en' ? (item.nameEn || item.nameAr) : item.nameAr; const desc = currentLang === 'en' ? (item.descEn || item.descAr) : item.descAr; const currency = currentLang === 'en' ? 'EGP' : 'جنيه'; const price = getItemPrice(item);
   $('slideContent').innerHTML = `<div style="display: flex; gap: 6px; margin-bottom: 8px;"><span style="background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #1F1611; padding: 5px 12px; border-radius: 8px; font-size: 10px; font-weight: 900;">⭐ ${currentLang === 'en' ? 'Featured' : 'مميز'}</span></div><h2 style="font-size: 24px; font-weight: 900; margin: 0 0 4px; color: #fff;">${name}</h2><p style="font-size: 12px; color: rgba(255,255,255,0.8); margin: 0 0 12px; max-width: 460px;">${desc || ''}</p><div style="display: flex; gap: 12px; align-items: center;"><span style="font-size: 24px; font-weight: 900; color: #E0BE85;">${price} <span style="font-size: 12px;">${currency}</span></span><button onclick="event.stopPropagation(); openItemDetails(${item.id})" style="background: #fff; color: #1F1611; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 900; border: none; cursor: pointer;">${currentLang === 'en' ? 'View' : 'التفاصيل'}</button></div>`;
 }
-function nextSlide() { showSlide(currentSlide + 1); }
-function prevSlide() { showSlide(currentSlide - 1); }
-function goToSlide(i) { showSlide(i); }
-function startAutoplay() { if (autoplayTimer) clearInterval(autoplayTimer); autoplayTimer = setInterval(() => { if (!isCarouselPaused) showSlide(currentSlide + 1); }, 6000); }
+
+function nextSlide() { 
+  if (currentOffers.length > 0) showOfferSlide(currentSlide + 1);
+  else showSlide(currentSlide + 1); 
+}
+
+function prevSlide() { 
+  if (currentOffers.length > 0) showOfferSlide(currentSlide - 1);
+  else showSlide(currentSlide - 1); 
+}
+
+function goToSlide(i) { 
+  if (currentOffers.length > 0) showOfferSlide(i);
+  else showSlide(i); 
+}
+
+function startAutoplay() { if (autoplayTimer) clearInterval(autoplayTimer); autoplayTimer = setInterval(() => { if (!isCarouselPaused) { if (currentOffers.length > 0) showOfferSlide(currentSlide + 1); else showSlide(currentSlide + 1); } }, 6000); }
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.querySelector('[data-nav="home"]').classList.add('active'); }
 function focusSearch() { $('searchInput').focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.querySelector('[data-nav="search"]').classList.add('active'); }
