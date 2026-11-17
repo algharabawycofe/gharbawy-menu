@@ -22,6 +22,12 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 .app-main { max-width: 860px; margin: 0 auto; padding: 1rem; width: 100%; }
 .search-wrap { position: relative; flex: 1; } .search-input { width: 100%; padding: 12px 16px 12px 42px; background: var(--bg-surface); border: 1.5px solid var(--border); border-radius: 16px; font-size: 13px; color: var(--text-primary); outline: none; font-family: inherit; } html[dir="rtl"] .search-input { padding: 12px 42px 12px 16px; } .search-input:focus { border-color: var(--coffee-gold); } .search-icon { position: absolute; top: 50%; transform: translateY(-50%); inset-inline-start: 14px; color: var(--text-muted); pointer-events: none; }
 .cat-tab { padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); font-family: inherit; display: inline-flex; align-items: center; gap: 6px; } .cat-tab .cat-count { font-size: 10px; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--coffee-gold) 15%, transparent); color: var(--coffee-gold); font-weight: 900; } .cat-tab.active { background: var(--coffee-dark); color: var(--bg-primary); border-color: var(--coffee-dark); }
+
+/* قسم العروض البانر المتحرك أو المميز */
+.promo-banner { background: linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium)); color: #FAF6F0; border-radius: 20px; padding: 16px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-md); border: 1px solid var(--coffee-gold); }
+.promo-banner h3 { margin: 0 0 4px; font-size: 15px; font-weight: 900; color: var(--coffee-gold-light); }
+.promo-banner p { margin: 0; font-size: 12px; color: #E8DED2; font-weight: 600; }
+
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; } @media (min-width: 700px) { .menu-grid { grid-template-columns: 1fr 1fr 1fr; gap: 14px; } }
 .menu-card { background: var(--bg-surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden; position: relative; display: flex; flex-direction: column; } .menu-card:hover { border-color: var(--coffee-gold); box-shadow: var(--shadow-md); } .menu-card.out-of-stock { opacity: 0.55; }
 .menu-card-img-wrap { position: relative; width: 100%; aspect-ratio: 1 / 1; background: var(--bg-subtle); overflow: hidden; } .menu-card-img { width: 100%; height: 100%; object-fit: cover; }
@@ -113,6 +119,15 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 </header>
 
 <main class="app-main">
+  <!-- قسم العروض والخصومات المميزة -->
+  <div class="promo-banner">
+    <div>
+      <h3 id="promoTitle">🔥 عروض بن الغرباوي الخاصة</h3>
+      <p id="promoDesc">اطلب دلوقتي واستمتع بأحلى الأجواء والقهوة المضبوطة!</p>
+    </div>
+    <div style="font-size: 32px;">☕</div>
+  </div>
+
   <div style="position: sticky; top: 62px; background: var(--bg-primary); padding: 12px 0; z-index: 40;">
     <div style="display: flex; gap: 8px; margin-bottom: 10px;">
       <div class="search-wrap">
@@ -208,6 +223,8 @@ function applyLanguage() {
     document.getElementById('branchSelectSub').innerText = 'Choose your current branch to view the correct menu';
     document.getElementById('searchInput').placeholder = 'Search menu...';
     document.getElementById('cartModalTitle').innerText = '📋 Current Orders';
+    document.getElementById('promoTitle').innerText = '🔥 Al-Gharbawy Special Offers';
+    document.getElementById('promoDesc').innerText = 'Order now and enjoy the best coffee atmosphere!';
   } else {
     document.getElementById('welcomeTitle').innerText = 'أهلاً وسهلاً بيك';
     document.getElementById('welcomeSubtitle').innerHTML = 'منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.';
@@ -216,6 +233,8 @@ function applyLanguage() {
     document.getElementById('branchSelectSub').innerText = 'اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح';
     document.getElementById('searchInput').placeholder = 'ابحث في القائمة...';
     document.getElementById('cartModalTitle').innerText = '📋 طلباتي الحالية';
+    document.getElementById('promoTitle').innerText = '🔥 عروض بن الغرباوي الخاصة';
+    document.getElementById('promoDesc').innerText = 'اطلب دلوقتي واستمتع بأحلى الأجواء والقهوة المضبوطة!';
   }
 }
 
@@ -229,7 +248,6 @@ function readTableFromUrl() {
 function subscribeAll() {
   const { db, collection, onSnapshot, query, where, doc } = window.FB;
   
-  // تفعيل ظهور زر الجرس للويتر حسب الإعدادات
   onSnapshot(doc(db, 'settings', 'features'), (snap) => {
     if (snap.exists() && snap.data().callWaiter) { 
       document.getElementById('callWaiterBtn').style.display = 'flex'; 
@@ -251,18 +269,18 @@ function subscribeAll() {
     renderCustomerMenu();
   });
 
-  // الاستماع لتحديثات حالة الأوردر للعميل (إشعارات فورية عند بدء التحضير أو الاكتمال)
+  // الاستماع لتحديثات الأوردر للعميل وإرسال إشعارات فورية صوتية وبصرية
   if (currentTable) {
     onSnapshot(query(collection(db, 'orders'), where('table', '==', currentTable)), (snap) => {
       snap.docChanges().forEach(ch => {
         if (ch.type === 'modified' || ch.type === 'added') {
           const data = ch.doc.data();
-          if (data.status === 'done') {
+          if (data.status === 'preparing') {
             playClientBellSound();
-            showToast(currentLang === 'ar' ? `🎉 أوردر طربيزة ${currentTable} جاهز وفي طريقه إليك بالهناء والشفاء!` : `🎉 Your order for table ${currentTable} is ready and on the way!`, '☕');
-          } else if (data.status === 'preparing') {
+            showToast(currentLang === 'ar' ? `🔥 جاري تحضير طلبك الآن لطربيزة ${currentTable}...` : `🔥 Your order for table ${currentTable} is being prepared...`, '👨‍🍳');
+          } else if (data.status === 'done') {
             playClientBellSound();
-            showToast(currentLang === 'ar' ? `👨‍🍳 جاري تحضير طلبك الآن في الفرع...` : `👨‍🍳 Your order is being prepared...`, '🔥');
+            showToast(currentLang === 'ar' ? `🎉 أوردر طربيزة ${currentTable} خلص وجايلك حالاً!` : `🎉 Your order for table ${currentTable} is ready!`, '☕');
           }
         }
       });
@@ -334,7 +352,6 @@ function filterMenu() {
   }).join('');
 }
 
-// دالة زر استدعاء الويتر العائم (الجرس)
 async function callWaiter() {
   if (!currentBranch) return;
   const { db, collection, addDoc, onSnapshot, doc } = window.FB;
