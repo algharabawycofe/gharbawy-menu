@@ -269,7 +269,7 @@ window.addEventListener('fb-ready', () => {
         currentUserData = snap.data();
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('app').style.display = 'block';
-        document.getElementById('managerName').innerText = currentUserData.name || '';
+        document.getElementById('managerName', user).innerText = currentUserData.name || '';
         subscribeData();
       } else {
         window.location.href = 'admin.html';
@@ -326,7 +326,7 @@ function subscribeData() {
     renderKDS();
   }));
 
-  // 4. استدعاءات الويتر
+  // 4. استدعاءات الويتر (نجلب فقط المعلقة 'pending')
   const qWaiter = query(collection(db, 'waiter_calls'), where('branchId', '==', bId), where('status', '==', 'pending'));
   let firstWaiterLoad = true;
   unsubs.push(onSnapshot(qWaiter, (snap) => {
@@ -365,16 +365,29 @@ function renderWaiterBar() {
   `;
 }
 
+// التعديل الجوهري هنا: تحديث الحالة إلى acknowledged وتفعيل responded لكي يشعر بها العميل فوراً ويختفي الجرس عنده
 async function resolveWaiterCall(id) {
-  await window.FB.updateDoc(window.FB.doc(window.FB.db, 'waiter_calls', id), { status: 'done' });
+  const { db, doc, updateDoc } = window.FB;
+  try {
+    await updateDoc(doc(db, 'waiter_calls', id), {
+      status: 'acknowledged',
+      responded: true
+    });
+    showToast('✅ تم تأكيد النداء وإرساله للعميل');
+  } catch (e) {
+    console.error('Error resolving waiter call:', e);
+  }
 }
 
 async function resolveAllWaiterCalls() {
   const { db, writeBatch, doc } = window.FB;
   const batch = writeBatch(db);
-  waiterCalls.forEach(c => batch.update(doc(db, 'waiter_calls', c.id), { status: 'done' }));
+  waiterCalls.forEach(c => batch.update(doc(db, 'waiter_calls', c.id), {
+    status: 'acknowledged',
+    responded: true
+  }));
   await batch.commit();
-  showToast('✅ تم تصفية جميع الاستدعاءات');
+  showToast('✅ تم تأكيد جميع الاستدعاءات');
 }
 
 function updateAnalytics() {
