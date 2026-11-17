@@ -51,9 +51,13 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 .waiter-overlay { position: fixed; inset: 0; background: #FFF; color: #1F1611; z-index: 100; display: flex; flex-direction: column; overflow-y: auto; opacity: 0; pointer-events: none; transition: opacity 0.35s; } .waiter-overlay.open { opacity: 1; pointer-events: auto; } html.dark .waiter-overlay { background: var(--bg-primary); color: var(--text-primary); } .waiter-toolbar { position: sticky; top: 0; background: rgba(255,255,255,0.95); border-bottom: 1px solid #E8DED2; padding: 12px 16px; display: flex; justify-content: flex-end; z-index: 10; } html.dark .waiter-toolbar { background: var(--bg-surface); border-color: var(--border); } .waiter-close-btn { width: 44px; height: 44px; border-radius: 14px; background: #F5EEE5; border: 1.5px solid #E8DED2; color: #1F1611; font-size: 20px; font-weight: 900; cursor: pointer; font-family: inherit; } .waiter-content { max-width: 760px; margin: 0 auto; padding: 24px; width: 100%; } .waiter-header { text-align: center; padding-bottom: 24px; border-bottom: 4px dashed #D4C4B0; margin-bottom: 28px; } .waiter-brand { font-size: 32px; font-weight: 900; color: #2B1D14; margin: 0; } html.dark .waiter-brand { color: var(--text-primary); } .waiter-subtitle { font-size: 14px; color: #6F4E37; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; } .waiter-order-title { font-size: 22px; font-weight: 900; color: #6F4E37; text-align: center; margin: 24px 0 16px; } .waiter-item { display: flex; justify-content: space-between; padding: 20px 0; border-bottom: 2.5px dotted #D4C4B0; } .waiter-item-name { font-size: 26px; font-weight: 900; color: #1F1611; margin-bottom: 6px; } html.dark .waiter-item-name { color: var(--text-primary); } .waiter-item-notes { font-size: 15px; color: #B5651D; background: #FFF6E8; padding: 6px 12px; border-radius: 8px; margin-top: 8px; display: inline-block; } .waiter-item-qty { font-size: 32px; font-weight: 900; color: #C89B5E; background: #FAF1E0; padding: 4px 16px; border-radius: 14px; } .waiter-item-price { font-size: 22px; font-weight: 900; color: #1F1611; text-align: right; } html.dark .waiter-item-price { color: var(--text-primary); } .waiter-total-box { margin-top: 32px; padding: 28px 32px; background: linear-gradient(135deg, #2B1D14, #6F4E37); border-radius: 24px; display: flex; justify-content: space-between; align-items: center; color: #fff; } .waiter-total-label { font-size: 20px; font-weight: 900; opacity: 0.85; } .waiter-total-value { font-size: 48px; font-weight: 900; color: #E0BE85; } .waiter-footer { margin-top: 40px; padding-top: 24px; border-top: 4px dashed #D4C4B0; text-align: center; color: #6F4E37; } .waiter-time { font-size: 22px; font-weight: 900; color: #1F1611; } html.dark .waiter-time { color: var(--text-primary); } .waiter-thanks { margin-top: 24px; font-size: 16px; font-weight: 800; color: #C89B5E; }
 .branch-select-screen { position: fixed; inset: 0; z-index: 900; display: none; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px; } .branch-select-screen.show { display: flex; } .branch-select-card { width: min(92vw, 480px); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); } .branch-select-card h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; } .branch-select-card p { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; } .branch-option { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; width: 100%; text-align: inherit; color: var(--text-primary); } .branch-option:hover { border-color: var(--coffee-gold); background: color-mix(in srgb, var(--coffee-gold) 8%, var(--bg-subtle)); } .branch-option strong { font-weight: 900; font-size: 14px; display: block; } .branch-option small { font-size: 11px; color: var(--text-muted); }
 .system-offline-overlay { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; } .system-offline-overlay.show { display: flex; }
-#callWaiterBtn { display: none; position: fixed; bottom: 100px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; }
 
-/* Custom Confirm Modal styling */
+/* Call Waiter Button Styling with Active Wait State */
+#callWaiterBtn { display: none; position: fixed; bottom: 100px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; transition: transform 0.3s ease; }
+#callWaiterBtn.pending { animation: pulseBtn 1.5s infinite; opacity: 0.7; pointer-events: none; }
+@keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(200,155,94,0.8); } 100% { transform: scale(1); } }
+
+/* Custom Modal styling */
 .custom-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
 .custom-modal-backdrop.show { display: flex; }
 .custom-modal { background: var(--bg-surface); padding: 24px; border-radius: 24px; width: min(90vw, 360px); text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-lg); }
@@ -97,7 +101,6 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
       <button onclick="openCartModal()" class="cart-btn-header"><span style="font-size: 14px;">🛒</span><span id="cartCountBadge" class="cart-badge" style="display: none;">0</span></button>
       <button onclick="toggleDarkMode()" class="icon-btn" id="darkModeBtn">🌙</button>
       <button onclick="toggleLanguage()" class="icon-btn"><span id="langBtnText" style="font-size: 12px; font-weight: 900;">AR</span></button>
-      <!-- تم إزالة زر تغيير الفرع بناءً على طلبك -->
     </div>
   </div>
 </header>
@@ -163,7 +166,7 @@ function showToast(msg, icon = '✅') {
     t.style.opacity = '0';
     t.style.transform = 'translateX(60px)';
     setTimeout(() => t.remove(), 300);
-  }, 3000);
+  }, 3500);
 }
 
 function showCustomConfirm(title, desc) {
@@ -200,7 +203,7 @@ function subscribeAll() {
   const { db, collection, onSnapshot, doc } = window.FB;
 
   onSnapshot(doc(db, 'settings', 'features'), (snap) => {
-    if (snap.exists() && snap.data().callWaiter) { features.callWaiter = true; $('callWaiterBtn').style.display = 'flex'; } else { features.callWaiter = false; $('callWaiterBtn').style.display = 'none'; }
+    if (snap.exists() && snap.data().callWaiter) { features.callWaiter = true; if (!activeWaiterCallId) $('callWaiterBtn').style.display = 'flex'; } else { features.callWaiter = false; $('callWaiterBtn').style.display = 'none'; }
   });
 
   onSnapshot(doc(db, 'settings', 'system'), (snap) => { if (snap.exists()) { systemOnline = snap.data().online !== false; } else { systemOnline = true; } updateSystemOverlay(); });
@@ -355,7 +358,7 @@ async function showOrderToWaiter() {
       dateStr: todayStr
     });
 
-    // تفريغ السلة أوتوماتيك بعد عرض الطلب للويتر وإرساله بنجاح
+    // تفريغ السلة أوتوماتيك وإغلاق النافذة
     cart = [];
     saveCart();
     renderCartModalItems();
@@ -373,6 +376,8 @@ function closeWaiterView() { $('waiterOverlay').classList.remove('open'); docume
 async function callWaiter() {
   if (!currentBranch) return;
   const { db, collection, addDoc, onSnapshot, doc } = window.FB;
+  const btn = $('callWaiterBtn');
+  
   try {
     const docRef = await addDoc(collection(db, 'waiter_calls'), {
       branchId: currentBranch.id,
@@ -382,20 +387,28 @@ async function callWaiter() {
       status: 'pending'
     });
     activeWaiterCallId = docRef.id;
-    showToast(currentLang === 'ar' ? 'تم استدعاء الويتر، لحظة واحدة!' : 'Waiter called, please wait!', '🛎️');
+    
+    // إخفاء أو تحويل الجرس لحالة الانتظار لحد ما الويتر يرد
+    btn.classList.add('pending');
+    showToast(currentLang === 'ar' ? 'تم استدعاء الويتر، جاري الاستجابة...' : 'Waiter called, awaiting response...', '🛎️');
 
-    // الاستماع لحالة نداء الويتر لحظياً لمعرفة هل ضغط الويتر على علامة صح (تم الاستجابة)
     const unsubCall = onSnapshot(doc(db, 'waiter_calls', activeWaiterCallId), (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        if (data.status === 'acknowledged' || data.status === 'completed' || data.responded === true) {
+        if (data.status === 'acknowledged' || data.responded === true) {
+          // الويتر ضغط صح! إخفاء الجرس تماماً أو إظهار رسالة الويتر جاي
           showToast(currentLang === 'ar' ? 'الويتر في طريقه إليك 🚶‍♂️☕' : 'Waiter is on the way! 🚶‍♂️☕', '🏃‍♂️');
+          btn.style.display = 'none'; // يختفي الجرس من عند العميل تماماً
+          activeWaiterCallId = null;
           unsubCall();
         }
       }
     });
 
-  } catch (e) { console.error(e); }
+  } catch (e) { 
+    console.error(e); 
+    btn.classList.remove('pending');
+  }
 }
 
 function openItemDetails(id) { const item = getBranchItems().find(i => i.id === id); if (!item) return; currentSheetItem = item; currentSheetQty = 1; renderItemSheet(); $('itemBackdrop').classList.add('open'); $('itemSheet').classList.add('open'); }
