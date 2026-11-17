@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة مدير الفرع — الاحترافية</title>
+<title>لوحة إدارة الفرع الاحترافية — بن الغرباوي</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#FAF6F0;--surface:#FFF;--subtle:#F5EEE5;--text:#1F1611;--muted:#A89080;--border:#E8DED2;--gold:#C89B5E;--dark:#2B1D14;--danger:#B33A3A;--success:#4A7C59;--info:#2980b9}
@@ -18,38 +18,39 @@ body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);mar
 .nav-btn:hover{background:var(--subtle)}
 .nav-btn.active{background:var(--gold);color:#1F1611}
 .main{padding:24px;overflow:auto}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.02)}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden}
 .stat-label{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px}
-.stat-value{font-size:26px;font-weight:900;color:var(--gold)}
+.stat-value{font-size:24px;font-weight:900;color:var(--gold)}
+.stat-desc{font-size:10px;color:var(--muted);margin-top:4px}
 .page{display:none}.page.active{display:block}
-.btn{padding:9px 16px;border-radius:10px;border:none;font-weight:900;font-size:13px;cursor:pointer}
+.btn{padding:8px 14px;border-radius:10px;border:none;font-weight:900;font-size:12px;cursor:pointer}
 .btn-primary{background:var(--dark);color:#fff}
 html.dark .btn-primary{background:var(--gold);color:#1F1611}
 .btn-success{background:var(--success);color:#fff}
 .btn-danger{background:var(--danger);color:#fff}
 .btn-ghost{background:var(--subtle);color:var(--text);border:1px solid var(--border)}
-.btn-sm{padding:5px 10px;font-size:11px}
+.btn-sm{padding:4px 8px;font-size:11px}
 .order-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
-.badge{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:900;display:inline-block}
+.badge{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:900;display:inline-block}
 .badge-gold{background:rgba(200,155,94,.15);color:var(--gold)}
 .badge-green{background:rgba(74,124,89,.15);color:var(--success)}
 .badge-red{background:rgba(179,58,58,.15);color:var(--danger)}
 .badge-blue{background:rgba(41,128,185,.15);color:var(--info)}
 
-/* KDS Custom Styles */
-@keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(179, 58, 58, 0.7); } 70% { box-shadow: 0 0 0 12px rgba(179, 58, 58, 0); } 100% { box-shadow: 0 0 0 0 rgba(179, 58, 58, 0); } }
-.kds-board { display: flex; gap: 20px; align-items: flex-start; height: 100%; }
-.kds-column { flex: 1; background: var(--surface); border-radius: 16px; padding: 15px; min-height: 70vh; border: 1px solid var(--border); }
-.kds-column-header { text-align: center; font-size: 18px; font-weight: 900; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
-.kds-card { background: var(--subtle); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid var(--border); }
+/* KDS Pro Styles */
+@keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(179, 58, 58, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(179, 58, 58, 0); } 100% { box-shadow: 0 0 0 0 rgba(179, 58, 58, 0); } }
+.kds-board { display: flex; gap: 20px; align-items: flex-start; }
+.kds-column { flex: 1; background: var(--surface); border-radius: 16px; padding: 15px; min-height: 65vh; border: 1px solid var(--border); }
+.kds-column-header { text-align: center; font-size: 15px; font-weight: 900; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+.kds-card { background: var(--subtle); border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 2px solid var(--border); }
 .kds-card.late { border-color: var(--danger); animation: pulseRed 1.5s infinite; }
-.kds-card-header { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 10px; align-items: center; }
-.kds-table { font-size: 20px; font-weight: 900; margin: 0; color: var(--text); }
-.kds-item { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; font-weight: 700; }
+.kds-card-header { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 6px; margin-bottom: 10px; align-items: center; }
+.kds-table { font-size: 16px; font-weight: 900; margin: 0; color: var(--text); }
+.kds-item { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; font-weight: 700; }
 .kds-qty { color: var(--gold); }
-.kds-notes { color: var(--danger); font-size: 12px; font-weight: 900; margin-bottom: 6px; background: rgba(179,58,58,0.1); padding: 4px 8px; border-radius: 6px; }
+.kds-notes { color: var(--danger); font-size: 11px; font-weight: 900; margin-bottom: 6px; background: rgba(179,58,58,0.1); padding: 3px 6px; border-radius: 4px; }
 
 #loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
 #loginCard{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:380px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.05)}
@@ -62,11 +63,11 @@ input:focus{border-color:var(--gold)}
 
 <div id="loginOverlay">
   <div id="loginCard">
-    <div style="font-size:36px;margin-bottom:10px">👔</div>
-    <h2 style="font-size:20px;font-weight:900;margin-bottom:20px">لوحة مدير الفرع</h2>
+    <div style="font-size:36px;margin-bottom:10px">☕</div>
+    <h2 style="font-size:20px;font-weight:900;margin-bottom:20px">لوحة مدير الفرع الاحترافية</h2>
     <input id="email" type="email" placeholder="الإيميل" dir="ltr">
     <input id="password" type="password" placeholder="الباسورد" dir="ltr">
-    <button class="btn btn-primary" style="width:100%;padding:12px" onclick="doLogin()">دخول</button>
+    <button class="btn btn-primary" style="width:100%;padding:12px" onclick="doLogin()">دخول للنظام</button>
     <p id="loginError" style="color:var(--danger);font-size:12px;margin-top:10px"></p>
   </div>
 </div>
@@ -77,46 +78,71 @@ input:focus{border-color:var(--gold)}
   <div class="topbar">
     <div><div class="brand">☕ الغرباوي — إدارة الفرع</div><div class="brand-sub" id="userBranchLabel">جاري التحميل...</div></div>
     <div style="display:flex;align-items:center;gap:10px">
-      <button class="btn btn-ghost btn-sm" onclick="document.documentElement.classList.toggle('dark')">🌓</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.documentElement.classList.toggle('dark')">🌓 الوضع</button>
       <button class="btn btn-danger btn-sm" onclick="doLogout()">خروج</button>
     </div>
   </div>
 
   <div class="layout">
     <aside class="side">
-      <button class="nav-btn active" onclick="showPage('dashboard')">📊 نظرة عامة</button>
-      <button class="nav-btn" onclick="showPage('orders')">📦 جميع الأوردرات</button>
+      <button class="nav-btn active" onclick="showPage('dashboard')">📊 تحليل ونظرة عامة</button>
+      <button class="nav-btn" onclick="showPage('orders')">📦 سجل الأوردرات</button>
       <button class="nav-btn" id="kdsNavBtn" onclick="showPage('kds')">📺 شاشة المطبخ (KDS)</button>
     </aside>
 
     <main class="main">
-      <!-- تنبيهات استدعاء الويتر الفورية -->
+      <!-- استدعاءات الويتر (منظمة بشكل أنيق ولا تسبب زحمة) -->
       <div id="waiterCallsContainer"></div>
 
-      <!-- صفحة نظرة عامة -->
+      <!-- صفحة التحليل ونظرة عامة -->
       <div id="page-dashboard" class="page active">
-        <h2 id="welcomeText" style="font-size:22px;font-weight:900;margin-bottom:20px">مرحباً بك</h2>
+        <h2 id="welcomeText" style="font-size:20px;font-weight:900;margin-bottom:16px">مرحباً بك</h2>
+        
+        <!-- إحصائيات تحليلية ذكية -->
         <div class="stat-grid">
-          <div class="stat"><div class="stat-label">أوردرات النهاردة</div><div class="stat-value" id="statOrders">0</div></div>
-          <div class="stat"><div class="stat-label">إجمالي مبيعات اليوم</div><div class="stat-value" id="statSales">0 ج</div></div>
-          <div class="stat"><div class="stat-label">أوردرات قيد التنفيذ</div><div class="stat-value" id="statPending">0</div></div>
-          <div class="stat"><div class="stat-label">حالة النظام</div><div class="stat-value" style="color:var(--success)">● يعمل</div></div>
+          <div class="stat">
+            <div class="stat-label">مبيعات اليوم الإجمالية</div>
+            <div class="stat-value" id="statSales">0 ج</div>
+            <div class="stat-desc">إجمالي قيمة الفواتير المسجلة</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">متوسط قيمة الأوردر (AOV)</div>
+            <div class="stat-value" id="statAov">0 ج</div>
+            <div class="stat-desc">متوسط إنفاق الطربيزة الواحدة</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">أوردرات مكتملة اليوم</div>
+            <div class="stat-value" id="statOrders">0</div>
+            <div class="stat-desc" id="statPendingText">قيد التنفيذ: 0 أوردر</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">أكثر صنف مبيعاً اليوم</div>
+            <div class="stat-value" id="statTopItem" style="font-size:16px;margin-top:4px">—</div>
+            <div class="stat-desc">الأكثر طلباً بالصالة</div>
+          </div>
         </div>
+
+        <!-- تحليل رسومي مبسط للمبيعات -->
         <div class="card">
-          <h3 style="font-size:15px;font-weight:900;margin-bottom:12px">⚡ آخر 5 أوردرات للفرع</h3>
+          <h3 style="font-size:14px;font-weight:900;margin-bottom:12px">📈 تحليل حركة الأوردرات اليومية</h3>
+          <div style="height:200px;position:relative;"><canvas id="branchAnalyticsChart"></canvas></div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:14px;font-weight:900;margin-bottom:12px">⚡ آخر 5 أوردرات للفرع</h3>
           <div id="recentOrders"></div>
         </div>
       </div>
 
       <!-- صفحة الأوردرات -->
       <div id="page-orders" class="page">
-        <h2 style="font-size:22px;font-weight:900;margin-bottom:20px">📦 أوردرات الفرع</h2>
+        <h2 style="font-size:20px;font-weight:900;margin-bottom:16px">📦 سجل أوردرات الفرع الكامل</h2>
         <div id="ordersList"></div>
       </div>
 
-      <!-- صفحة شاشة المطبخ KDS المحترفة -->
+      <!-- شاشة مطبخ KDS المحترفة -->
       <div id="page-kds" class="page">
-        <h2 style="font-size:22px;font-weight:900;margin-bottom:20px">📺 شاشة المطبخ والتحضير (KDS)</h2>
+        <h2 style="font-size:20px;font-weight:900;margin-bottom:16px">📺 شاشة المطبخ والتحضير (KDS)</h2>
         <div id="kdsOrders"></div>
       </div>
     </main>
@@ -129,6 +155,7 @@ let currentUserData = null;
 let orders = [], waiterCalls = [], features = {};
 let unsubs = [];
 let audioCtx = null;
+let branchChart = null;
 
 function unlockAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -139,10 +166,10 @@ document.addEventListener('click', unlockAudio, { once: true });
 function playSound(){
   try {
     unlockAudio(); if(!audioCtx) return;
-    [0, 0.15, 0.3].forEach(d => {
+    [0, 0.15].forEach(d => {
       let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
       osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.frequency.value = 750; gain.gain.setValueAtTime(0.4, audioCtx.currentTime + d);
+      osc.frequency.value = 850; gain.gain.setValueAtTime(0.3, audioCtx.currentTime + d);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d + 0.1);
       osc.start(audioCtx.currentTime + d); osc.stop(audioCtx.currentTime + d + 0.1);
     });
@@ -168,8 +195,8 @@ window.addEventListener('fb-ready', () => {
           currentUserData = snap.data();
           document.getElementById('loginOverlay').style.display='none';
           document.getElementById('app').style.display='block';
-          document.getElementById('userBranchLabel').innerText = 'فرع: ' + (currentUserData.branchId || '');
-          document.getElementById('welcomeText').innerText = 'مرحباً بك، مدير الفرع ' + (currentUserData.name || '');
+          document.getElementById('userBranchLabel').innerText = 'كود الفرع: ' + (currentUserData.branchId || '');
+          document.getElementById('welcomeText').innerText = 'أهلاً بك يا مدير الفرع، ' + (currentUserData.name || '');
           subscribeData();
         } else {
           window.location.href = 'admin.html';
@@ -198,7 +225,7 @@ async function doLogout(){ await window.FB.signOut(window.FB.auth); location.rel
 function subscribeData(){
   const { db, collection, query, where, orderBy, onSnapshot, doc } = window.FB;
   
-  // 1. مراقبة الأوردرات للفرع لحظياً
+  // 1. مراقبة الأوردرات
   const q = query(collection(db, 'orders'), where('branchId', '==', currentUserData.branchId), orderBy('createdAt', 'desc'));
   let isFirstOrder = true;
   
@@ -211,12 +238,12 @@ function subscribeData(){
     });
     isFirstOrder = false;
     orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    updateStats();
+    updateAnalyticsAndStats();
     renderOrders();
     renderKDS();
   }));
 
-  // 2. مراقبة استدعاءات الويتر (Waiter Calls) لحظياً
+  // 2. مراقبة استدعاءات الويتر الذكية
   const waiterQuery = query(
     collection(db, 'waiter_calls'), 
     where('branchId', '==', currentUserData.branchId), 
@@ -229,7 +256,7 @@ function subscribeData(){
       if(change.type === 'added' && !isFirstWaiter) {
         playSound();
         const tableNum = change.doc.data().table || '—';
-        showToast(`🛎️ تنبيه: زبون يطلب الويتر في طربيزة ${tableNum}`);
+        showToast(`🛎️ تنبيه: زبون يطلب المساعدة في طربيزة ${tableNum}`);
       }
     });
     isFirstWaiter = false;
@@ -237,15 +264,13 @@ function subscribeData(){
     renderWaiterCallsUI();
   }));
 
-  // 3. جلب إعدادات الميزات
+  // 3. الميزات
   unsubs.push(onSnapshot(doc(db, 'settings', 'features'), (snap) => {
-    if(snap.exists()) {
-      features = snap.data();
-    }
+    if(snap.exists()) features = snap.data();
   }));
 }
 
-// عرض واجهة استدعاءات الويتر
+// عرض واجهة استدعاءات الويتر المحسنة (بدون إحداث زحمة بصرية)
 function renderWaiterCallsUI() {
   const container = document.getElementById('waiterCallsContainer');
   if(!container) return;
@@ -256,17 +281,17 @@ function renderWaiterCallsUI() {
   }
 
   container.innerHTML = `
-    <div style="background: linear-gradient(135deg, var(--gold), #e0be85); color: #1F1611; padding: 15px 20px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(200,155,94,0.3); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:24px">🔔</span>
+    <div style="background: linear-gradient(135deg, var(--gold), #e0be85); color: #1F1611; padding: 12px 18px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(200,155,94,0.25); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:20px">🔔</span>
         <div>
-          <strong style="font-size:15px; display:block;">استدعاءات ويتر معلقة (${waiterCalls.length})</strong>
-          <span style="font-size:11px; opacity:0.8;">يوجد زبائن ينتظرون المساعدة في الصالة</span>
+          <strong style="font-size:14px; display:block;">استدعاءات ويتر معلقة (${waiterCalls.length})</strong>
+          <span style="font-size:10px; opacity:0.85;">زبائن تنتظر الخدمة بالصالة</span>
         </div>
       </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <div style="display: flex; gap: 6px; flex-wrap: wrap; max-height: 90px; overflow-y:auto; padding:2px;">
         ${waiterCalls.map(c => `
-          <div style="background: #fff; color:#1F1611; padding: 6px 12px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-weight:800;">
+          <div style="background: #fff; color:#1F1611; padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; gap: 6px; font-weight:800; font-size:12px;">
             <span>طربيزة ${c.table}</span>
             <button class="btn btn-success btn-sm" onclick="resolveWaiterCall('${c.id}')">✓ تمت</button>
           </div>
@@ -280,7 +305,7 @@ async function resolveWaiterCall(callId) {
   const { db, doc, updateDoc } = window.FB;
   try {
     await updateDoc(doc(db, 'waiter_calls', callId), { status: 'done' });
-    showToast('✅ تم الرد على الاستدعاء وإغلاقه');
+    showToast('✅ تم إغلاق الاستدعاء بنجاح');
   } catch(e) {
     console.error(e);
   }
@@ -291,27 +316,86 @@ function showPage(id){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   event.currentTarget.classList.add('active');
+  if(id === 'dashboard') {
+    setTimeout(() => renderBranchChart(), 100);
+  }
 }
 
-function updateStats(){
+// تحليل ذكي للإحصائيات والمبيعات
+function updateAnalyticsAndStats(){
   const today = new Date().toDateString();
   const todayOrders = orders.filter(o => o.createdAt && o.createdAt.toDate().toDateString() === today);
-  const pendingOrders = orders.filter(o => o.status !== 'done');
+  const pendingOrders = todayOrders.filter(o => o.status !== 'done');
+  const doneOrders = todayOrders.filter(o => o.status === 'done');
   
   let totalSales = todayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  let aov = todayOrders.length > 0 ? Math.round(totalSales / todayOrders.length) : 0;
 
-  document.getElementById('statOrders').innerText = todayOrders.length;
+  // حساب أكثر صنف مبيعاً
+  let itemCounts = {};
+  todayOrders.forEach(o => {
+    (o.items || []).forEach(i => {
+      const name = i.nameAr || 'صنف';
+      itemCounts[name] = (itemCounts[name] || 0) + (Number(i.qty) || 1);
+    });
+  });
+  let topItemName = '—';
+  let maxQty = 0;
+  for(let name in itemCounts) {
+    if(itemCounts[name] > maxQty) {
+      maxQty = itemCounts[name];
+      topItemName = `${name} (${maxQty})`;
+    }
+  }
+
   document.getElementById('statSales').innerText = totalSales.toLocaleString() + ' ج';
-  document.getElementById('statPending').innerText = pendingOrders.length;
+  document.getElementById('statAov').innerText = aov.toLocaleString() + ' ج';
+  document.getElementById('statOrders').innerText = doneOrders.length;
+  document.getElementById('statPendingText').innerText = `قيد التنفيذ بالصالة: ${pendingOrders.length} أوردر`;
+  document.getElementById('statTopItem').innerText = topItemName;
   
   const recent = orders.slice(0, 5);
   document.getElementById('recentOrders').innerHTML = recent.map(o => {
     const time = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}) : '—';
-    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px">
       <span><span class="badge badge-blue">${time}</span> — طربيزة ${o.table || '—'} (${(o.items||[]).length} أصناف)</span>
       <strong style="color:var(--gold)">${o.total} ج</strong>
     </div>`;
-  }).join('') || '<div style="text-align:center;color:var(--muted);padding:15px">لا توجد أوردرات حديثة</div>';
+  }).join('') || '<div style="text-align:center;color:var(--muted);padding:15px;font-size:12px">لا توجد أوردرات حديثة مسجلة</div>';
+
+  renderBranchChart();
+}
+
+// رسم بياني تحليلي للمبيعات حسب الساعات أو الحالة
+function renderBranchChart() {
+  const ctx = document.getElementById('branchAnalyticsChart');
+  if(!ctx) return;
+  
+  // تجميع مبسط حسب حالة الأوردرات اليوم
+  const pendingCount = orders.filter(o => o.status === 'pending').length;
+  const prepCount = orders.filter(o => o.status === 'preparing').length;
+  const doneCount = orders.filter(o => o.status === 'done').length;
+
+  if(branchChart) branchChart.destroy();
+  
+  branchChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['جديدة (Pending)', 'قيد التحضير (Preparing)', 'مكتملة (Done)'],
+      datasets: [{
+        label: 'عدد الأوردرات',
+        data: [pendingCount, prepCount, doneCount],
+        backgroundColor: ['#C89B5E', '#2980b9', '#4A7C59'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision:0 } } }
+    }
+  });
 }
 
 function renderOrders(){
@@ -334,7 +418,7 @@ function renderOrders(){
   }).join('') || '<div class="card" style="text-align:center;color:var(--muted)">لا توجد أوردرات مسجلة</div>';
 }
 
-// شاشة مطبخ KDS احترافية
+// شاشة KDS الاحترافية
 function renderKDS(){
   const pending = orders.filter(o => o.status === 'pending');
   const preparing = orders.filter(o => o.status === 'preparing');
@@ -359,16 +443,16 @@ function renderKDSCard(o, type) {
   const isLate = mins > 15;
 
   const btn = type === 'pending'
-    ? `<button onclick="updateOrderStatus('${o.id}', 'preparing')" class="btn btn-primary btn-sm" style="width:100%;padding:10px;font-size:13px">▶️ ابدأ التحضير</button>`
-    : `<button onclick="updateOrderStatus('${o.id}', 'done')" class="btn btn-success btn-sm" style="width:100%;padding:10px;font-size:13px">✅ تم التحضير والتسليم</button>`;
+    ? `<button onclick="updateOrderStatus('${o.id}', 'preparing')" class="btn btn-primary btn-sm" style="width:100%;padding:8px;font-size:12px">▶️ ابدأ التحضير</button>`
+    : `<button onclick="updateOrderStatus('${o.id}', 'done')" class="btn btn-success btn-sm" style="width:100%;padding:8px;font-size:12px">✅ تم التحضير والتسليم</button>`;
 
   return `
     <div class="kds-card ${isLate ? 'late' : ''}">
       <div class="kds-card-header">
         <h3 class="kds-table">طربيزة ${o.table || '—'}</h3>
-        <span class="badge ${isLate ? 'badge-red' : 'badge-gold'}">⏱️ ${mins} دقيقة</span>
+        <span class="badge ${isLate ? 'badge-red' : 'badge-gold'}">⏱️ ${mins} د</span>
       </div>
-      <div style="margin-bottom: 12px;">
+      <div style="margin-bottom: 10px;">
         ${(o.items || []).map(i => `
           <div class="kds-item">
             <span>${i.nameAr}</span>
@@ -386,13 +470,12 @@ async function updateOrderStatus(id, status) {
   const { db, doc, updateDoc } = window.FB;
   try {
     await updateDoc(doc(db, 'orders', id), { status });
-    showToast('✅ تم تحديث حالة الأوردر بنجاح');
+    showToast('✅ تم تحديث الحالة بنجاح');
   } catch (e) {
     showToast('❌ حدث خطأ أثناء التحديث');
   }
 }
 
-// تحديث تلقائي للعدّادات والوقت في KDS كل دقيقة
 setInterval(() => {
   if(document.getElementById('page-kds').classList.contains('active')) {
     renderKDS();
