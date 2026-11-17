@@ -224,18 +224,28 @@ function unlockAudio() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 document.addEventListener('click', unlockAudio, { once: true });
+document.addEventListener('touchstart', unlockAudio, { once: true });
 
+// صوت جرس إنذار حقيقي وعالٍ جداً للفرع (3 نغمات تنبيه حادة وواضحة)
 function playSound() {
   try {
     unlockAudio(); if (!audioCtx) return;
-    [0, 0.16].forEach(d => {
+    [0, 0.25, 0.5].forEach(delay => {
       let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = 'square'; // صوت جرس حاد ومسموع بقوة
+      osc.frequency.setValueAtTime(950, audioCtx.currentTime + delay);
+      osc.frequency.setValueAtTime(1400, audioCtx.currentTime + delay + 0.1);
+      
+      gain.gain.setValueAtTime(1.0, audioCtx.currentTime + delay); // أقصى مستوى صوت
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.2);
+      
       osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.frequency.value = 880; gain.gain.setValueAtTime(0.4, audioCtx.currentTime + d);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d + 0.12);
-      osc.start(audioCtx.currentTime + d); osc.stop(audioCtx.currentTime + d + 0.12);
+      osc.start(audioCtx.currentTime + delay);
+      osc.stop(audioCtx.currentTime + delay + 0.2);
     });
-  } catch (e) {}
+  } catch (e) {
+    console.log("Branch sound error:", e);
+  }
 }
 
 function showToast(msg) {
@@ -297,7 +307,7 @@ function subscribeData() {
   unsubs.push(onSnapshot(qOrders, (snap) => {
     snap.docChanges().forEach(ch => {
       if (ch.type === 'added' && !firstOrderLoad) {
-        playSound();
+        playSound(); // تشغيل صوت الجرس العالي عند قدوم أوردر جديد
         showToast(`🔔 أوردر جديد — طربيزة ${ch.doc.data().table || '—'}`);
       }
     });
@@ -311,7 +321,7 @@ function subscribeData() {
   unsubs.push(onSnapshot(qWaiter, (snap) => {
     snap.docChanges().forEach(ch => {
       if (ch.type === 'added' && !firstWaiterLoad) {
-        playSound();
+        playSound(); // تشغيل صوت الجرس العالي عند طلب الويتر
         showToast(`🛎️ طربيزة ${ch.doc.data().table || '—'} تطلب الويتر`);
       }
     });
@@ -476,7 +486,7 @@ async function toggleBranchItemStock(itemId, makeAvailable) {
 }
 
 async function updateOrderStatus(id, status) {
-  await window.FB.updateDoc(window.FB.doc(window.FB.db, 'orders', id), { status });
+  await window.FB.updateDoc(doc(db, 'orders', id), { status });
   showToast('✅ تم تحديث الأوردر');
 }
 
