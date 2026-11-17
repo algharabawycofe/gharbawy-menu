@@ -106,6 +106,7 @@ input:focus { border-color: var(--gold); }
   <div class="layout">
     <aside class="side">
       <button class="nav-btn active" data-page="kds" onclick="showPage('kds', this)"><span>📺 شاشة المطبخ (KDS)</span><span class="nav-badge" id="kdsBadge" style="display:none">0</span></button>
+      <button class="nav-btn" data-page="waiter" onclick="showPage('waiter', this)"><span>🛎️ نداءات الويتر</span><span class="nav-badge" id="waiterBadge" style="display:none">0</span></button>
       <button class="nav-btn" data-page="orders" onclick="showPage('orders', this)"><span>📦 سجل الأوردرات</span></button>
       <button class="nav-btn" data-page="stock" onclick="showPage('stock', this)"><span>🍽️ توافر المنيو</span></button>
     </aside>
@@ -125,7 +126,15 @@ input:focus { border-color: var(--gold); }
         </div>
       </div>
 
-      <!-- 2. سجل الأوردرات -->
+      <!-- 2. قسم نداءات الويتر -->
+      <div id="page-waiter" class="page">
+        <div class="card">
+          <div class="card-title"><span>🛎️ طلبات استدعاء الويتر النشطة من الطرابيزات</span></div>
+          <div id="waiterCallsList"></div>
+        </div>
+      </div>
+
+      <!-- 3. سجل الأوردرات -->
       <div id="page-orders" class="page">
         <div class="filter-bar">
           <button class="btn btn-primary btn-sm" onclick="filterOrders('all', this)">الكل</button>
@@ -135,7 +144,7 @@ input:focus { border-color: var(--gold); }
         <div id="ordersList"></div>
       </div>
 
-      <!-- 3. توافر المنيو -->
+      <!-- 4. توافر المنيو -->
       <div id="page-stock" class="page">
         <div class="card">
           <div class="card-title"><span>🍽️ التحكم في توافر أصناف الفرع</span></div>
@@ -155,7 +164,7 @@ input:focus { border-color: var(--gold); }
 <script type="module" src="firebase-config.js"></script>
 <script>
 let currentUserData = null, branchData = null;
-let orders = [], menuItems = [];
+let orders = [], menuItems = [], waiterCalls = [];
 let orderFilter = 'all', unsubs = [], audioCtx = null;
 
 function unlockAudio() {
@@ -165,19 +174,19 @@ function unlockAudio() {
 document.addEventListener('click', unlockAudio, { once: true });
 document.addEventListener('touchstart', unlockAudio, { once: true });
 
-// صوت جرس إنذار حقيقي وعالي للفرع
+// صوت جرس حقيقي وصارخ للفرع عند قدوم أوردر أو نداء ويتر
 function playBranchAlarmBell() {
   try {
     unlockAudio(); if (!audioCtx) return;
-    [0, 0.2, 0.4, 0.6].forEach((delay, idx) => {
+    [0, 0.25, 0.5, 0.75].forEach((delay, idx) => {
       let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(880 + (idx * 200), audioCtx.currentTime + delay);
+      osc.frequency.setValueAtTime(750 + (idx * 250), audioCtx.currentTime + delay);
       gain.gain.setValueAtTime(1.0, audioCtx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.18);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.2);
       osc.connect(gain); gain.connect(audioCtx.destination);
       osc.start(audioCtx.currentTime + delay);
-      osc.stop(audioCtx.currentTime + delay + 0.18);
+      osc.stop(audioCtx.currentTime + delay + 0.2);
     });
   } catch (e) {}
 }
@@ -236,6 +245,7 @@ function subscribeData() {
     renderStockTable();
   }));
 
+  // الاستماع للأوردرات وتفعيل الجرس العالي
   const qOrders = query(collection(db, 'orders'), where('branchId', '==', bId), orderBy('createdAt', 'desc'));
   let firstOrderLoad = true;
   unsubs.push(onSnapshot(qOrders, (snap) => {
@@ -247,15 +257,65 @@ function subscribeData() {
     });
     firstOrderLoad = false;
     orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    updateKDSCounters(); renderOrders(); renderKDS();
+    updateCounters(); renderOrders(); renderKDS();
+  }));
+
+  // الاستماع لنداءات الويتر (الجرس) وتفعيل صوت الجرس العالي للفرع
+  const qWaiter = query(collection(db, 'waiter_calls'), where('branchId', '==', bId), where('status', '==', 'pending'), orderBy('createdAt', 'desc'));
+  let firstWaiterLoad = true;
+  unsubs.push(onSnapshot(qWaiter, (snap) => {
+    snap.docChanges().forEach(ch => {
+      if (ch.type === 'added' && !firstWaiterLoad) {
+        playBranchAlarmBell();
+        showToast(`🛎️ نداء ويتر عاجل — طربيزة ${ch.doc.data().table || '—'}`);
+      }
+    });
+    firstWaiterLoad = false;
+    waiterCalls = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateCounters();
+    renderWaiterCalls();
   }));
 }
 
-function updateKDSCounters() {
+function updateCounters() {
   const activeOrders = orders.filter(o => o.status !== 'done');
   const kdsBadge = document.getElementById('kdsBadge');
   kdsBadge.style.display = activeOrders.length ? 'inline-block' : 'none';
   kdsBadge.innerText = activeOrders.length;
+
+  const waiterBadge = document.getElementById('waiterBadge');
+  waiterBadge.style.display = waiterCalls.length ? 'inline-block' : 'none';
+  waiterBadge.innerText = waiterCalls.length;
+}
+
+function renderWaiterCalls() {
+  const c = document.getElementById('waiterCallsList');
+  if (!waiterCalls.length) {
+    c.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px;">لا توجد نداءات ويتر معلقة حالياً ☕</div>`;
+    return;
+  }
+  c.innerHTML = waiterCalls.map(w => {
+    const time = w.createdAt?.toDate ? w.createdAt.toDate().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '—';
+    return `
+      <div class="order-card" style="border-color:var(--gold); display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:15px; font-weight:900; margin-bottom:4px;">🛎️ نداء استدعاء من طربيزة: <span style="color:var(--gold)">${w.table || '—'}</span></div>
+          <div style="font-size:11px; color:var(--muted)">وقت النداء: ${time}</div>
+        </div>
+        <button class="btn btn-gold" onclick="resolveWaiterCall('${w.id}')">✓ استجابة وتم التوجه</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function resolveWaiterCall(callId) {
+  const { db, doc, updateDoc } = window.FB;
+  try {
+    await updateDoc(doc(db, 'waiter_calls', callId), { status: 'done', responded: true });
+    showToast('✅ تم الاستجابة لنداء الطربيزة بنجاح');
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function filterOrders(type, btn) {
