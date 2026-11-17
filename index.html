@@ -21,10 +21,9 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 .cart-badge { position: absolute; top: -6px; inset-inline-end: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--coffee-gold); color: #1F1611; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-surface); }
 .app-main { max-width: 860px; margin: 0 auto; padding: 1rem; width: 100%; }
 .search-wrap { position: relative; flex: 1; } .search-input { width: 100%; padding: 12px 16px 12px 42px; background: var(--bg-surface); border: 1.5px solid var(--border); border-radius: 16px; font-size: 13px; color: var(--text-primary); outline: none; font-family: inherit; } html[dir="rtl"] .search-input { padding: 12px 42px 12px 16px; } .search-input:focus { border-color: var(--coffee-gold); } .search-icon { position: absolute; top: 50%; transform: translateY(-50%); inset-inline-start: 14px; color: var(--text-muted); pointer-events: none; }
-.pill-btn { padding: 12px 16px; background: var(--bg-surface); border: 1.5px solid var(--border); border-radius: 16px; color: var(--text-primary); font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; font-family: inherit; } .pill-btn.active { background: var(--coffee-gold); border-color: var(--coffee-gold); color: #1F1611; }
 .cat-tab { padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); font-family: inherit; display: inline-flex; align-items: center; gap: 6px; } .cat-tab .cat-count { font-size: 10px; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--coffee-gold) 15%, transparent); color: var(--coffee-gold); font-weight: 900; } .cat-tab.active { background: var(--coffee-dark); color: var(--bg-primary); border-color: var(--coffee-dark); }
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; } @media (min-width: 700px) { .menu-grid { grid-template-columns: 1fr 1fr 1fr; gap: 14px; } }
-.menu-card { background: var(--bg-surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden; cursor: pointer; position: relative; display: flex; flex-direction: column; } .menu-card:hover { border-color: var(--coffee-gold); box-shadow: var(--shadow-md); } .menu-card.out-of-stock { opacity: 0.55; }
+.menu-card { background: var(--bg-surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden; position: relative; display: flex; flex-direction: column; } .menu-card:hover { border-color: var(--coffee-gold); box-shadow: var(--shadow-md); } .menu-card.out-of-stock { opacity: 0.55; }
 .menu-card-img-wrap { position: relative; width: 100%; aspect-ratio: 1 / 1; background: var(--bg-subtle); overflow: hidden; } .menu-card-img { width: 100%; height: 100%; object-fit: cover; }
 .menu-card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .menu-card-title { font-size: 13px; font-weight: 900; color: var(--text-primary); margin: 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em; }
@@ -54,8 +53,8 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 <div id="branchSelectScreen" class="branch-select-screen">
   <div class="branch-select-card">
     <div style="font-size: 48px; margin-bottom: 8px;">☕</div>
-    <h2>اختار الفرع</h2>
-    <p style="color: var(--text-muted); font-size: 13px;">اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح</p>
+    <h2 id="branchSelectTitle">اختار الفرع</h2>
+    <p id="branchSelectSub" style="color: var(--text-muted); font-size: 13px;">اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح</p>
     <div id="branchList" style="margin-top: 16px;"></div>
   </div>
 </div>
@@ -63,9 +62,9 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 <div id="welcomeScreen" class="welcome-screen">
   <div class="welcome-card">
     <div class="welcome-logo-wrap"><img id="welcomeLogo" src="logo-01.png" alt="Al-Gharbawy" onerror="this.style.display='none';"></div>
-    <h1 class="welcome-title">أهلاً وسهلاً بيك</h1>
-    <p class="welcome-subtitle">منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.</p>
-    <div style="margin-top: 24px;"><button type="button" class="welcome-enter-btn" onclick="enterWelcome()">تفضل على القائمة</button></div>
+    <h1 class="welcome-title" id="welcomeTitle">أهلاً وسهلاً بيك</h1>
+    <p class="welcome-subtitle" id="welcomeSubtitle">منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.</p>
+    <div style="margin-top: 24px;"><button type="button" class="welcome-enter-btn" id="welcomeEnterBtn" onclick="enterWelcome()">تفضل على القائمة</button></div>
   </div>
 </div>
 
@@ -75,11 +74,12 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
   <div style="max-width: 860px; margin: 0 auto; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
     <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
       <div style="width: 42px; height: 42px;"><img id="headerLogo" src="logo-01.png" alt="Al-Gharbawy" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none';"></div>
-      <div><h1 style="font-size: 14px; font-weight: 900; margin: 0;">Al-Gharbawy</h1><p style="font-size: 10px; color: var(--text-muted); margin: 2px 0 0;">Digital Menu</p></div>
+      <div><h1 id="brandTitle" style="font-size: 14px; font-weight: 900; margin: 0;">Al-Gharbawy</h1><p id="brandSub" style="font-size: 10px; color: var(--text-muted); margin: 2px 0 0;">Digital Menu</p></div>
     </div>
     <div style="display: flex; align-items: center; gap: 6px;">
       <button onclick="openCartModal()" class="cart-btn-header">🛒 <span id="cartCountBadge" class="cart-badge" style="display: none;">0</span></button>
-      <button onclick="document.documentElement.classList.toggle('dark')" class="icon-btn">🌙</button>
+      <button onclick="document.documentElement.classList.toggle('dark')" class="icon-btn" title="تبديل المظهر">🌙</button>
+      <button onclick="toggleLanguage()" class="icon-btn"><span id="langBtnText" style="font-size: 12px; font-weight: 900;">EN</span></button>
     </div>
   </div>
 </header>
@@ -101,7 +101,7 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 <div id="cartSheet" class="bottom-sheet">
   <div class="sheet-handle"></div>
   <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-    <h2 style="font-size: 15px; font-weight: 900; margin: 0;">📋 طلباتي الحالية</h2>
+    <h2 id="cartModalTitle" style="font-size: 15px; font-weight: 900; margin: 0;">📋 طلباتي الحالية</h2>
     <button onclick="closeCartModal()" class="icon-btn" style="width: 32px; height: 32px;">✕</button>
   </div>
   <div class="sheet-scroll" style="padding: 16px 20px;"><div id="cartItemsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div></div>
@@ -110,10 +110,31 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 
 <script type="module" src="firebase-config.js"></script>
 <script>
+let currentLang = localStorage.getItem('gharbaoui_lang') || 'ar';
 let cart = JSON.parse(localStorage.getItem('gharbaoui_cart')) || [];
 let activeCategory = 'all', allCategories = [], allItems = [], allBranches = [];
 let currentBranch = null, currentMenuId = null, currentTable = null;
 let activeWaiterCallId = null;
+let audioCtx = null;
+
+function unlockAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+document.addEventListener('click', unlockAudio, { once: true });
+
+function playClientBellSound() {
+  try {
+    unlockAudio(); if (!audioCtx) return;
+    let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.2);
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+  } catch(e) {}
+}
 
 function onFbReady(cb) { if (window.FB_READY) cb(); else window.addEventListener('fb-ready', cb, { once: true }); }
 
@@ -126,24 +147,43 @@ function showToast(msg, icon = '✅') {
   setTimeout(() => t.remove(), 3500);
 }
 
-// دالة تشغيل صوت تفاعلي للعميل عند الضغط أو استجابة الويتر
-function playClientBellSound() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    let osc = ctx.createOscillator(), gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.setValueAtTime(650, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.2);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    osc.start(); osc.stop(ctx.currentTime + 0.4);
-  } catch(e) {}
-}
-
 window.addEventListener('DOMContentLoaded', () => {
   readTableFromUrl();
+  applyLanguage();
   onFbReady(() => { subscribeAll(); });
 });
+
+function toggleLanguage() {
+  currentLang = currentLang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('gharbaoui_lang', currentLang);
+  applyLanguage();
+  renderCustomerMenu();
+}
+
+function applyLanguage() {
+  const root = document.getElementById('htmlRoot');
+  root.setAttribute('lang', currentLang);
+  root.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+  document.getElementById('langBtnText').innerText = currentLang === 'ar' ? 'EN' : 'AR';
+  
+  if (currentLang === 'en') {
+    document.getElementById('welcomeTitle').innerText = 'Welcome';
+    document.getElementById('welcomeSubtitle').innerHTML = 'Welcome to Al-Gharbawy ☕<br>Take your time and explore our menu.';
+    document.getElementById('welcomeEnterBtn').innerText = 'Explore Menu';
+    document.getElementById('branchSelectTitle').innerText = 'Select Branch';
+    document.getElementById('branchSelectSub').innerText = 'Choose your current branch to view the correct menu';
+    document.getElementById('searchInput').placeholder = 'Search menu...';
+    document.getElementById('cartModalTitle').innerText = '📋 Current Orders';
+  } else {
+    document.getElementById('welcomeTitle').innerText = 'أهلاً وسهلاً بيك';
+    document.getElementById('welcomeSubtitle').innerHTML = 'منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.';
+    document.getElementById('welcomeEnterBtn').innerText = 'تفضل على القائمة';
+    document.getElementById('branchSelectTitle').innerText = 'اختار الفرع';
+    document.getElementById('branchSelectSub').innerText = 'اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح';
+    document.getElementById('searchInput').placeholder = 'ابحث في القائمة...';
+    document.getElementById('cartModalTitle').innerText = '📋 طلباتي الحالية';
+  }
+}
 
 function readTableFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -182,7 +222,7 @@ function checkBranchFromUrl() {
 
 function showBranchSelector() {
   document.getElementById('branchSelectScreen').classList.add('show');
-  document.getElementById('branchList').innerHTML = allBranches.map(b => `<button class="branch-option" onclick="selectBranchById('${b.id}')"><strong>${b.nameAr}</strong><small>${b.code}</small></button>`).join('');
+  document.getElementById('branchList').innerHTML = allBranches.map(b => `<button class="branch-option" onclick="selectBranchById('${b.id}')"><strong>${currentLang === 'ar' ? b.nameAr : (b.nameEn || b.nameAr)}</strong><small>${b.code}</small></button>`).join('');
 }
 function selectBranchById(id) { selectBranch(allBranches.find(x => x.id === id)); }
 function selectBranch(branch) {
@@ -198,8 +238,9 @@ function getItemPrice(item) { if (!currentBranch) return item.price; const overr
 function renderCustomerMenu() {
   if (!currentBranch) return;
   const cats = getBranchCategories(); const items = getBranchItems();
-  document.getElementById('categoryTabs').innerHTML = `<button onclick="filterCategory('all')" class="cat-tab ${activeCategory === 'all' ? 'active' : ''}">الكل <span class="cat-count">${items.length}</span></button>` +
-    cats.map(c => `<button onclick="filterCategory('${c.id}')" class="cat-tab ${activeCategory === c.id ? 'active' : ''}">${c.nameAr} <span class="cat-count">${items.filter(i => i.categoryId === c.id).length}</span></button>`).join('');
+  const allText = currentLang === 'ar' ? 'الكل' : 'All';
+  document.getElementById('categoryTabs').innerHTML = `<button onclick="filterCategory('all')" class="cat-tab ${activeCategory === 'all' ? 'active' : ''}">${allText} <span class="cat-count">${items.length}</span></button>` +
+    cats.map(c => `<button onclick="filterCategory('${c.id}')" class="cat-tab ${activeCategory === c.id ? 'active' : ''}">${currentLang === 'ar' ? c.nameAr : (c.nameEn || c.nameAr)} <span class="cat-count">${items.filter(i => i.categoryId === c.id).length}</span></button>`).join('');
   filterMenu();
 }
 
@@ -211,19 +252,24 @@ function filterMenu() {
   const items = getBranchItems();
   const filtered = items.filter(item => {
     const matchesCategory = (activeCategory === 'all' || item.categoryId === activeCategory);
-    return matchesCategory && ((item.nameAr || '').toLowerCase().includes(searchVal) || (item.descAr || '').toLowerCase().includes(searchVal));
+    const nAr = (item.nameAr || '').toLowerCase();
+    const nEn = (item.nameEn || '').toLowerCase();
+    return matchesCategory && (nAr.includes(searchVal) || nEn.includes(searchVal));
   });
 
   document.getElementById('customerMenuGrid').innerHTML = filtered.map(item => {
     const isBranchOutOfStock = currentBranch?.stockOverrides?.[item.id] === false;
     const inStock = isBranchOutOfStock ? false : (item.inStock !== false);
+    const itemName = currentLang === 'ar' ? item.nameAr : (item.nameEn || item.nameAr);
+    const addText = currentLang === 'ar' ? '+ إضافة' : '+ Add';
+    const outText = currentLang === 'ar' ? 'نفد' : 'Sold out';
     return `<div class="menu-card ${inStock ? '' : 'out-of-stock'}">
       <div class="menu-card-img-wrap"><img src="${item.image}" class="menu-card-img" loading="lazy" onerror="this.src='' "></div>
       <div class="menu-card-body">
-        <h3 class="menu-card-title">${item.nameAr}</h3>
+        <h3 class="menu-card-title">${itemName}</h3>
         <div class="menu-card-bottom">
           <span class="menu-card-price">${getItemPrice(item)} ج</span>
-          ${inStock ? `<button class="add-btn" onclick="addToCart(${item.id})">+ إضافة</button>` : `<span style="font-size:11px;color:var(--danger);font-weight:900;">نفد</span>`}
+          ${inStock ? `<button class="add-btn" onclick="addToCart(${item.id})">${addText}</button>` : `<span style="font-size:11px;color:var(--danger);font-weight:900;">${outText}</span>`}
         </div>
       </div>
     </div>`;
@@ -235,7 +281,7 @@ async function callWaiter() {
   const { db, collection, addDoc, onSnapshot, doc } = window.FB;
   const btn = document.getElementById('callWaiterBtn');
   
-  playClientBellSound(); // صوت عند الضغط
+  playClientBellSound(); // تشغيل الصوت عند الضغط
 
   try {
     const docRef = await addDoc(collection(db, 'waiter_calls'), {
@@ -247,14 +293,14 @@ async function callWaiter() {
     });
     activeWaiterCallId = docRef.id;
     btn.classList.add('pending');
-    showToast('تم استدعاء الويتر، جاري الاستجابة...', '🛎️');
+    showToast(currentLang === 'ar' ? 'تم استدعاء الويتر، جاري الاستجابة...' : 'Waiter called, awaiting response...', '🛎️');
 
     const unsubCall = onSnapshot(doc(db, 'waiter_calls', activeWaiterCallId), (snap) => {
       if (snap.exists()) {
         const data = snap.data();
         if (data.status === 'done' || data.responded === true) {
-          playClientBellSound(); // صوت عند استجابة الويتر
-          showToast('الويتر في طريقه إليك 🚶‍♂️☕', '🏃‍♂️');
+          playClientBellSound(); // تشغيل الصوت عند استجابة الويتر
+          showToast(currentLang === 'ar' ? 'الويتر في طريقه إليك 🚶‍♂️☕' : 'Waiter is on the way! 🚶‍♂️☕', '🏃‍♂️');
           btn.style.display = 'none';
           btn.classList.remove('pending');
           activeWaiterCallId = null;
@@ -272,11 +318,12 @@ function addToCart(id) {
   const item = allItems.find(x => x.id === id);
   if (!item) return;
   const existing = cart.find(x => x.id === id);
+  const itemName = currentLang === 'ar' ? item.nameAr : (item.nameEn || item.nameAr);
   if (existing) { existing.qty += 1; }
-  else { cart.push({ id: item.id, nameAr: item.nameAr, price: getItemPrice(item), qty: 1 }); }
+  else { cart.push({ id: item.id, nameAr: itemName, price: getItemPrice(item), qty: 1 }); }
   localStorage.setItem('gharbaoui_cart', JSON.stringify(cart));
   updateCartBadge();
-  showToast('تمت الإضافة للسلة');
+  showToast(currentLang === 'ar' ? 'تمت الإضافة للسلة' : 'Added to cart');
 }
 
 function updateCartBadge() {
@@ -300,7 +347,7 @@ function renderCartItems() {
   const c = document.getElementById('cartItemsContainer');
   const footer = document.getElementById('cartFooter');
   if (!cart.length) {
-    c.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:30px;">سلة الطلبات فارغة</div>';
+    c.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:30px;">${currentLang === 'ar' ? 'سلة الطلبات فارغة' : 'Cart is empty'}</div>`;
     footer.innerHTML = '';
     return;
   }
@@ -316,12 +363,14 @@ function renderCartItems() {
   `).join('');
 
   const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+  const totalText = currentLang === 'ar' ? 'الإجمالي:' : 'Total:';
+  const sendText = currentLang === 'ar' ? 'إرسال الطلب للفرع 🚀' : 'Send Order 🚀';
   footer.innerHTML = `
     <div style="display:flex;justify-content:space-between;font-weight:900;font-size:15px;margin-bottom:6px;">
-      <span>الإجمالي:</span>
+      <span>${totalText}</span>
       <span style="color:var(--coffee-gold);">${total} ج</span>
     </div>
-    <button class="primary-btn" onclick="submitOrder()">إرسال الطلب للفرع 🚀</button>
+    <button class="primary-btn" onclick="submitOrder()">${sendText}</button>
   `;
 }
 
@@ -351,14 +400,16 @@ async function submitOrder() {
     localStorage.removeItem('gharbaoui_cart');
     updateCartBadge();
     closeCartModal();
-    showToast('✅ تم إرسال طلبك للفرع بنجاح!', '🎉');
+    showToast(currentLang === 'ar' ? '✅ تم إرسال طلبك للفرع بنجاح!' : '✅ Order sent successfully!', '🎉');
   } catch (e) {
     console.error(e);
-    showToast('حدث خطأ أثناء إرسال الطلب', '❌');
+    showToast(currentLang === 'ar' ? 'حدث خطأ أثناء إرسال الطلب' : 'Error sending order', '❌');
   }
 }
 
-enterWelcome = () => document.getElementById('welcomeScreen').classList.add('is-hidden');
+function enterWelcome() {
+  document.getElementById('welcomeScreen').classList.add('is-hidden');
+}
 </script>
 </body>
 </html>
