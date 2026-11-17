@@ -52,6 +52,15 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 .branch-select-screen { position: fixed; inset: 0; z-index: 900; display: none; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px; } .branch-select-screen.show { display: flex; } .branch-select-card { width: min(92vw, 480px); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); } .branch-select-card h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; } .branch-select-card p { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; } .branch-option { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; width: 100%; text-align: inherit; color: var(--text-primary); } .branch-option:hover { border-color: var(--coffee-gold); background: color-mix(in srgb, var(--coffee-gold) 8%, var(--bg-subtle)); } .branch-option strong { font-weight: 900; font-size: 14px; display: block; } .branch-option small { font-size: 11px; color: var(--text-muted); }
 .system-offline-overlay { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; } .system-offline-overlay.show { display: flex; }
 #callWaiterBtn { display: none; position: fixed; bottom: 100px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; }
+
+/* Custom Confirm Modal styling */
+.custom-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.custom-modal-backdrop.show { display: flex; }
+.custom-modal { background: var(--bg-surface); padding: 24px; border-radius: 24px; width: min(90vw, 360px); text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-lg); }
+.custom-modal h3 { margin: 0 0 10px; font-size: 18px; font-weight: 900; }
+.custom-modal p { margin: 0 0 20px; font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+.custom-modal-actions { display: flex; gap: 10px; }
+.custom-modal-actions button { flex: 1; padding: 12px; border-radius: 12px; font-weight: 900; cursor: pointer; font-family: inherit; border: none; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -66,6 +75,18 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 
 <div id="toastContainer" class="toast-container"></div>
 
+<!-- Custom Confirmation Modal -->
+<div id="customModalBackdrop" class="custom-modal-backdrop">
+  <div class="custom-modal">
+    <h3 id="customModalTitle">تأكيد</h3>
+    <p id="customModalDesc">هل أنت متأكد؟</p>
+    <div class="custom-modal-actions">
+      <button id="customModalCancel" style="background: var(--bg-subtle); color: var(--text-primary);" onclick="closeCustomModal(false)">إلغاء</button>
+      <button id="customModalConfirm" style="background: var(--coffee-dark); color: #fff;" onclick="closeCustomModal(true)">تأكيد</button>
+    </div>
+  </div>
+</div>
+
 <header class="app-header" id="appHeader">
   <div style="max-width: 860px; margin: 0 auto; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
     <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
@@ -76,7 +97,7 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
       <button onclick="openCartModal()" class="cart-btn-header"><span style="font-size: 14px;">🛒</span><span id="cartCountBadge" class="cart-badge" style="display: none;">0</span></button>
       <button onclick="toggleDarkMode()" class="icon-btn" id="darkModeBtn">🌙</button>
       <button onclick="toggleLanguage()" class="icon-btn"><span id="langBtnText" style="font-size: 12px; font-weight: 900;">AR</span></button>
-      <button onclick="changeBranch()" class="icon-btn" id="changeBranchBtn" title="تغيير الفرع" style="display: none;">🏢</button>
+      <!-- تم إزالة زر تغيير الفرع بناءً على طلبك -->
     </div>
   </div>
 </header>
@@ -126,15 +147,49 @@ let cart = JSON.parse(localStorage.getItem('gharbaoui_cart')) || [];
 let showOnlyFavorites = false; let currentSlide = 0; let activeCategory = 'all'; let featuredItems = []; let currentOffers = []; let autoplayTimer = null; let isCarouselPaused = false; let currentSheetItem = null; let currentSheetQty = 1; const DARK_KEY = 'gharbaoui_dark_mode';
 let allMenus = []; let allCategories = []; let allItems = []; let allBranches = []; let currentBranch = null; let currentMenuId = null; let currentTable = null; let systemOnline = true; let companyInfo = {}; let unsubscribes = [];
 let features = { callWaiter: false };
+let activeWaiterCallId = null;
+let currentModalResolve = null;
 
 function $(id) { return document.getElementById(id); }
 function onFbReady(cb) { if (window.FB_READY) cb(); else window.addEventListener('fb-ready', cb, { once: true }); }
-function showToast(msg, icon = '✅') { const c = $('toastContainer'); const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = `<span style="font-size:16px">${icon}</span><span>${msg}</span>`; c.appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(60px)'; setTimeout(() => t.remove(), 300); }, 2200); }
+
+function showToast(msg, icon = '✅') {
+  const c = $('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span style="font-size:16px">${icon}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(60px)';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+
+function showCustomConfirm(title, desc) {
+  return new Promise((resolve) => {
+    $('customModalTitle').innerText = title;
+    $('customModalDesc').innerText = desc;
+    $('customModalBackdrop').classList.add('show');
+    currentModalResolve = resolve;
+  });
+}
+
+function closeCustomModal(result) {
+  $('customModalBackdrop').classList.remove('show');
+  if (currentModalResolve) {
+    currentModalResolve(result);
+    currentModalResolve = null;
+  }
+}
+
 function debounce(fn, w) { let t; return function(...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), w); }; }
 
 window.addEventListener('DOMContentLoaded', () => {
   initDarkMode(); applyLanguageUI(); updateCartBadge(); renderSkeleton(); initWelcome(); readTableFromUrl(); setupScrollBehavior();
-  onFbReady(() => subscribeAll());
+  onFbReady(() => {
+    subscribeAll();
+  });
   if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 });
 
@@ -180,11 +235,11 @@ function showBranchSelector() {
 function selectBranchById(id) { const b = allBranches.find(x => x.id === id); if (b) selectBranch(b); }
 function selectBranch(branch) {
   currentBranch = branch; currentMenuId = branch.menuId; localStorage.setItem('gharbaoui_last_branch', branch.id);
-  $('branchSelectScreen').classList.remove('show'); $('changeBranchBtn').style.display = 'flex'; $('brandSub').innerText = currentLang === 'en' ? (branch.nameEn || branch.nameAr) : branch.nameAr;
+  $('branchSelectScreen').classList.remove('show'); $('brandSub').innerText = currentLang === 'en' ? (branch.nameEn || branch.nameAr) : branch.nameAr;
   const lastBranchForCart = localStorage.getItem('gharbaoui_cart_branch'); if (lastBranchForCart && lastBranchForCart !== branch.id) { cart = []; localStorage.setItem('gharbaoui_cart', JSON.stringify(cart)); updateCartBadge(); }
   localStorage.setItem('gharbaoui_cart_branch', branch.id); featuredItems = []; currentOffers = []; initFeaturedCarousel(); renderCustomerMenu();
 }
-function changeBranch() { if (allBranches.length <= 1) return; if (!confirm(currentLang === 'ar' ? 'هتغيّر الفرع؟ السلة هتتفضى.' : 'Change branch? Cart will be cleared.')) return; localStorage.removeItem('gharbaoui_last_branch'); localStorage.removeItem('gharbaoui_cart_branch'); window.location.search = ''; }
+
 function getBranchItems() { if (!currentMenuId) return []; return allItems.filter(i => i.menuId === currentMenuId); }
 function getBranchCategories() { if (!currentMenuId) return []; return allCategories.filter(c => c.menuId === currentMenuId && c.active !== false); }
 function getItemPrice(item) { if (!currentBranch) return item.price; const overrides = currentBranch.priceOverrides || {}; const bId = currentBranch.id; return overrides[bId] ? Number(overrides[bId]) : Number(item.price); }
@@ -261,7 +316,14 @@ function updateCartQuantity(cartKey, change, event) { if (event) event.stopPropa
 function saveCart() { localStorage.setItem('gharbaoui_cart', JSON.stringify(cart)); updateCartBadge(); }
 function updateCartBadge() { const count = cart.reduce((s, i) => s + i.quantity, 0); const b = $('cartCountBadge'); const nb = $('bottomCartBadge'); if (count > 0) { b.innerText = count > 99 ? '99+' : count; b.style.display = 'flex'; nb.innerText = count > 99 ? '99+' : count; nb.style.display = 'flex'; } else { b.style.display = 'none'; nb.style.display = 'none'; } }
 function bumpCartBadge() { const b = $('cartCountBadge'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
-function clearCart() { if (cart.length === 0) return; if (!confirm(currentLang === 'ar' ? 'هتمسح كل الطلبات؟' : 'Clear all orders?')) return; cart = []; saveCart(); renderCartModalItems(); renderCustomerMenu(); }
+
+async function clearCart() {
+  if (cart.length === 0) return;
+  const ok = await showCustomConfirm(currentLang === 'ar' ? 'مسح السلة' : 'Clear Cart', currentLang === 'ar' ? 'هل أنت متأكد من مسح جميع الطلبات الحالية؟' : 'Are you sure you want to clear all current items?');
+  if (!ok) return;
+  cart = []; saveCart(); renderCartModalItems(); renderCustomerMenu();
+}
+
 function openCartModal() { renderCartModalItems(); $('cartBackdrop').classList.add('open'); $('cartSheet').classList.add('open'); }
 function closeCartModal() { $('cartBackdrop').classList.remove('open'); $('cartSheet').classList.remove('open'); }
 function renderCartModalItems() {
@@ -277,7 +339,31 @@ async function showOrderToWaiter() {
   const currency = currentLang === 'en' ? 'EGP' : 'جنيه'; const now = new Date(); const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); const dateStr = now.toLocaleDateString(currentLang === 'en' ? 'en-GB' : 'ar-EG', { day: '2-digit', month: 'long', year: 'numeric' }); const tableNum = currentTable || ''; const todayStr = new Date().toISOString().split('T')[0];
   let total = 0;
   const itemsHtml = cart.map(item => { const name = currentLang === 'en' ? item.nameEn : item.nameAr; const itemTotal = item.unitPrice * item.quantity; total += itemTotal; return `<div class="waiter-item"><div><div class="waiter-item-name">${name}</div>${item.notes ? `<div class="waiter-item-notes">📝 ${item.notes}</div>` : ''}</div><div style="text-align: right;"><div class="waiter-item-qty">× ${item.quantity}</div><div class="waiter-item-price">${itemTotal} ${currency}</div></div></div>`; }).join('');
-  try { const { db, collection, addDoc, serverTimestamp } = window.FB; await addDoc(collection(db, 'orders'), { branchId: currentBranch ? currentBranch.id : 'unknown', branchCode: currentBranch ? currentBranch.code : 'unknown', branchNameAr: currentBranch ? currentBranch.nameAr : '', branchNameEn: currentBranch ? (currentBranch.nameEn || '') : '', table: tableNum, items: cart.map(c => ({ id: c.id, nameAr: c.nameAr, nameEn: c.nameEn, price: c.unitPrice, qty: c.quantity, notes: c.notes || '' })), total, currency, status: 'pending', createdAt: serverTimestamp(), dateStr: todayStr }); } catch (e) { console.error('Order save failed', e); }
+  try {
+    const { db, collection, addDoc, serverTimestamp } = window.FB;
+    await addDoc(collection(db, 'orders'), {
+      branchId: currentBranch ? currentBranch.id : 'unknown',
+      branchCode: currentBranch ? currentBranch.code : 'unknown',
+      branchNameAr: currentBranch ? currentBranch.nameAr : '',
+      branchNameEn: currentBranch ? (currentBranch.nameEn || '') : '',
+      table: tableNum,
+      items: cart.map(c => ({ id: c.id, nameAr: c.nameAr, nameEn: c.nameEn, price: c.unitPrice, qty: c.quantity, notes: c.notes || '' })),
+      total,
+      currency,
+      status: 'pending',
+      createdAt: serverTimestamp(),
+      dateStr: todayStr
+    });
+
+    // تفريغ السلة أوتوماتيك بعد عرض الطلب للويتر وإرساله بنجاح
+    cart = [];
+    saveCart();
+    renderCartModalItems();
+    renderCustomerMenu();
+    closeCartModal();
+
+  } catch (e) { console.error('Order save failed', e); }
+
   const companyName = currentLang === 'ar' ? (companyInfo.nameAr || 'الغرباوي') : (companyInfo.nameEn || 'Al-Gharbawy'); const branchName = currentBranch ? (currentLang === 'en' ? (currentBranch.nameEn || currentBranch.nameAr) : currentBranch.nameAr) : ''; const tableLabel = tableNum ? (currentLang === 'en' ? `Table ${tableNum}` : `طربيزة ${tableNum}`) : '';
   $('waiterContent').innerHTML = `<div class="waiter-header"><span style="font-size: 42px; display: block; margin-bottom: 8px;">☕</span><h1 class="waiter-brand">${companyName}</h1><div class="waiter-subtitle">${branchName}${tableLabel ? ' — ' + tableLabel : ''}</div></div><div class="waiter-order-title">📋 ${currentLang === 'en' ? 'Order Details' : 'تفاصيل الطلب'}</div><div>${itemsHtml}</div><div class="waiter-total-box"><span class="waiter-total-label">${currentLang === 'en' ? 'Total' : 'الإجمالي'}</span><div><span class="waiter-total-value">${total}</span><span style="font-size: 20px; font-weight: 700; color: #E0BE85; margin-inline-start: 6px;">${currency}</span></div></div><div class="waiter-footer"><div class="waiter-time">⏰ ${timeStr}</div><div style="font-size: 14px; margin-top: 4px;">${dateStr}</div><div class="waiter-thanks">${currentLang === 'en' ? 'Thank you! ☕' : 'شكراً لطلبكم ☕'}</div></div>`;
   $('waiterOverlay').classList.add('open'); document.body.style.overflow = 'hidden';
@@ -285,8 +371,31 @@ async function showOrderToWaiter() {
 function closeWaiterView() { $('waiterOverlay').classList.remove('open'); document.body.style.overflow = ''; }
 
 async function callWaiter() {
-  if (!currentBranch) return; const { db, collection, addDoc, serverTimestamp } = window.FB;
-  try { await addDoc(collection(db, 'waiter_calls'), { branchId: currentBranch.id, branchNameAr: currentBranch.nameAr, table: currentTable || 'غير محدد', createdAt: serverTimestamp(), status: 'pending' }); showToast('✅ تم استدعاء الويتر، لحظة واحدة!', '🛎️'); } catch (e) { console.error(e); }
+  if (!currentBranch) return;
+  const { db, collection, addDoc, onSnapshot, doc } = window.FB;
+  try {
+    const docRef = await addDoc(collection(db, 'waiter_calls'), {
+      branchId: currentBranch.id,
+      branchNameAr: currentBranch.nameAr,
+      table: currentTable || 'غير محدد',
+      createdAt: new Date(),
+      status: 'pending'
+    });
+    activeWaiterCallId = docRef.id;
+    showToast(currentLang === 'ar' ? 'تم استدعاء الويتر، لحظة واحدة!' : 'Waiter called, please wait!', '🛎️');
+
+    // الاستماع لحالة نداء الويتر لحظياً لمعرفة هل ضغط الويتر على علامة صح (تم الاستجابة)
+    const unsubCall = onSnapshot(doc(db, 'waiter_calls', activeWaiterCallId), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.status === 'acknowledged' || data.status === 'completed' || data.responded === true) {
+          showToast(currentLang === 'ar' ? 'الويتر في طريقه إليك 🚶‍♂️☕' : 'Waiter is on the way! 🚶‍♂️☕', '🏃‍♂️');
+          unsubCall();
+        }
+      }
+    });
+
+  } catch (e) { console.error(e); }
 }
 
 function openItemDetails(id) { const item = getBranchItems().find(i => i.id === id); if (!item) return; currentSheetItem = item; currentSheetQty = 1; renderItemSheet(); $('itemBackdrop').classList.add('open'); $('itemSheet').classList.add('open'); }
@@ -306,12 +415,10 @@ function confirmAddToCart() { if (!currentSheetItem) return; const notes = ($('s
 
 async function initFeaturedCarousel() {
   if (!currentBranch) return; const { db, collection, getDocs } = window.FB;
-  
   try {
     const snap = await getDocs(collection(db, 'offers'));
     const allOffers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     currentOffers = allOffers.filter(o => o.active !== false && (o.branchId === 'all' || o.branchId === currentBranch.id));
-    
     if (currentOffers.length > 0) {
       featuredItems = [];
       $('featuredSection').classList.remove('hidden-init');
@@ -321,20 +428,13 @@ async function initFeaturedCarousel() {
       startAutoplay();
       return;
     }
-  } catch(e) {
-    console.error('Error loading offers, falling back to featured items:', e);
-  }
+  } catch(e) { console.error('Error loading offers', e); }
 
   const items = getBranchItems().filter(i => {
     const isBranchOut = currentBranch?.stockOverrides?.[i.id] === false;
     return !isBranchOut && i.inStock !== false;
   });
-  
-  if (items.length === 0) {
-    $('featuredSection').classList.add('hidden-init');
-    return;
-  }
-  
+  if (items.length === 0) { $('featuredSection').classList.add('hidden-init'); return; }
   const shuffled = [...items].sort(() => Math.random() - 0.5);
   featuredItems = shuffled.slice(0, 10);
   currentOffers = [];
@@ -362,22 +462,18 @@ function renderOfferDots() {
 function showOfferSlide(index) {
   if (currentOffers.length === 0) return;
   currentSlide = (index + currentOffers.length) % currentOffers.length;
-  
   document.querySelectorAll('.carousel-slide').forEach((el, i) => {
     el.style.opacity = i === currentSlide ? '1' : '0';
     el.style.pointerEvents = i === currentSlide ? 'auto' : 'none';
   });
-  
   document.querySelectorAll('#slideDots button').forEach((el, i) => {
     el.style.background = i === currentSlide ? '#C89B5E' : 'rgba(255,255,255,0.4)';
     el.style.width = i === currentSlide ? '22px' : '7px';
   });
-  
   const offer = currentOffers[currentSlide];
   const title = currentLang === 'en' ? (offer.titleEn || offer.titleAr) : offer.titleAr;
   const desc = currentLang === 'en' ? (offer.descEn || offer.descAr) : (offer.descAr || '');
   const currency = currentLang === 'en' ? 'EGP' : 'جنيه';
-  
   $('slideContent').innerHTML = `
     <div style="display: flex; gap: 6px; margin-bottom: 8px;">
       <span style="background: linear-gradient(135deg, #B33A3A, #E74C3C); color: #fff; padding: 5px 12px; border-radius: 8px; font-size: 10px; font-weight: 900;">🔥 ${currentLang === 'en' ? 'Special Offer' : 'عرض خاص'}</span>
@@ -394,21 +490,9 @@ function showOfferSlide(index) {
 function openOfferDetails(offerId) {
   const offer = currentOffers.find(o => o.id === offerId);
   if (!offer) return;
-  
-  const pseudoItem = {
-    id: offer.id,
-    nameAr: offer.titleAr,
-    nameEn: offer.titleEn || offer.titleAr,
-    price: offer.price,
-    image: offer.image,
-    inStock: true
-  };
-  
-  currentSheetItem = pseudoItem;
-  currentSheetQty = 1;
-  renderItemSheet();
-  $('itemBackdrop').classList.add('open');
-  $('itemSheet').classList.add('open');
+  const pseudoItem = { id: offer.id, nameAr: offer.titleAr, nameEn: offer.titleEn || offer.titleAr, price: offer.price, image: offer.image, inStock: true };
+  currentSheetItem = pseudoItem; currentSheetQty = 1; renderItemSheet();
+  $('itemBackdrop').classList.add('open'); $('itemSheet').classList.add('open');
 }
 
 function renderSlides() { $('slidesContainer').innerHTML = featuredItems.map((item, i) => `<div class="carousel-slide" data-slide="${i}" onclick="openItemDetails(${item.id})" style="position: absolute; inset: 0; opacity: 0; transition: opacity 1s; pointer-events: none; cursor: pointer;"><img src="${item.image}" style="width: 100%; height: 100%; object-fit: cover;" loading="${i === 0 ? 'eager' : 'lazy'}"></div>`).join(''); }
@@ -421,21 +505,9 @@ function showSlide(index) {
   $('slideContent').innerHTML = `<div style="display: flex; gap: 6px; margin-bottom: 8px;"><span style="background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #1F1611; padding: 5px 12px; border-radius: 8px; font-size: 10px; font-weight: 900;">⭐ ${currentLang === 'en' ? 'Featured' : 'مميز'}</span></div><h2 style="font-size: 24px; font-weight: 900; margin: 0 0 4px; color: #fff;">${name}</h2><p style="font-size: 12px; color: rgba(255,255,255,0.8); margin: 0 0 12px; max-width: 460px;">${desc || ''}</p><div style="display: flex; gap: 12px; align-items: center;"><span style="font-size: 24px; font-weight: 900; color: #E0BE85;">${price} <span style="font-size: 12px;">${currency}</span></span><button onclick="event.stopPropagation(); openItemDetails(${item.id})" style="background: #fff; color: #1F1611; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 900; border: none; cursor: pointer;">${currentLang === 'en' ? 'View' : 'التفاصيل'}</button></div>`;
 }
 
-function nextSlide() { 
-  if (currentOffers.length > 0) showOfferSlide(currentSlide + 1);
-  else showSlide(currentSlide + 1); 
-}
-
-function prevSlide() { 
-  if (currentOffers.length > 0) showOfferSlide(currentSlide - 1);
-  else showSlide(currentSlide - 1); 
-}
-
-function goToSlide(i) { 
-  if (currentOffers.length > 0) showOfferSlide(i);
-  else showSlide(i); 
-}
-
+function nextSlide() { if (currentOffers.length > 0) showOfferSlide(currentSlide + 1); else showSlide(currentSlide + 1); }
+function prevSlide() { if (currentOffers.length > 0) showOfferSlide(currentSlide - 1); else showSlide(currentSlide - 1); }
+function goToSlide(i) { if (currentOffers.length > 0) showOfferSlide(i); else showSlide(i); }
 function startAutoplay() { if (autoplayTimer) clearInterval(autoplayTimer); autoplayTimer = setInterval(() => { if (!isCarouselPaused) { if (currentOffers.length > 0) showOfferSlide(currentSlide + 1); else showSlide(currentSlide + 1); } }, 6000); }
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.querySelector('[data-nav="home"]').classList.add('active'); }
