@@ -23,14 +23,19 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 .search-wrap { position: relative; flex: 1; } .search-input { width: 100%; padding: 12px 16px 12px 42px; background: var(--bg-surface); border: 1.5px solid var(--border); border-radius: 16px; font-size: 13px; color: var(--text-primary); outline: none; font-family: inherit; } html[dir="rtl"] .search-input { padding: 12px 42px 12px 16px; } .search-input:focus { border-color: var(--coffee-gold); } .search-icon { position: absolute; top: 50%; transform: translateY(-50%); inset-inline-start: 14px; color: var(--text-muted); pointer-events: none; }
 .cat-tab { padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); font-family: inherit; display: inline-flex; align-items: center; gap: 6px; } .cat-tab .cat-count { font-size: 10px; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--coffee-gold) 15%, transparent); color: var(--coffee-gold); font-weight: 900; } .cat-tab.active { background: var(--coffee-dark); color: var(--bg-primary); border-color: var(--coffee-dark); }
 
-/* قسم السلايدر الخاص بالعروض الترويجية */
-.offers-slider-container { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 16px; scroll-snap-type: x mandatory; }
-.offer-card { min-width: 280px; max-width: 320px; flex: 0 0 auto; background: linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium)); border-radius: 20px; overflow: hidden; border: 1.5px solid var(--coffee-gold); display: flex; align-items: center; padding: 14px; gap: 12px; box-shadow: var(--shadow-md); scroll-snap-align: start; color: #FAF6F0; }
-.offer-card img { width: 70px; height: 70px; border-radius: 14px; object-fit: cover; background: var(--bg-subtle); flex-shrink: 0; }
-.offer-info { flex: 1; min-width: 0; }
-.offer-title { font-size: 14px; font-weight: 900; color: var(--coffee-gold-light); margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.offer-desc { font-size: 11px; color: #E8DED2; margin: 0 0 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.offer-price { font-size: 13px; font-weight: 900; color: var(--coffee-gold); }
+/* سلايدر البانرات الفخم والفاخر */
+.luxury-hero-slider { position: relative; width: 100%; height: 180px; border-radius: 22px; overflow: hidden; margin-bottom: 20px; box-shadow: var(--shadow-lg); background: var(--coffee-dark); border: 1px solid var(--coffee-gold); }
+.luxury-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease-in-out; display: flex; align-items: center; padding: 24px; background: linear-gradient(135deg, #2B1D14 0%, #1A1310 100%); }
+.luxury-slide.active { opacity: 1; z-index: 2; }
+.luxury-slide-content { flex: 1; z-index: 3; color: #FAF6F0; min-width: 0; padding-inline-end: 15px; }
+.luxury-slide-badge { display: inline-block; background: rgba(200,155,94,0.2); color: var(--coffee-gold); padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 900; margin-bottom: 8px; border: 1px solid rgba(200,155,94,0.4); }
+.luxury-slide-title { font-size: 18px; font-weight: 900; margin: 0 0 6px; color: #FAF6F0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.luxury-slide-desc { font-size: 12px; color: var(--text-muted); margin: 0 0 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+.luxury-slide-price { font-size: 16px; font-weight: 900; color: var(--coffee-gold); }
+.luxury-slide-img { width: 130px; height: 130px; border-radius: 16px; object-fit: cover; border: 2px solid var(--coffee-gold); box-shadow: 0 8px 20px rgba(0,0,0,0.4); flex-shrink: 0; background: #fff; }
+.luxury-dots { position: absolute; bottom: 10px; inset-inline-end: 20px; display: flex; gap: 6px; z-index: 10; }
+.luxury-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: 0.3s; }
+.luxury-dot.active { width: 20px; border-radius: 4px; background: var(--coffee-gold); }
 
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; } @media (min-width: 700px) { .menu-grid { grid-template-columns: 1fr 1fr 1fr; gap: 14px; } }
 .menu-card { background: var(--bg-surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden; position: relative; display: flex; flex-direction: column; } .menu-card:hover { border-color: var(--coffee-gold); box-shadow: var(--shadow-md); } .menu-card.out-of-stock { opacity: 0.55; }
@@ -117,8 +122,11 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 </header>
 
 <main class="app-main">
-  <!-- منطقة العروض المتحركة (Slider) -->
-  <div id="offersSlider" class="offers-slider-container" style="display: none;"></div>
+  <!-- سلايدر البانرات الفخم المتحرك أوتوماتيك -->
+  <div id="luxurySlider" class="luxury-hero-slider" style="display: none;">
+    <div id="luxurySlidesContainer"></div>
+    <div class="luxury-dots" id="luxuryDotsContainer"></div>
+  </div>
 
   <div style="position: sticky; top: 62px; background: var(--bg-primary); padding: 12px 0; z-index: 40;">
     <div style="display: flex; gap: 8px; margin-bottom: 10px;">
@@ -150,6 +158,7 @@ let cart = JSON.parse(localStorage.getItem('gharbaoui_cart')) || [];
 let activeCategory = 'all', allCategories = [], allItems = [], allBranches = [], allOffers = [];
 let currentBranch = null, currentMenuId = null, currentTable = null;
 let activeWaiterCallId = null;
+let sliderInterval = null, currentSlideIndex = 0;
 let audioCtx = null;
 
 function initAudio() {
@@ -199,7 +208,7 @@ function toggleLanguage() {
   localStorage.setItem('gharbaoui_lang', currentLang);
   applyLanguage();
   renderCustomerMenu();
-  renderOffersSlider();
+  buildLuxurySlider();
 }
 
 function applyLanguage() {
@@ -252,15 +261,15 @@ function subscribeAll() {
   onSnapshot(collection(db, 'menu'), (snap) => {
     allItems = snap.docs.map(d => ({ ...d.data(), id: Number(d.id) }));
     renderCustomerMenu();
+    buildLuxurySlider();
   });
   onSnapshot(collection(db, 'categories'), (snap) => {
     allCategories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderCustomerMenu();
   });
-  // الاستماع المباشر لجدول العروض (Offers)
   onSnapshot(collection(db, 'offers'), (snap) => {
     allOffers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderOffersSlider();
+    buildLuxurySlider();
   });
 
   if (currentTable) {
@@ -298,38 +307,101 @@ function selectBranch(branch) {
   currentBranch = branch; currentMenuId = branch.menuId;
   document.getElementById('branchSelectScreen').classList.remove('show');
   renderCustomerMenu();
-  renderOffersSlider();
+  buildLuxurySlider();
 }
 
-function renderOffersSlider() {
-  const slider = document.getElementById('offersSlider');
-  if (!currentBranch || !allOffers.length) {
-    slider.style.display = 'none';
-    return;
-  }
-  // فلترة العروض النشطة الخاصة بالفرع الحالي أو العامة (التي ليس لها فرع محدد أو الفرع هو نفسه)
-  const branchOffers = allOffers.filter(o => o.active !== false && (!o.branchId || o.branchId === currentBranch.id));
-  
-  if (!branchOffers.length) {
-    slider.style.display = 'none';
+/* بناء السلايدر الفخم: عروض أولاً، ولو مفيش، يعرض مشروبات عشوائية */
+function buildLuxurySlider() {
+  const sliderEl = document.getElementById('luxurySlider');
+  const slidesContainer = document.getElementById('luxurySlidesContainer');
+  const dotsContainer = document.getElementById('luxuryDotsContainer');
+
+  if (!currentBranch) {
+    sliderEl.style.display = 'none';
     return;
   }
 
-  slider.style.display = 'flex';
-  slider.innerHTML = branchOffers.map(o => {
-    const title = currentLang === 'ar' ? (o.titleAr || '') : (o.titleEn || o.titleAr || '');
-    const desc = currentLang === 'ar' ? (o.descAr || '') : (o.descEn || o.descAr || '');
+  // 1. جلب العروض الخاصة بالفرع
+  let slidesData = allOffers.filter(o => o.active !== false && (!o.branchId || o.branchId === currentBranch.id));
+
+  // 2. لو مفيش عروض، هات أصناف/مشروبات عشوائية متوفرة في الفرع
+  if (!slidesData.length) {
+    const branchItems = getBranchItems().filter(i => i.inStock !== false);
+    // خلط عشوائي واختيار أول 5 أصناف
+    const shuffled = [...branchItems].sort(() => 0.5 - Math.random());
+    slidesData = shuffled.slice(0, 5).map(item => ({
+      image: item.image,
+      titleAr: item.nameAr,
+      titleEn: item.nameEn || item.nameAr,
+      descAr: item.descAr || (currentLang === 'ar' ? 'جرب طعمنا المميز اليوم' : 'Try our special taste today'),
+      descEn: item.descEn || 'Try our special taste today',
+      price: getItemPrice(item),
+      isRandomItem: true
+    }));
+  }
+
+  if (!slidesData.length) {
+    sliderEl.style.display = 'none';
+    return;
+  }
+
+  sliderEl.style.display = 'block';
+  if (sliderInterval) clearInterval(sliderInterval);
+
+  slidesContainer.innerHTML = slidesData.map((slide, idx) => {
+    const title = currentLang === 'ar' ? (slide.titleAr || '') : (slide.titleEn || slide.titleAr || '');
+    const desc = currentLang === 'ar' ? (slide.descAr || '') : (slide.descEn || slide.descAr || '');
+    const badgeText = slide.isRandomItem ? (currentLang === 'ar' ? '⭐ مميز لأجلك' : '⭐ Featured') : (currentLang === 'ar' ? '🔥 عرض خاص' : '🔥 Special Offer');
+    
     return `
-      <div class="offer-card">
-        <img src="${o.image || ''}" onerror="this.style.display='none'">
-        <div class="offer-info">
-          <h4 class="offer-title">${title}</h4>
-          <p class="offer-desc">${desc}</p>
-          ${o.price ? `<div class="offer-price">${o.price} ج</div>` : ''}
+      <div class="luxury-slide ${idx === 0 ? 'active' : ''}" data-index="${idx}">
+        <div class="luxury-slide-content">
+          <span class="luxury-slide-badge">${badgeText}</span>
+          <h3 class="luxury-slide-title">${title}</h3>
+          <p class="luxury-slide-desc">${desc}</p>
+          ${slide.price ? `<div class="luxury-slide-price">${slide.price} ج</div>` : ''}
         </div>
+        <img src="${slide.image || ''}" class="luxury-slide-img" onerror="this.style.display='none'">
       </div>
     `;
   }).join('');
+
+  dotsContainer.innerHTML = slidesData.map((_, idx) => `
+    <span class="luxury-dot ${idx === 0 ? 'active' : ''}" onclick="goToSlide(${idx})"></span>
+  `).join('');
+
+  currentSlideIndex = 0;
+  if (slidesData.length > 1) {
+    sliderInterval = setInterval(() => {
+      currentSlideIndex = (currentSlideIndex + 1) % slidesData.length;
+      updateSlidePosition();
+    }, 4500); // يتنقل لوحده كل 4.5 ثانية بشياكة
+  }
+}
+
+function updateSlidePosition() {
+  const slides = document.querySelectorAll('.luxury-slide');
+  const dots = document.querySelectorAll('.luxury-dot');
+  slides.forEach((s, idx) => {
+    s.classList.toggle('active', idx === currentSlideIndex);
+  });
+  dots.forEach((d, idx) => {
+    d.classList.toggle('active', idx === currentSlideIndex);
+  });
+}
+
+function goToSlide(idx) {
+  currentSlideIndex = idx;
+  updateSlidePosition();
+  if (sliderInterval) {
+    clearInterval(sliderInterval);
+    // إعادة تشغيل المؤقت الأوتوماتيكي
+    const slides = document.querySelectorAll('.luxury-slide');
+    sliderInterval = setInterval(() => {
+      currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+      updateSlidePosition();
+    }, 4500);
+  }
 }
 
 function getBranchItems() { if (!currentMenuId) return []; return allItems.filter(i => i.menuId === currentMenuId); }
@@ -533,7 +605,7 @@ async function submitAndShowToWaiter() {
   }
 }
 
-function closeWaiterDisplay() {
+function closeBladeDisplay() {
   document.getElementById('waiterDisplayScreen').classList.remove('show');
 }
 
