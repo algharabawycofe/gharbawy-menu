@@ -21,6 +21,7 @@ body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);mar
 .page{display:none}.page.active{display:block}
 .btn{padding:9px 16px;border-radius:10px;border:none;font-weight:900;font-size:13px;cursor:pointer}
 .btn-primary{background:var(--dark);color:#fff}.btn-success{background:var(--success);color:#fff}
+.btn-sm{padding:5px 10px;font-size:11px;}
 .order-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
 .badge{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:900}
 .badge-gold{background:rgba(200,155,94,.15);color:var(--gold)}
@@ -56,6 +57,9 @@ input{width:100%;padding:10px;margin-bottom:10px;border:1px solid var(--border);
     </aside>
 
     <main class="main">
+      <!-- حاوية استدعاءات الويتر المعلقة تظهر هنا تلقائياً -->
+      <div id="waiterCallsContainer"></div>
+
       <div id="page-dashboard" class="page active">
         <h2 id="welcomeText">مرحباً بك</h2>
         <div class="stat-grid">
@@ -121,7 +125,6 @@ window.addEventListener('fb-ready', () => {
         document.getElementById('welcomeText').innerText = 'مرحباً يا مدير ' + (currentUserData.name || 'الفرع');
         subscribeData();
       } else {
-        // لو مش مدير فرع، اطرده
         window.location.href = 'admin.html';
       }
     } else {
@@ -140,7 +143,7 @@ async function doLogout(){ await window.FB.signOut(window.FB.auth); location.rel
 function subscribeData(){
   const { db, collection, query, where, orderBy, onSnapshot, doc } = window.FB;
   
-  // جلب الأوردرات الخاصة بالفرع فقط
+  // 1. مراقبة الأوردرات الخاصة بالفرع فقط
   const q = query(collection(db, 'orders'), where('branchId', '==', currentUserData.branchId), orderBy('createdAt', 'desc'));
   let isFirst = true;
   
@@ -157,13 +160,72 @@ function subscribeData(){
     if(document.getElementById('page-kds').classList.contains('active')) renderKDS();
   }));
 
-  // جلب الميزات
+  // 2. مراقبة استدعاءات الويتر (Waiter Calls) الاحترافية للفرع
+  const waiterQuery = query(
+    collection(db, 'waiter_calls'), 
+    where('branchId', '==', currentUserData.branchId), 
+    where('status', '==', 'pending')
+  );
+  
+  let isFirstWaiter = true;
+  unsubs.push(onSnapshot(waiterQuery, (snap) => {
+    snap.docChanges().forEach(change => {
+      if(change.type === 'added' && !isFirstWaiter) {
+        playSound();
+        const tableNum = change.doc.data().table || '—';
+        alert(`🛎️ تنبيه استدعاء! زبون يطلب الويتر في "طربيزة ${tableNum}"`);
+      }
+    });
+    isFirstWaiter = false;
+    const waiterCalls = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderWaiterCallsUI(waiterCalls);
+  }));
+
+  // 3. جلب الميزات (Features)
   unsubs.push(onSnapshot(doc(db, 'settings', 'features'), (snap) => {
     if(snap.exists()) {
       features = snap.data();
       document.getElementById('kdsNavBtn').style.display = features.kds ? 'block' : 'none';
     }
   }));
+}
+
+// عرض واجهة استدعاءات الويتر المعلقة
+function renderWaiterCallsUI(calls) {
+  const container = document.getElementById('waiterCallsContainer');
+  if(!container) return;
+
+  if(calls.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #1F1611; padding: 15px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <h3 style="margin: 0 0 10px; font-size: 16px; font-weight: 900;">🔔 استدعاءات ويتر معلقة (${calls.length})</h3>
+      <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;">
+        ${calls.map(c => `
+          <div style="background: #fff; padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 12px; min-width: 180px; justify-content: space-between;">
+            <div>
+              <strong style="font-size: 14px; display: block;">طربيزة ${c.table}</strong>
+              <small style="color: #666; font-size: 10px;">${c.createdAt?.toDate ? c.createdAt.toDate().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'}) : 'الآن'}</small>
+            </div>
+            <button class="btn btn-success btn-sm" onclick="resolveWaiterCall('${c.id}')">✓ تمت</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// إنهاء حالة الاستدعاء وتحديثها في قاعدة البيانات
+async function resolveWaiterCall(callId) {
+  const { db, doc, updateDoc } = window.FB;
+  try {
+    await updateDoc(doc(db, 'waiter_calls', callId), { status: 'done' });
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 function showPage(id){
