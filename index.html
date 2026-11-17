@@ -40,10 +40,19 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
 .welcome-title { margin: 0; color: #2B1D14; font-size: clamp(34px, 8vw, 52px); font-weight: 900; } .welcome-subtitle { margin: 14px auto 0; max-width: 420px; color: #6F4E37; font-size: 14px; line-height: 2; font-weight: 600; } .welcome-enter-btn { min-width: 230px; padding: 14px 28px; border-radius: 14px; color: #FFFDF9; background: #2B1D14; font-size: 14px; font-weight: 900; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 8px 20px rgba(43,29,20,.15); }
 
 .branch-select-screen { position: fixed; inset: 0; z-index: 900; display: none; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px; } .branch-select-screen.show { display: flex; } .branch-select-card { width: min(92vw, 480px); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); } .branch-option { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; width: 100%; text-align: inherit; color: var(--text-primary); }
+
+/* زر استدعاء الويتر (الجرس) العائم */
+#callWaiterBtn { display: none; position: fixed; bottom: 30px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; }
+#callWaiterBtn.pending { animation: pulseBtn 1.5s infinite; opacity: 0.7; pointer-events: none; }
+@keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(200,155,94,0.8); } 100% { transform: scale(1); } }
 </style>
 </head>
 <body>
 
+<!-- زر الجرس لاستدعاء الويتر -->
+<button id="callWaiterBtn" onclick="callWaiter()" title="استدعاء الويتر">🛎️</button>
+
+<!-- شاشة اختيار الفرع -->
 <div id="branchSelectScreen" class="branch-select-screen">
   <div class="branch-select-card">
     <div style="font-size: 48px; margin-bottom: 8px;">☕</div>
@@ -53,6 +62,7 @@ body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary
   </div>
 </div>
 
+<!-- شاشة الترحيب -->
 <div id="welcomeScreen" class="welcome-screen">
   <div class="welcome-card">
     <div class="welcome-logo-wrap"><img id="welcomeLogo" src="logo-01.png" alt="Al-Gharbawy" onerror="this.style.display='none';"></div>
@@ -108,6 +118,7 @@ let currentLang = localStorage.getItem('gharbaoui_lang') || 'ar';
 let cart = JSON.parse(localStorage.getItem('gharbaoui_cart')) || [];
 let activeCategory = 'all', allCategories = [], allItems = [], allBranches = [];
 let currentBranch = null, currentMenuId = null, currentTable = null;
+let activeWaiterCallId = null;
 let audioCtx = null;
 
 function initAudio() {
@@ -117,18 +128,20 @@ function initAudio() {
 document.addEventListener('click', initAudio, { once: true });
 document.addEventListener('touchstart', initAudio, { once: true });
 
-function playCustomerSuccessSound() {
+// صوت رنين الجرس العالي والتنبيه
+function playClientBellSound() {
   try {
     initAudio(); if (!audioCtx) return;
-    [0, 0.15, 0.3].forEach((delay, idx) => {
+    [0, 0.2].forEach(delay => {
       let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime([600, 800, 1050][idx], audioCtx.currentTime + delay);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime + delay);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + delay + 0.15);
       gain.gain.setValueAtTime(0.8, audioCtx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.35);
       osc.connect(gain); gain.connect(audioCtx.destination);
       osc.start(audioCtx.currentTime + delay);
-      osc.stop(audioCtx.currentTime + delay + 0.3);
+      osc.stop(audioCtx.currentTime + delay + 0.35);
     });
   } catch(e) {}
 }
@@ -191,7 +204,17 @@ function readTableFromUrl() {
 }
 
 function subscribeAll() {
-  const { db, collection, onSnapshot, query, where } = window.FB;
+  const { db, collection, onSnapshot, query, where, doc } = window.FB;
+  
+  // التحقق من تفعيل زر استدعاء الويتر من الإعدادات
+  onSnapshot(doc(db, 'settings', 'features'), (snap) => {
+    if (snap.exists() && snap.data().callWaiter) { 
+      document.getElementById('callWaiterBtn').style.display = 'flex'; 
+    } else { 
+      document.getElementById('callWaiterBtn').style.display = 'none'; 
+    }
+  });
+
   onSnapshot(collection(db, 'branches'), (snap) => {
     allBranches = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.active !== false);
     checkBranchFromUrl();
@@ -205,13 +228,14 @@ function subscribeAll() {
     renderCustomerMenu();
   });
 
+  // الاستماع لحالة أوردرات الطربيزة لتنبيه العميل عند اكتمال التحضير
   if (currentTable) {
     onSnapshot(query(collection(db, 'orders'), where('table', '==', currentTable)), (snap) => {
       snap.docChanges().forEach(ch => {
         if (ch.type === 'modified') {
           const data = ch.doc.data();
           if (data.status === 'done') {
-            playCustomerSuccessSound();
+            playClientBellSound();
             showToast(currentLang === 'ar' ? `🎉 أوردر طربيزة ${currentTable} جاهز وفي طريقه إليك بالهناء والشفاء!` : `🎉 Your order for table ${currentTable} is ready and on the way!`, '☕');
           } else if (data.status === 'preparing') {
             showToast(currentLang === 'ar' ? `👨‍🍳 جاري تحضير طلبك الآن في الفرع...` : `👨‍🍳 Your order is being prepared...`, '🔥');
@@ -284,6 +308,45 @@ function filterMenu() {
       </div>
     </div>`;
   }).join('');
+}
+
+// دالة زر استدعاء الويتر (الجرس)
+async function callWaiter() {
+  if (!currentBranch) return;
+  const { db, collection, addDoc, onSnapshot, doc } = window.FB;
+  const btn = document.getElementById('callWaiterBtn');
+  
+  playClientBellSound();
+
+  try {
+    const docRef = await addDoc(collection(db, 'waiter_calls'), {
+      branchId: currentBranch.id,
+      branchNameAr: currentBranch.nameAr,
+      table: currentTable || 'غير محدد',
+      createdAt: new Date(),
+      status: 'pending'
+    });
+    activeWaiterCallId = docRef.id;
+    btn.classList.add('pending');
+    showToast(currentLang === 'ar' ? 'تم استدعاء الويتر، جاري الاستجابة...' : 'Waiter called, awaiting response...', '🛎️');
+
+    const unsubCall = onSnapshot(doc(db, 'waiter_calls', activeWaiterCallId), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.status === 'done' || data.responded === true) {
+          playClientBellSound();
+          showToast(currentLang === 'ar' ? 'الويتر في طريقه إليك 🚶‍♂️☕' : 'Waiter is on the way! 🚶‍♂️☕', '🏃‍♂️');
+          btn.style.display = 'none';
+          btn.classList.remove('pending');
+          activeWaiterCallId = null;
+          unsubCall();
+        }
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    btn.classList.remove('pending');
+  }
 }
 
 function addToCart(id) {
@@ -372,7 +435,7 @@ async function submitOrder() {
     localStorage.removeItem('gharbaoui_cart');
     updateCartBadge();
     closeCartModal();
-    playCustomerSuccessSound();
+    playClientBellSound();
     showToast(currentLang === 'ar' ? '✅ تم إرسال طلبك للفرع بنجاح!' : '✅ Order sent successfully!', '🎉');
   } catch (e) {
     console.error(e);
