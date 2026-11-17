@@ -3,83 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة مدير الفرع</title>
+<title>لوحة مدير الفرع — الاحترافية</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--bg:#FAF6F0;--surface:#FFF;--subtle:#F5EEE5;--text:#1F1611;--muted:#A89080;--border:#E8DED2;--gold:#C89B5E;--dark:#2B1D14;--danger:#B33A3A;--success:#4A7C59}
+:root{--bg:#FAF6F0;--surface:#FFF;--subtle:#F5EEE5;--text:#1F1611;--muted:#A89080;--border:#E8DED2;--gold:#C89B5E;--dark:#2B1D14;--danger:#B33A3A;--success:#4A7C59;--info:#2980b9}
+html.dark{--bg:#1A1310;--surface:#241B16;--subtle:#1F1712;--text:#FAF6F0;--muted:#8A7566;--border:#3A2A20;--gold:#D4A56A;--dark:#FAF6F0}
+*{box-sizing:border-box;transition:background-color 0.2s, border-color 0.2s}
 body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;min-height:100vh}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
-.layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 65px)}
+.brand{font-weight:900;font-size:18px}.brand-sub{font-size:11px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 65px)}
 .side{background:var(--surface);border-left:1px solid var(--border);padding:16px 10px}
 .nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:10px;background:transparent;border:none;cursor:pointer;color:var(--text);font-weight:700;font-size:13px;text-align:right;margin-bottom:3px}
+.nav-btn:hover{background:var(--subtle)}
 .nav-btn.active{background:var(--gold);color:#1F1611}
-.main{padding:24px;}
+.main{padding:24px;overflow:auto}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}
-.stat-label{font-size:11px;color:var(--muted);font-weight:700}
+.stat-label{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px}
 .stat-value{font-size:26px;font-weight:900;color:var(--gold)}
 .page{display:none}.page.active{display:block}
 .btn{padding:9px 16px;border-radius:10px;border:none;font-weight:900;font-size:13px;cursor:pointer}
-.btn-primary{background:var(--dark);color:#fff}.btn-success{background:var(--success);color:#fff}
-.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-primary{background:var(--dark);color:#fff}
+html.dark .btn-primary{background:var(--gold);color:#1F1611}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{background:var(--subtle);color:var(--text);border:1px solid var(--border)}
+.btn-sm{padding:5px 10px;font-size:11px}
 .order-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
-.badge{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:900}
+.badge{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:900;display:inline-block}
 .badge-gold{background:rgba(200,155,94,.15);color:var(--gold)}
 .badge-green{background:rgba(74,124,89,.15);color:var(--success)}
+.badge-red{background:rgba(179,58,58,.15);color:var(--danger)}
+.badge-blue{background:rgba(41,128,185,.15);color:var(--info)}
+
+/* KDS Custom Styles */
+@keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(179, 58, 58, 0.7); } 70% { box-shadow: 0 0 0 12px rgba(179, 58, 58, 0); } 100% { box-shadow: 0 0 0 0 rgba(179, 58, 58, 0); } }
+.kds-board { display: flex; gap: 20px; align-items: flex-start; height: 100%; }
+.kds-column { flex: 1; background: var(--surface); border-radius: 16px; padding: 15px; min-height: 70vh; border: 1px solid var(--border); }
+.kds-column-header { text-align: center; font-size: 18px; font-weight: 900; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+.kds-card { background: var(--subtle); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid var(--border); }
+.kds-card.late { border-color: var(--danger); animation: pulseRed 1.5s infinite; }
+.kds-card-header { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 10px; align-items: center; }
+.kds-table { font-size: 20px; font-weight: 900; margin: 0; color: var(--text); }
+.kds-item { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; font-weight: 700; }
+.kds-qty { color: var(--gold); }
+.kds-notes { color: var(--danger); font-size: 12px; font-weight: 900; margin-bottom: 6px; background: rgba(179,58,58,0.1); padding: 4px 8px; border-radius: 6px; }
+
 #loginOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
-#loginCard{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:380px;text-align:center}
-input{width:100%;padding:10px;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box}
+#loginCard{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:380px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.05)}
+input,select{width:100%;padding:10px 14px;margin-bottom:12px;background:var(--subtle);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;outline:none}
+input:focus{border-color:var(--gold)}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--dark);color:var(--bg);padding:10px 20px;border-radius:10px;font-weight:700;font-size:13px;z-index:200;box-shadow:0 5px 20px rgba(0,0,0,0.2)}
 </style>
 </head>
 <body>
 
 <div id="loginOverlay">
   <div id="loginCard">
-    <h2>لوحة مدير الفرع</h2>
+    <div style="font-size:36px;margin-bottom:10px">👔</div>
+    <h2 style="font-size:20px;font-weight:900;margin-bottom:20px">لوحة مدير الفرع</h2>
     <input id="email" type="email" placeholder="الإيميل" dir="ltr">
     <input id="password" type="password" placeholder="الباسورد" dir="ltr">
-    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">دخول</button>
-    <p id="loginError" style="color:red;font-size:12px"></p>
+    <button class="btn btn-primary" style="width:100%;padding:12px" onclick="doLogin()">دخول</button>
+    <p id="loginError" style="color:var(--danger);font-size:12px;margin-top:10px"></p>
   </div>
 </div>
 
+<div id="toastContainer" style="z-index:300"></div>
+
 <div id="app" style="display:none">
   <div class="topbar">
-    <div><strong>☕ الغرباوي - إدارة الفرع</strong><div id="userBranchLabel" style="font-size:11px;color:var(--muted)"></div></div>
-    <button class="btn btn-primary" onclick="doLogout()">خروج</button>
+    <div><div class="brand">☕ الغرباوي — إدارة الفرع</div><div class="brand-sub" id="userBranchLabel">جاري التحميل...</div></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-ghost btn-sm" onclick="document.documentElement.classList.toggle('dark')">🌓</button>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">خروج</button>
+    </div>
   </div>
 
   <div class="layout">
     <aside class="side">
       <button class="nav-btn active" onclick="showPage('dashboard')">📊 نظرة عامة</button>
-      <button class="nav-btn" onclick="showPage('orders')">📦 أوردرات الفرع</button>
-      <button class="nav-btn" id="kdsNavBtn" onclick="showPage('kds')" style="display:none">📺 شاشة المطبخ</button>
+      <button class="nav-btn" onclick="showPage('orders')">📦 جميع الأوردرات</button>
+      <button class="nav-btn" id="kdsNavBtn" onclick="showPage('kds')">📺 شاشة المطبخ (KDS)</button>
     </aside>
 
     <main class="main">
-      <!-- حاوية استدعاءات الويتر المعلقة تظهر هنا تلقائياً -->
+      <!-- تنبيهات استدعاء الويتر الفورية -->
       <div id="waiterCallsContainer"></div>
 
+      <!-- صفحة نظرة عامة -->
       <div id="page-dashboard" class="page active">
-        <h2 id="welcomeText">مرحباً بك</h2>
+        <h2 id="welcomeText" style="font-size:22px;font-weight:900;margin-bottom:20px">مرحباً بك</h2>
         <div class="stat-grid">
           <div class="stat"><div class="stat-label">أوردرات النهاردة</div><div class="stat-value" id="statOrders">0</div></div>
-          <div class="stat"><div class="stat-label">حالة النظام</div><div class="stat-value" id="statSystem">✅</div></div>
+          <div class="stat"><div class="stat-label">إجمالي مبيعات اليوم</div><div class="stat-value" id="statSales">0 ج</div></div>
+          <div class="stat"><div class="stat-label">أوردرات قيد التنفيذ</div><div class="stat-value" id="statPending">0</div></div>
+          <div class="stat"><div class="stat-label">حالة النظام</div><div class="stat-value" style="color:var(--success)">● يعمل</div></div>
         </div>
         <div class="card">
-          <h3>آخر الأوردرات</h3>
+          <h3 style="font-size:15px;font-weight:900;margin-bottom:12px">⚡ آخر 5 أوردرات للفرع</h3>
           <div id="recentOrders"></div>
         </div>
       </div>
 
+      <!-- صفحة الأوردرات -->
       <div id="page-orders" class="page">
-        <h2>أوردرات الفرع</h2>
+        <h2 style="font-size:22px;font-weight:900;margin-bottom:20px">📦 أوردرات الفرع</h2>
         <div id="ordersList"></div>
       </div>
 
-      <div id="page-kds" class="page" style="background:#1A1310;color:#fff;padding:20px;border-radius:14px">
-        <h2 style="color:#C89B5E;text-align:center">📺 شاشة المطبخ</h2>
-        <div id="kdsOrders" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px"></div>
+      <!-- صفحة شاشة المطبخ KDS المحترفة -->
+      <div id="page-kds" class="page">
+        <h2 style="font-size:22px;font-weight:900;margin-bottom:20px">📺 شاشة المطبخ والتحضير (KDS)</h2>
+        <div id="kdsOrders"></div>
       </div>
     </main>
   </div>
@@ -88,11 +126,10 @@ input{width:100%;padding:10px;margin-bottom:10px;border:1px solid var(--border);
 <script type="module" src="firebase-config.js"></script>
 <script>
 let currentUserData = null;
-let orders = [], features = {};
+let orders = [], waiterCalls = [], features = {};
 let unsubs = [];
 let audioCtx = null;
 
-// حل مشكلة الصوت
 function unlockAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -102,30 +139,43 @@ document.addEventListener('click', unlockAudio, { once: true });
 function playSound(){
   try {
     unlockAudio(); if(!audioCtx) return;
-    [0, 0.15].forEach(d => {
+    [0, 0.15, 0.3].forEach(d => {
       let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
       osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.frequency.value = 880; gain.gain.setValueAtTime(0.3, audioCtx.currentTime + d);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d + 0.12);
-      osc.start(audioCtx.currentTime + d); osc.stop(audioCtx.currentTime + d + 0.12);
+      osc.frequency.value = 750; gain.gain.setValueAtTime(0.4, audioCtx.currentTime + d);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d + 0.1);
+      osc.start(audioCtx.currentTime + d); osc.stop(audioCtx.currentTime + d + 0.1);
     });
   } catch(e){}
+}
+
+function showToast(msg) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerText = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
 }
 
 window.addEventListener('fb-ready', () => {
   const { auth, onAuthStateChanged, db, doc, getDoc } = window.FB;
   onAuthStateChanged(auth, async (user) => {
     if(user) {
-      const snap = await getDoc(doc(db,'users',user.uid));
-      if(snap.exists() && snap.data().role === 'branch_manager') {
-        currentUserData = snap.data();
-        document.getElementById('loginOverlay').style.display='none';
-        document.getElementById('app').style.display='block';
-        document.getElementById('userBranchLabel').innerText = currentUserData.name;
-        document.getElementById('welcomeText').innerText = 'مرحباً يا مدير ' + (currentUserData.name || 'الفرع');
-        subscribeData();
-      } else {
-        window.location.href = 'admin.html';
+      try {
+        const snap = await getDoc(doc(db,'users',user.uid));
+        if(snap.exists() && snap.data().role === 'branch_manager') {
+          currentUserData = snap.data();
+          document.getElementById('loginOverlay').style.display='none';
+          document.getElementById('app').style.display='block';
+          document.getElementById('userBranchLabel').innerText = 'فرع: ' + (currentUserData.branchId || '');
+          document.getElementById('welcomeText').innerText = 'مرحباً بك، مدير الفرع ' + (currentUserData.name || '');
+          subscribeData();
+        } else {
+          window.location.href = 'admin.html';
+        }
+      } catch(e) {
+        console.error(e);
       }
     } else {
       document.getElementById('loginOverlay').style.display='flex';
@@ -135,32 +185,38 @@ window.addEventListener('fb-ready', () => {
 });
 
 async function doLogin(){
-  try { await window.FB.signInWithEmailAndPassword(window.FB.auth, document.getElementById('email').value, document.getElementById('password').value); } 
-  catch(e) { document.getElementById('loginError').innerText = 'بيانات غلط'; }
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  try { 
+    await window.FB.signInWithEmailAndPassword(window.FB.auth, email, password); 
+  } catch(e) { 
+    document.getElementById('loginError').innerText = 'بيانات الدخول غير صحيحة'; 
+  }
 }
 async function doLogout(){ await window.FB.signOut(window.FB.auth); location.reload(); }
 
 function subscribeData(){
   const { db, collection, query, where, orderBy, onSnapshot, doc } = window.FB;
   
-  // 1. مراقبة الأوردرات الخاصة بالفرع فقط
+  // 1. مراقبة الأوردرات للفرع لحظياً
   const q = query(collection(db, 'orders'), where('branchId', '==', currentUserData.branchId), orderBy('createdAt', 'desc'));
-  let isFirst = true;
+  let isFirstOrder = true;
   
   unsubs.push(onSnapshot(q, (snap) => {
     snap.docChanges().forEach(change => {
-      if(change.type === 'added' && !isFirst) {
+      if(change.type === 'added' && !isFirstOrder) {
         playSound();
-        alert('🔔 أوردر جديد وصلك من طربيزة ' + (change.doc.data().table || ''));
+        showToast('🔔 أوردر جديد تم استلامه!');
       }
     });
-    isFirst = false;
+    isFirstOrder = false;
     orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderOrders(); updateStats();
-    if(document.getElementById('page-kds').classList.contains('active')) renderKDS();
+    updateStats();
+    renderOrders();
+    renderKDS();
   }));
 
-  // 2. مراقبة استدعاءات الويتر (Waiter Calls) الاحترافية للفرع
+  // 2. مراقبة استدعاءات الويتر (Waiter Calls) لحظياً
   const waiterQuery = query(
     collection(db, 'waiter_calls'), 
     where('branchId', '==', currentUserData.branchId), 
@@ -173,43 +229,45 @@ function subscribeData(){
       if(change.type === 'added' && !isFirstWaiter) {
         playSound();
         const tableNum = change.doc.data().table || '—';
-        alert(`🛎️ تنبيه استدعاء! زبون يطلب الويتر في "طربيزة ${tableNum}"`);
+        showToast(`🛎️ تنبيه: زبون يطلب الويتر في طربيزة ${tableNum}`);
       }
     });
     isFirstWaiter = false;
-    const waiterCalls = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderWaiterCallsUI(waiterCalls);
+    waiterCalls = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderWaiterCallsUI();
   }));
 
-  // 3. جلب الميزات (Features)
+  // 3. جلب إعدادات الميزات
   unsubs.push(onSnapshot(doc(db, 'settings', 'features'), (snap) => {
     if(snap.exists()) {
       features = snap.data();
-      document.getElementById('kdsNavBtn').style.display = features.kds ? 'block' : 'none';
     }
   }));
 }
 
-// عرض واجهة استدعاءات الويتر المعلقة
-function renderWaiterCallsUI(calls) {
+// عرض واجهة استدعاءات الويتر
+function renderWaiterCallsUI() {
   const container = document.getElementById('waiterCallsContainer');
   if(!container) return;
 
-  if(calls.length === 0) {
+  if(waiterCalls.length === 0) {
     container.innerHTML = '';
     return;
   }
 
   container.innerHTML = `
-    <div style="background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #1F1611; padding: 15px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-      <h3 style="margin: 0 0 10px; font-size: 16px; font-weight: 900;">🔔 استدعاءات ويتر معلقة (${calls.length})</h3>
-      <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;">
-        ${calls.map(c => `
-          <div style="background: #fff; padding: 10px 14px; border-radius: 10px; display: flex; align-items: center; gap: 12px; min-width: 180px; justify-content: space-between;">
-            <div>
-              <strong style="font-size: 14px; display: block;">طربيزة ${c.table}</strong>
-              <small style="color: #666; font-size: 10px;">${c.createdAt?.toDate ? c.createdAt.toDate().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'}) : 'الآن'}</small>
-            </div>
+    <div style="background: linear-gradient(135deg, var(--gold), #e0be85); color: #1F1611; padding: 15px 20px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(200,155,94,0.3); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:24px">🔔</span>
+        <div>
+          <strong style="font-size:15px; display:block;">استدعاءات ويتر معلقة (${waiterCalls.length})</strong>
+          <span style="font-size:11px; opacity:0.8;">يوجد زبائن ينتظرون المساعدة في الصالة</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        ${waiterCalls.map(c => `
+          <div style="background: #fff; color:#1F1611; padding: 6px 12px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-weight:800;">
+            <span>طربيزة ${c.table}</span>
             <button class="btn btn-success btn-sm" onclick="resolveWaiterCall('${c.id}')">✓ تمت</button>
           </div>
         `).join('')}
@@ -218,11 +276,11 @@ function renderWaiterCallsUI(calls) {
   `;
 }
 
-// إنهاء حالة الاستدعاء وتحديثها في قاعدة البيانات
 async function resolveWaiterCall(callId) {
   const { db, doc, updateDoc } = window.FB;
   try {
     await updateDoc(doc(db, 'waiter_calls', callId), { status: 'done' });
+    showToast('✅ تم الرد على الاستدعاء وإغلاقه');
   } catch(e) {
     console.error(e);
   }
@@ -232,43 +290,114 @@ function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  event.target.classList.add('active');
+  event.currentTarget.classList.add('active');
 }
 
 function updateStats(){
   const today = new Date().toDateString();
   const todayOrders = orders.filter(o => o.createdAt && o.createdAt.toDate().toDateString() === today);
+  const pendingOrders = orders.filter(o => o.status !== 'done');
+  
+  let totalSales = todayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
   document.getElementById('statOrders').innerText = todayOrders.length;
+  document.getElementById('statSales').innerText = totalSales.toLocaleString() + ' ج';
+  document.getElementById('statPending').innerText = pendingOrders.length;
   
   const recent = orders.slice(0, 5);
-  document.getElementById('recentOrders').innerHTML = recent.map(o => `<div style="padding:8px;border-bottom:1px solid #eee">${o.total} ج - طربيزة ${o.table||'—'}</div>`).join('') || 'لا يوجد أوردرات';
+  document.getElementById('recentOrders').innerHTML = recent.map(o => {
+    const time = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}) : '—';
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span><span class="badge badge-blue">${time}</span> — طربيزة ${o.table || '—'} (${(o.items||[]).length} أصناف)</span>
+      <strong style="color:var(--gold)">${o.total} ج</strong>
+    </div>`;
+  }).join('') || '<div style="text-align:center;color:var(--muted);padding:15px">لا توجد أوردرات حديثة</div>';
 }
 
 function renderOrders(){
-  document.getElementById('ordersList').innerHTML = orders.map(o => `
-    <div class="order-card">
-      <div style="display:flex;justify-content:space-between">
-        <strong>طربيزة ${o.table || '—'}</strong>
-        <span class="badge badge-gold">${o.total} ج</span>
+  document.getElementById('ordersList').innerHTML = orders.map(o => {
+    const time = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString('ar-EG') : '—';
+    const itemsHtml = (o.items||[]).map(i => `• ${i.nameAr} × ${i.qty} ${i.notes ? `<em style="color:var(--danger)">(${i.notes})</em>` : ''}`).join('<br>');
+    const statusBadge = o.status === 'done' ? '<span class="badge badge-green">مكتمل</span>' : (o.status === 'preparing' ? '<span class="badge badge-blue">قيد التحضير</span>' : '<span class="badge badge-gold">جديد</span>');
+    
+    return `<div class="order-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div><strong>طربيزة ${o.table || '—'}</strong> <span style="font-size:11px;color:var(--muted);margin-inline-start:8px">${time}</span></div>
+        <div>${statusBadge} <strong style="color:var(--gold);margin-inline-start:10px">${o.total} ج</strong></div>
       </div>
-      <div style="font-size:12px;margin-top:10px">${o.items.map(i => `• ${i.nameAr} × ${i.qty}`).join('<br>')}</div>
-      ${o.status !== 'done' ? `<button class="btn btn-success" style="width:100%;margin-top:10px" onclick="markDone('${o.id}')">✓ تم التسليم</button>` : '<div style="color:green;margin-top:10px;font-weight:bold">✓ مكتمل</div>'}
-    </div>
-  `).join('') || '<div style="padding:20px;text-align:center">لا يوجد أوردرات</div>';
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">${itemsHtml}</div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        ${o.status !== 'done' ? `<button class="btn btn-success btn-sm" onclick="updateOrderStatus('${o.id}', 'done')">✓ تسليم الأوردر</button>` : ''}
+        ${o.status === 'pending' ? `<button class="btn btn-primary btn-sm" onclick="updateOrderStatus('${o.id}', 'preparing')">▶️ ابدأ التحضير</button>` : ''}
+      </div>
+    </div>`;
+  }).join('') || '<div class="card" style="text-align:center;color:var(--muted)">لا توجد أوردرات مسجلة</div>';
 }
 
-async function markDone(id){ await window.FB.updateDoc(window.FB.doc(window.FB.db,'orders',id),{status:'done'}); }
-
+// شاشة مطبخ KDS احترافية
 function renderKDS(){
-  const pending = orders.filter(o => o.status !== 'done');
-  document.getElementById('kdsOrders').innerHTML = pending.map(o => `
-    <div style="background:#241B16;border:1px solid #3A2A20;padding:15px;border-radius:10px">
-      <h3 style="color:#C89B5E;margin:0 0 10px">طربيزة ${o.table || '—'}</h3>
-      <div style="font-size:16px;margin-bottom:15px">${o.items.map(i => `• ${i.nameAr} × ${i.qty} ${i.notes ? '<em style="color:red">('+i.notes+')</em>' : ''}`).join('<br>')}</div>
-      <button class="btn btn-success" style="width:100%" onclick="markDone('${o.id}')">✓ تحضير</button>
+  const pending = orders.filter(o => o.status === 'pending');
+  const preparing = orders.filter(o => o.status === 'preparing');
+
+  document.getElementById('kdsOrders').innerHTML = `
+    <div class="kds-board">
+      <div class="kds-column">
+        <div class="kds-column-header" style="color: var(--gold);">🟡 أوردرات جديدة (${pending.length})</div>
+        <div>${pending.map(o => renderKDSCard(o, 'pending')).join('') || '<div style="text-align:center;color:var(--muted);margin-top:30px;font-size:12px">لا توجد أوردرات جديدة</div>'}</div>
+      </div>
+      <div class="kds-column">
+        <div class="kds-column-header" style="color: var(--info);">🔵 قيد التحضير (${preparing.length})</div>
+        <div>${preparing.map(o => renderKDSCard(o, 'preparing')).join('') || '<div style="text-align:center;color:var(--muted);margin-top:30px;font-size:12px">لا توجد أوردرات تحضير حالياً</div>'}</div>
+      </div>
     </div>
-  `).join('') || '<div style="color:#888;grid-column:1/-1;text-align:center">لا يوجد أوردرات جديدة ☕</div>';
+  `;
 }
+
+function renderKDSCard(o, type) {
+  const time = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+  const mins = Math.floor((new Date() - time) / 60000);
+  const isLate = mins > 15;
+
+  const btn = type === 'pending'
+    ? `<button onclick="updateOrderStatus('${o.id}', 'preparing')" class="btn btn-primary btn-sm" style="width:100%;padding:10px;font-size:13px">▶️ ابدأ التحضير</button>`
+    : `<button onclick="updateOrderStatus('${o.id}', 'done')" class="btn btn-success btn-sm" style="width:100%;padding:10px;font-size:13px">✅ تم التحضير والتسليم</button>`;
+
+  return `
+    <div class="kds-card ${isLate ? 'late' : ''}">
+      <div class="kds-card-header">
+        <h3 class="kds-table">طربيزة ${o.table || '—'}</h3>
+        <span class="badge ${isLate ? 'badge-red' : 'badge-gold'}">⏱️ ${mins} دقيقة</span>
+      </div>
+      <div style="margin-bottom: 12px;">
+        ${(o.items || []).map(i => `
+          <div class="kds-item">
+            <span>${i.nameAr}</span>
+            <strong class="kds-qty">× ${i.qty}</strong>
+          </div>
+          ${i.notes ? `<div class="kds-notes">📝 ${i.notes}</div>` : ''}
+        `).join('')}
+      </div>
+      ${btn}
+    </div>
+  `;
+}
+
+async function updateOrderStatus(id, status) {
+  const { db, doc, updateDoc } = window.FB;
+  try {
+    await updateDoc(doc(db, 'orders', id), { status });
+    showToast('✅ تم تحديث حالة الأوردر بنجاح');
+  } catch (e) {
+    showToast('❌ حدث خطأ أثناء التحديث');
+  }
+}
+
+// تحديث تلقائي للعدّادات والوقت في KDS كل دقيقة
+setInterval(() => {
+  if(document.getElementById('page-kds').classList.contains('active')) {
+    renderKDS();
+  }
+}, 60000);
 </script>
 </body>
 </html>
