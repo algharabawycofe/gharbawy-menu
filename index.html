@@ -2258,5 +2258,729 @@ async function submitRating(){
 })();
 
 </script>
+<!-- ===== قفل الموقع 300م + تقييم الأصناف (gharbawy-geo-ratings v1.0) ===== -->
+<script>
+/*!
+ * ============================================================
+ *  gharbawy-geo-ratings.js — v1.0
+ *  1) قفل الموقع: العميل ميقدرش يستخدم المنيو إلا وهو داخل
+ *     دايرة (افتراضي 300 متر) من الفرع.
+ *  2) تقييم الأصناف: نجوم لكل صنف بعد التسليم + متوسط التقييم
+ *     يظهر على كارت الصنف.
+ * ------------------------------------------------------------
+ *  بيتحمّل بعد سكريبت المنيو (وفي النسخة المدموجة جوه index.html).
+ * ============================================================
+ */
+(function () {
+  "use strict";
+
+  var W = window;
+  if (W.__GHARBAWY_PRO__) return;
+  W.__GHARBAWY_PRO__ = "1.0";
+
+  /* =========================================================
+     أدوات
+     ========================================================= */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+  function isAr() {
+    try { return typeof currentLang === "undefined" || currentLang === "ar"; } catch (e) { return true; }
+  }
+  function t(ar, en) { return isAr() ? ar : en; }
+
+  function toast(msg, icon) {
+    try {
+      if (typeof W.toast === "function") W.toast(msg, icon || "✅");
+      else console.log("[geo]", msg);
+    } catch (e) { /* تجاهل */ }
+  }
+
+  function deviceId() {
+    var k = "gharbaoui_device";
+    try {
+      var v = localStorage.getItem(k);
+      if (v) return v;
+      v = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : "dev-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(k, v);
+      return v;
+    } catch (e) {
+      return "dev-anon";
+    }
+  }
+
+  /* =========================================================
+     حساب المسافة (Haversine)
+     ========================================================= */
+  function distanceMeters(lat1, lon1, lat2, lon2) {
+    var R = 6371000;
+    var toRad = Math.PI / 180;
+    var dLat = (lat2 - lat1) * toRad;
+    var dLon = (lon2 - lon1) * toRad;
+    var a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  /** بنسمح بهامش دقة الـ GPS (بحد أقصى 60 متر) عشان ما نظلمش حد جوه الفرع */
+  function insideZone(dist, accuracy, radius) {
+    var tol = Math.min(Math.max(Number(accuracy) || 0, 0), 60);
+    return Number(dist) <= Number(radius) + tol;
+  }
+
+  /* =========================================================
+     قراءة إحداثيات الفرع من بياناته
+     ========================================================= */
+  function readGeo(branch) {
+    if (!branch) return null;
+    var g = branch.geo || branch.location || null;
+    var lat = g && (g.lat != null ? g.lat : g.latitude);
+    var lng = g && (g.lng != null ? g.lng : g.longitude);
+    lat = Number(lat);
+    lng = Number(lng);
+    if (!isFinite(lat) || !isFinite(lng) || lat === 0 || lng === 0) return null;
+    return { lat: lat, lng: lng };
+  }
+
+  function radiusOf(branch) {
+    var r = Number(branch && (branch.geoRadius || branch.radius));
+    return isFinite(r) && r > 0 ? r : 300;
+  }
+
+  function currentBranchSafe() {
+    try { return typeof currentBranch !== "undefined" ? currentBranch : null; } catch (e) { return null; }
+  }
+
+  /* =========================================================
+     الحالة
+     ========================================================= */
+  var state = {
+    device: deviceId(),
+    branch: null,
+    inside: false,
+    checking: false,
+    lastCheck: 0,
+    lastDist: null,
+    geo: null,
+    pending: null,
+    ratings: {},     // itemId -> {sum, count}
+    mine: {},        // itemId -> {stars}
+    rating: null,    // { orderId, items, itemStars }
+    booted: false,
+  };
+
+  /* =========================================================
+     CSS
+     ========================================================= */
+  function injectCSS() {
+    if ($("gh-pro-style")) return;
+    var css = [
+      ".gh-gate{position:fixed;inset:0;z-index:9990;display:flex;align-items:center;justify-content:center;padding:22px;",
+      "background:var(--bg-primary,#FAF6F0);direction:rtl;text-align:center}",
+      ".gh-gate-card{width:min(430px,100%);background:var(--bg-surface,#fff);border:1px solid var(--border,#E8DED2);",
+      "border-radius:26px;padding:34px 26px;box-shadow:0 24px 70px rgba(43,29,20,.16)}",
+      ".gh-gate-icon{width:76px;height:76px;border-radius:24px;margin:0 auto 16px;display:grid;place-items:center;font-size:36px;",
+      "background:linear-gradient(145deg,rgba(200,155,94,.22),rgba(200,155,94,.07));border:1px solid rgba(200,155,94,.35)}",
+      ".gh-gate h2{margin:0 0 8px;font-size:20px;font-weight:900;color:var(--text-primary,#1F1611)}",
+      ".gh-gate p{margin:0 0 6px;font-size:13.5px;line-height:1.9;color:var(--text-secondary,#6F4E37);font-weight:600}",
+      ".gh-gate .gh-dist{font-size:15px;font-weight:900;color:var(--coffee-gold,#C89B5E);margin:10px 0 2px}",
+      ".gh-gate .gh-acc{font-size:11px;color:var(--text-muted,#A89080);margin-bottom:18px}",
+      ".gh-gate .gh-btn{width:100%;padding:14px;border-radius:14px;border:0;cursor:pointer;font-family:inherit;",
+      "font-weight:900;font-size:14px;background:linear-gradient(135deg,var(--coffee-dark,#2B1D14),#4a3427);color:#FAF6F0;margin-top:8px}",
+      "html.dark .gh-gate .gh-btn{background:linear-gradient(135deg,#D4A56A,#E0BE85);color:#1F1611}",
+      ".gh-gate .gh-btn:disabled{opacity:.6;cursor:wait}",
+      ".gh-gate .gh-help{margin-top:14px;font-size:11.5px;color:var(--text-muted,#A89080);line-height:1.9;text-align:start;",
+      "background:var(--bg-subtle,#F5EEE5);border-radius:12px;padding:10px 12px;display:none}",
+      ".gh-gate .gh-help.show{display:block}",
+      ".gh-spin{width:26px;height:26px;border-radius:50%;border:3px solid rgba(200,155,94,.25);border-top-color:#C89B5E;",
+      "animation:gh-spin .8s linear infinite;margin:0 auto 14px}",
+      "@keyframes gh-spin{to{transform:rotate(360deg)}}",
+      ".gh-rate{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:900;color:var(--coffee-gold,#C89B5E);",
+      "margin-top:2px}",
+      ".gh-rate span{color:var(--text-muted,#A89080);font-weight:700}",
+      ".gh-rate-sheet{margin:-4px 0 14px;font-size:12.5px;font-weight:800;color:var(--coffee-gold,#C89B5E)}",
+      ".gh-item-ratings{margin:18px 0 6px;border-top:1px dashed var(--border,#E8DED2);padding-top:14px}",
+      ".gh-ir-title{font-size:12px;font-weight:900;color:var(--text-secondary,#6F4E37);margin-bottom:10px}",
+      ".gh-ir-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border,#E8DED2)}",
+      ".gh-ir-row:last-child{border-bottom:0}",
+      ".gh-ir-name{font-size:12.5px;font-weight:700;color:var(--text-primary,#1F1611);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+      ".gh-ir-stars{display:inline-flex;gap:2px;flex:0 0 auto;direction:ltr}",
+      ".gh-ir-stars button{background:none;border:0;padding:0 1px;font-size:19px;line-height:1;cursor:pointer;color:#d8cdbf;transition:transform .12s}",
+      ".gh-ir-stars button.on{color:#F1C40F}",
+      ".gh-ir-stars button:active{transform:scale(1.2)}",
+      ".gh-ir-empty{font-size:11.5px;color:var(--text-muted,#A89080);text-align:center;padding:6px 0}",
+      "html.gh-locked,html.gh-locked body{overflow:hidden !important}",
+    ].join("");
+    var tag = document.createElement("style");
+    tag.id = "gh-pro-style";
+    tag.textContent = css;
+    document.head.appendChild(tag);
+  }
+
+  /* =========================================================
+     واجهة القفل (Gate)
+     ========================================================= */
+  var gateEl = null;
+
+  function buildGate() {
+    if (gateEl) return gateEl;
+    gateEl = document.createElement("div");
+    gateEl.className = "gh-gate";
+    gateEl.id = "ghGate";
+    gateEl.innerHTML =
+      '<div class="gh-gate-card" id="ghGateCard">' +
+        '<div class="gh-spin" id="ghGateSpin"></div>' +
+        '<div class="gh-gate-icon" id="ghGateIcon" style="display:none">📍</div>' +
+        '<h2 id="ghGateTitle">بنتأكد إنك في الفرع…</h2>' +
+        '<p id="ghGateMsg">لحظة واحدة، بنجيب موقعك.</p>' +
+        '<div class="gh-dist" id="ghGateDist" style="display:none"></div>' +
+        '<div class="gh-acc" id="ghGateAcc" style="display:none"></div>' +
+        '<button class="gh-btn" id="ghGateRetry" style="display:none">🔄 حاول تاني</button>' +
+        '<div class="gh-help" id="ghGateHelp"></div>' +
+      "</div>";
+    document.body.appendChild(gateEl);
+
+    $("ghGateRetry").addEventListener("click", function () {
+      verify(true);
+    });
+    return gateEl;
+  }
+
+  function gateLoading(msg) {
+    buildGate();
+    gateEl.style.display = "flex";
+    $("ghGateSpin").style.display = "block";
+    $("ghGateIcon").style.display = "none";
+    $("ghGateTitle").textContent = t("بنتأكد إنك في الفرع…", "Checking your location…");
+    $("ghGateMsg").textContent = msg || t("لحظة واحدة، بنجيب موقعك.", "One moment, getting your location.");
+    $("ghGateDist").style.display = "none";
+    $("ghGateAcc").style.display = "none";
+    $("ghGateRetry").style.display = "none";
+    $("ghGateHelp").classList.remove("show");
+  }
+
+  function gateAllow() {
+    state.inside = true;
+    if (gateEl) gateEl.style.display = "none";
+    document.documentElement.classList.remove("gh-locked");
+  }
+
+  function gateBlock(kind, dist, acc) {
+    state.inside = false;
+    buildGate();
+    gateEl.style.display = "flex";
+    $("ghGateSpin").style.display = "none";
+    $("ghGateIcon").style.display = "grid";
+    document.documentElement.classList.add("gh-locked");
+
+    var radius = radiusOf(state.branch);
+    var title, msg, icon, help;
+
+    if (kind === "far") {
+      icon = "📍";
+      title = t("إنت مش في الفرع", "You're not at the branch");
+      var dTxt = dist >= 1000 ? (dist / 1000).toFixed(1) + " كم" : Math.round(dist) + " متر";
+      msg = t("المنيو والطلب متاحين بس جوه الفرع.", "The menu is only available inside the branch.");
+      $("ghGateDist").textContent = t("بينك وبين الفرع حوالي ", "You are about ") + dTxt;
+      $("ghGateDist").style.display = "block";
+      help = t(
+        "اقرب من الفرع لمسافة " + radius + " متر وجرّب تاني. لو إنت فعلاً جوه الفرع، اقفل الـ Wi-Fi وجرّب، أو فعّل تحديد الموقع بدقة عالية.",
+        "Come within " + radius + " meters of the branch and try again."
+      );
+    } else if (kind === "denied") {
+      icon = "🔒";
+      title = t("محتاجين إذن الموقع", "Location permission needed");
+      msg = t("علشان نأكد إنك في الفرع، لازم تسمح للمتصفح بالوصول لموقعك.", "Allow location access to continue.");
+      help = t(
+        "من إعدادات المتصفح (علامة القفل جنب الرابط) → الموقع → السماح، وبعدها اضغط حاول تاني.",
+        "Enable location from the browser address bar, then retry."
+      );
+    } else if (kind === "unsupported") {
+      icon = "📵";
+      title = t("المتصفح مش بيدعم الموقع", "Location not supported");
+      msg = t("جرّب تفتح المنيو من Chrome أو Safari.", "Try Chrome or Safari.");
+      help = "";
+    } else {
+      icon = "📡";
+      title = t("تعذر تحديد موقعك", "Couldn't get your location");
+      msg = t("تأكد إن GPS شغال وإن النت تمام، وجرّب تاني.", "Check GPS and connection, then retry.");
+      help = t("لو المشكلة مستمرة، اسأل الكاشير.", "If it keeps happening, ask the cashier.");
+    }
+
+    $("ghGateIcon").textContent = icon;
+    $("ghGateTitle").textContent = title;
+    $("ghGateMsg").textContent = msg;
+    if (kind !== "far") {
+      $("ghGateDist").style.display = "none";
+    }
+    if (acc) {
+      $("ghGateAcc").textContent = t("دقة الموقع: ± " + Math.round(acc) + " متر", "Accuracy: ± " + Math.round(acc) + " m");
+      $("ghGateAcc").style.display = "block";
+    } else {
+      $("ghGateAcc").style.display = "none";
+    }
+
+    $("ghGateHelp").innerHTML = help;
+    $("ghGateHelp").classList.toggle("show", !!help);
+    $("ghGateRetry").style.display = "inline-block";
+    $("ghGateRetry").disabled = false;
+    $("ghGateRetry").textContent = t("🔄 حاول تاني", "🔄 Try again");
+  }
+
+  /* =========================================================
+     تحديد الموقع
+     ========================================================= */
+  function getPosition(opts) {
+    return new Promise(function (resolve, reject) {
+      if (!navigator.geolocation) {
+        reject({ code: -1, message: "unsupported" });
+        return;
+      }
+      var o = Object.assign({ enableHighAccuracy: true, timeout: 18000, maximumAge: 0 }, opts || {});
+      navigator.geolocation.getCurrentPosition(resolve, reject, o);
+    });
+  }
+
+  function verify(fresh, silent) {
+    var branch = state.branch || currentBranchSafe();
+    if (!branch) return Promise.resolve(false);
+
+    state.branch = branch;
+    var geo = readGeo(branch);
+    state.geo = geo;
+
+    if (!geo) {
+      gateAllow();
+      return Promise.resolve(true);
+    }
+
+    // فحص واحد بس في نفس الوقت
+    if (state.pending) return state.pending;
+
+    state.checking = true;
+    if (!silent) {
+      gateLoading(t("بنتأكد إنك في الفرع…", "Checking your location…"));
+      if ($("ghGateRetry")) {
+        $("ghGateRetry").disabled = true;
+        $("ghGateRetry").textContent = t("جاري التحقق…", "Checking…");
+      }
+    }
+
+    var p = getPosition({ maximumAge: fresh ? 0 : 60000 })
+      .then(function (pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+        var acc = pos.coords.accuracy || 0;
+        var dist = distanceMeters(lat, lng, geo.lat, geo.lng);
+
+        state.lastDist = dist;
+        state.lastCheck = Date.now();
+
+        if (insideZone(dist, acc, radiusOf(branch))) {
+          gateAllow();
+          return true;
+        }
+        gateBlock("far", dist, acc);
+        return false;
+      })
+      .catch(function (err) {
+        if (err && err.code === 1) gateBlock("denied");
+        else if (err && err.message === "unsupported") gateBlock("unsupported");
+        else gateBlock("error", null, null);
+        return false;
+      })
+      .then(function (res) {
+        state.checking = false;
+        state.pending = null;
+        return res;
+      });
+
+    state.pending = p;
+    return p;
+  }
+
+  /** بتتأكد قبل أي طلب — بموقع جديد */
+  function ensureInside() {
+    if (state.inside && Date.now() - state.lastCheck < 120000) return Promise.resolve(true);
+    return verify(true);
+  }
+
+  /* =========================================================
+     التقييمات
+     ========================================================= */
+  function ratingsAvg(itemId) {
+    var m = state.ratings[String(itemId)];
+    if (!m || !m.count) return null;
+    return { avg: m.sum / m.count, count: m.count };
+  }
+
+  function loadRatings() {
+    var FB = W.FB || {};
+    var branch = state.branch || currentBranchSafe();
+    if (!FB.db || !FB.collection || !FB.query || !FB.where || !FB.getDocs || !branch) return Promise.resolve();
+
+    return FB.getDocs(
+      FB.query(FB.collection(FB.db, "item_ratings"), FB.where("branchId", "==", branch.id))
+    )
+      .then(function (snap) {
+        var map = {};
+        var mine = {};
+        snap.forEach(function (d) {
+          var r = d.data() || {};
+          var key = String(r.itemId);
+          if (!key || key === "undefined") return;
+          var stars = Number(r.stars) || 0;
+          if (!map[key]) map[key] = { sum: 0, count: 0 };
+          map[key].sum += stars;
+          map[key].count += 1;
+          if (r.deviceId && r.deviceId === state.device) mine[key] = { stars: stars };
+        });
+        state.ratings = map;
+        state.mine = mine;
+        decorate();
+      })
+      .catch(function (e) {
+        console.warn("[geo] ratings load failed", e);
+      });
+  }
+
+  function applyMyRating(key, stars) {
+    var m = state.ratings[key] || { sum: 0, count: 0 };
+    var old = state.mine[key];
+    if (old) m.sum += stars - old.stars;
+    else { m.sum += stars; m.count += 1; }
+    state.ratings[key] = m;
+    state.mine[key] = { stars: stars };
+  }
+
+  function rateBadgeHTML(itemId) {
+    var a = ratingsAvg(itemId);
+    if (!a) return "";
+    return (
+      '<div class="gh-rate">★ ' + a.avg.toFixed(1) +
+      ' <span>(' + a.count + ")</span></div>"
+    );
+  }
+
+  /* ---- تزيين كروت المنيو وشيت الصنف ---- */
+  function decorateCards() {
+    var grid = $("menuGrid");
+    if (!grid) return;
+    Array.prototype.forEach.call(grid.querySelectorAll(".menu-card"), function (card) {
+      if (card.querySelector(".gh-rate")) return;
+      var m = /openItemSheet\((\d+)/.exec(card.getAttribute("onclick") || "");
+      if (!m) return;
+      var html = rateBadgeHTML(m[1]);
+      if (!html) return;
+      var body = card.querySelector(".card-body");
+      if (!body) return;
+      var bottom = body.querySelector(".card-bottom");
+      var tmp = document.createElement("div");
+      tmp.innerHTML = html;
+      body.insertBefore(tmp.firstChild, bottom || null);
+    });
+  }
+
+  function decorateSheet() {
+    var body = $("itemBody");
+    if (!body) return;
+    var price = body.querySelector(".item-base-price");
+    if (!price || body.querySelector(".gh-rate-sheet")) return;
+    var item = null;
+    try { item = typeof itemSheetState !== "undefined" ? itemSheetState.item : null; } catch (e) { item = null; }
+    if (!item) return;
+    var a = ratingsAvg(item.id);
+    if (!a) return;
+    var el = document.createElement("div");
+    el.className = "gh-rate-sheet";
+    el.textContent = "★ " + a.avg.toFixed(1) + " · " + a.count + t(" تقييم", " ratings");
+    price.parentNode.insertBefore(el, price.nextSibling);
+  }
+
+  var decorateTimer = null;
+  function decorate() {
+    if (decorateTimer) return;
+    decorateTimer = setTimeout(function () {
+      decorateTimer = null;
+      decorateCards();
+      decorateSheet();
+    }, 60);
+  }
+
+  function watchDOM() {
+    if (typeof MutationObserver === "undefined") return;
+    var obs = new MutationObserver(function () { decorate(); });
+    var grid = $("menuGrid");
+    if (grid) obs.observe(grid, { childList: true, subtree: true });
+    var sheet = $("itemSheet");
+    if (sheet) obs.observe(sheet, { childList: true, subtree: true });
+  }
+
+  /* =========================================================
+     تقييم الأصناف بعد التسليم (بيحل محل شيت التقييم)
+     ========================================================= */
+  function injectItemRatings(items) {
+    var old = $("ghItemRatings");
+    if (old) old.remove();
+
+    var starsEl = $("ratingStars");
+    if (!starsEl) return;
+
+    var list = (items || []).filter(function (i) { return i && i.id != null; });
+    var wrap = document.createElement("div");
+    wrap.className = "gh-item-ratings";
+    wrap.id = "ghItemRatings";
+
+    if (!list.length) {
+      wrap.innerHTML = '<div class="gh-ir-empty">' + t("مفيش أصناف للتقييم", "No items to rate") + "</div>";
+      starsEl.parentNode.insertBefore(wrap, starsEl.nextSibling);
+      return;
+    }
+
+    wrap.innerHTML =
+      '<div class="gh-ir-title">⭐ ' + t("قيّم الأصناف", "Rate the items") + "</div>" +
+      list.map(function (i) {
+        var id = String(i.id);
+        var mine = state.mine[id];
+        return (
+          '<div class="gh-ir-row" data-item="' + id + '">' +
+            '<span class="gh-ir-name">' + esc(i.nameAr || i.nameEn || "") + " ×" + (i.qty || 1) + "</span>" +
+            '<span class="gh-ir-stars">' +
+              [1, 2, 3, 4, 5].map(function (n) {
+                return '<button type="button" data-star="' + n + '" class="' +
+                  (mine && mine.stars >= n ? "on" : "") + '">★</button>';
+              }).join("") +
+            "</span>" +
+          "</div>"
+        );
+      }).join("");
+
+    starsEl.parentNode.insertBefore(wrap, starsEl.nextSibling);
+
+    wrap.addEventListener("click", function (e) {
+      var btn = e.target.closest("button[data-star]");
+      if (!btn) return;
+      var row = btn.closest(".gh-ir-row");
+      if (!row) return;
+      var id = row.getAttribute("data-item");
+      var n = Number(btn.getAttribute("data-star")) || 0;
+      state.rating = state.rating || { orderId: null, itemStars: {} };
+      state.rating.itemStars[id] = n;
+      Array.prototype.forEach.call(row.querySelectorAll("button[data-star]"), function (b) {
+        b.classList.toggle("on", Number(b.getAttribute("data-star")) <= n);
+      });
+    });
+  }
+
+  function currentOrderItems(orderId) {
+    try {
+      var o = (typeof watchedOrders !== "undefined" && watchedOrders) ? watchedOrders[orderId] : null;
+      if (o && Array.isArray(o.items)) return o.items;
+    } catch (e) { /* تجاهل */ }
+    return [];
+  }
+
+  // بنحل محل النداء الأصلي عشان نضيف تقييم الأصناف
+  W.maybeAskRating = function (orderId) {
+    try {
+      if (typeof ratedOrders !== "undefined" && ratedOrders[orderId]) return;
+    } catch (e) { /* تجاهل */ }
+
+    var sheet = $("ratingSheet");
+    if (sheet && sheet.classList.contains("open")) return;
+
+    var items = currentOrderItems(orderId).filter(function (i) { return !i.isBundle; });
+
+    state.rating = { orderId: orderId, items: items, itemStars: {} };
+
+    try { ratingState = { orderId: orderId, stars: 0 }; } catch (e) { /* تجاهل */ }
+
+    if (typeof renderRatingStars === "function") renderRatingStars();
+    var comment = $("ratingComment");
+    if (comment) comment.value = "";
+    injectItemRatings(items);
+
+    var bd = $("ratingBackdrop");
+    if (bd) bd.classList.add("open");
+    if (sheet) sheet.classList.add("open");
+  };
+
+  W.submitRating = function () {
+    var stars = 0;
+    try { stars = (ratingState && Number(ratingState.stars)) || 0; } catch (e) { stars = 0; }
+    if (!stars) {
+      toast(t("من فضلك اختر تقييم الطلب", "Please rate your order first"), "⚠️");
+      return Promise.resolve();
+    }
+
+    var FB = W.FB || {};
+    if (!FB.db || !FB.collection || !FB.addDoc) {
+      toast(t("خدمة التقييم مش متصلة", "Ratings service is not ready"), "❌");
+      return Promise.resolve();
+    }
+
+    var orderId = null;
+    try { orderId = ratingState.orderId; } catch (e) { orderId = null; }
+
+    var branch = state.branch || currentBranchSafe();
+    var commentEl = $("ratingComment");
+    var comment = commentEl ? String(commentEl.value || "").trim() : "";
+
+    var overall = FB.addDoc(FB.collection(FB.db, "order_feedback"), {
+      orderId: orderId,
+      branchId: branch ? branch.id : null,
+      branchNameAr: branch ? branch.nameAr : "",
+      table: (typeof currentTable !== "undefined" ? currentTable : null),
+      deviceId: state.device,
+      stars: stars,
+      comment: comment,
+      createdAt: FB.serverTimestamp ? FB.serverTimestamp() : new Date(),
+    });
+
+    var jobs = [overall];
+    var applied = [];
+
+    var itemStars = (state.rating && state.rating.itemStars) || {};
+    var items = (state.rating && state.rating.items) || [];
+
+    if (FB.setDoc && FB.doc) {
+      items.forEach(function (it) {
+        var key = String(it.id);
+        var n = Number(itemStars[key]) || 0;
+        if (!n) return;
+        var docId = state.device + "_" + key;
+        jobs.push(
+          FB.setDoc(FB.doc(FB.db, "item_ratings", docId), {
+            itemId: Number(it.id),
+            itemName: it.nameAr || it.nameEn || "",
+            branchId: branch ? branch.id : null,
+            branchNameAr: branch ? branch.nameAr : "",
+            deviceId: state.device,
+            orderId: orderId,
+            stars: n,
+            updatedAt: FB.serverTimestamp ? FB.serverTimestamp() : new Date(),
+          })
+        );
+        applied.push({ key: key, stars: n });
+      });
+    }
+
+    return Promise.all(jobs)
+      .then(function () {
+        applied.forEach(function (x) { applyMyRating(x.key, x.stars); });
+        if (orderId) {
+          try {
+            ratedOrders[orderId] = true;
+            localStorage.setItem("gharbaoui_rated_orders", JSON.stringify(ratedOrders));
+          } catch (e) { /* تجاهل */ }
+        }
+        if (typeof closeRatingModal === "function") closeRatingModal();
+        toast(t("شكراً لتقييمك ⭐", "Thanks for your rating ⭐"), "⭐");
+        decorate();
+        loadRatings();
+      })
+      .catch(function (e) {
+        console.error("[geo] submitRating", e);
+        toast(t("حدث خطأ، حاول تاني", "Something went wrong"), "❌");
+      });
+  };
+
+  /* =========================================================
+     قفل الطلب نفسه
+     ========================================================= */
+  function wrapSubmitOrder() {
+    var prev = W.submitOrder;
+    if (typeof prev !== "function") return;
+
+    W.submitOrder = function () {
+      var args = arguments;
+      return ensureInside().then(function (ok) {
+        if (!ok) {
+          toast(t("لازم تكون في الفرع عشان تطلب", "You must be at the branch to order"), "📍");
+          return;
+        }
+        return prev.apply(W, args);
+      });
+    };
+  }
+
+  /* =========================================================
+     المراقبة الدورية
+     ========================================================= */
+  function heartbeat() {
+    setInterval(function () {
+      if (document.hidden) return;
+      var b = state.branch || currentBranchSafe();
+      if (!b || !readGeo(b)) return;
+      if (!state.inside) return;           // لو مقفول، الزرار بيعيد المحاولة
+      verify(false, true);                 // فحص صامت من غير ما يغطّي الشاشة
+    }, 90000);
+
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) return;
+      if (!state.branch) return;
+      if (!state.inside) return;
+      verify(false, true);
+    });
+  }
+
+  /* =========================================================
+     التشغيل
+     ========================================================= */
+  function boot() {
+    if (!document.body) return;
+    injectCSS();
+    buildGate();
+    gateLoading();
+
+    var tries = 0;
+    var timer = setInterval(function () {
+      var b = currentBranchSafe();
+      if (b && b.id) {
+        clearInterval(timer);
+        state.branch = b;
+        state.rating = state.rating || null;
+        loadRatings();
+        verify(true);
+        watchDOM();
+        decorate();
+        return;
+      }
+      if (++tries > 80) {
+        clearInterval(timer);
+        // مفيش بيانات فرع (شبكة/صلاحيات) — منقفلش المنيو نهائياً
+        gateAllow();
+        console.warn("[geo] branch not available — gate skipped");
+      }
+    }, 250);
+
+    wrapSubmitOrder();
+    heartbeat();
+    state.booted = true;
+  }
+
+  // أدوات للاختبار
+  W.__GhPro = {
+    distanceMeters: distanceMeters,
+    insideZone: insideZone,
+    readGeo: readGeo,
+    radiusOf: radiusOf,
+    version: "1.0",
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+
+</script>
 </body>
 </html>
