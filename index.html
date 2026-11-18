@@ -2258,11 +2258,11 @@ async function submitRating(){
 })();
 
 </script>
-<!-- ===== تقييم الأصناف (gharbawy-ratings v1.3) ===== -->
+<!-- ===== تقييم الأصناف (gharbawy-ratings v1.4) ===== -->
 <script>
 /*!
  * ============================================================
- *  gharbawy-ratings.js — v1.3
+ *  gharbawy-ratings.js — v1.4
  *  تقييم الأصناف: نجوم لكل صنف بعد التسليم + متوسط التقييم
  *  يظهر على كارت الصنف. (من غير أي قفل موقع)
  * ------------------------------------------------------------
@@ -2274,7 +2274,7 @@ async function submitRating(){
 
   var W = window;
   if (W.__GHARBAWY_RATINGS__) return;
-  W.__GHARBAWY_RATINGS__ = "1.3";
+  W.__GHARBAWY_RATINGS__ = "1.4";
 
   /* =========================================================
      أدوات
@@ -2478,6 +2478,14 @@ async function submitRating(){
       "color:#d8cdbf;transition:transform .12s}",
       ".gh-rate-ask button.on{color:#F1C40F}",
       ".gh-rate-ask button:active{transform:scale(1.15)}",
+      ".gh-card-rate{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:6px 0 2px}",
+      ".gh-card-avg{font-size:10.5px;font-weight:900;color:var(--coffee-gold,#C89B5E);white-space:nowrap}",
+      ".gh-card-avg em{font-style:normal;color:var(--text-muted,#A89080);font-weight:700;font-size:9.5px}",
+      ".gh-card-stars{display:inline-flex;gap:1px;direction:ltr}",
+      ".gh-card-stars button{background:none;border:0;padding:0 1px;font-size:15px;line-height:1;",
+      "cursor:pointer;color:#d8cdbf;transition:transform .12s}",
+      ".gh-card-stars button.on{color:#F1C40F}",
+      ".gh-card-stars button:active{transform:scale(1.2)}",
       ".gh-item-ratings{margin:18px 0 6px;border-top:1px dashed var(--border,#E8DED2);padding-top:14px}",
       ".gh-ir-title{font-size:12px;font-weight:900;color:var(--text-secondary,#6F4E37);margin-bottom:10px}",
       ".gh-ir-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;",
@@ -2547,36 +2555,56 @@ async function submitRating(){
     state.mine[key] = { stars: stars };
   }
 
-  function rateBadgeHTML(itemId) {
-    var a = ratingsAvg(itemId);
-    if (!a) return "";
-    return '<div class="gh-rate">★ ' + a.avg.toFixed(1) + ' <span>(' + a.count + ")</span></div>";
-  }
 
-  /* ---- تزيين كروت المنيو وشيت الصنف ---- */
+  /* ---- نجوم على كارت المنيو: ضغطة واحدة = تقييم ---- */
   function decorateCards() {
     var grid = $("menuGrid");
     if (!grid) return;
+
     Array.prototype.forEach.call(grid.querySelectorAll(".menu-card"), function (card) {
-      if (card.querySelector(".gh-rate")) return;
+      if (card.querySelector(".gh-card-rate")) return;
+
       var m = /openItemSheet\((\d+)/.exec(card.getAttribute("onclick") || "");
       if (!m) return;
-      var html = rateBadgeHTML(m[1]);
-      if (!html) return;
+
+      var id = m[1];
+      var titleEl = card.querySelector(".card-title");
+      var itemName = titleEl ? titleEl.textContent.trim() : "";
+
       var body = card.querySelector(".card-body");
       if (!body) return;
+
+      var a = ratingsAvg(id);
+      var mine = state.mine[id];
+
+      var row = document.createElement("div");
+      row.className = "gh-card-rate";
+      row.dataset.id = id;
+
+      row.innerHTML =
+        '<span class="gh-card-avg">' +
+          (a ? "★ " + a.avg.toFixed(1) + " <em>(" + a.count + ")</em>" : "<em>قيّم</em>") +
+        "</span>" +
+        '<span class="gh-card-stars">' +
+          [1, 2, 3, 4, 5].map(function (n) {
+            return '<button type="button" data-star="' + n + '" class="' +
+              (mine && mine.stars >= n ? "on" : "") + '">★</button>';
+          }).join("") +
+        "</span>";
+
       var bottom = body.querySelector(".card-bottom");
-      var tmp = document.createElement("div");
-      tmp.innerHTML = html;
-      body.insertBefore(tmp.firstChild, bottom || null);
+      body.insertBefore(row, bottom || null);
+
+      row.addEventListener("click", function (ev) {
+        var btn = ev.target.closest("button[data-star]");
+        if (!btn) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        submitItemRating({ id: Number(id), nameAr: itemName }, Number(btn.getAttribute("data-star")));
+      });
     });
   }
 
-  function canRate() {
-    try {
-      return typeof myOrders !== "undefined" && Array.isArray(myOrders) && myOrders.length > 0;
-    } catch (e) { return false; }
-  }
 
   // تقييم سريع من صفحة الصنف نفسها (بعد ما يكون عمل أوردر قبل كده)
   function submitItemRating(item, stars) {
@@ -2615,7 +2643,7 @@ async function submitRating(){
   }
 
   function refreshDecos() {
-    Array.prototype.forEach.call(document.querySelectorAll(".gh-rate"), function (n) { n.remove(); });
+    Array.prototype.forEach.call(document.querySelectorAll(".gh-rate, .gh-card-rate"), function (n) { n.remove(); });
     var s = document.querySelector(".gh-rate-sheet");
     if (s) s.remove();
     decorate();
@@ -2632,7 +2660,7 @@ async function submitRating(){
 
     var a = ratingsAvg(item.id);
     var mine = state.mine[String(item.id)];
-    var allowed = canRate();
+    var allowed = true;
 
     var line = a
       ? "★ " + a.avg.toFixed(1) + " · " + a.count + t(" تقييم", " ratings")
@@ -2876,7 +2904,7 @@ async function submitRating(){
 
   // أدوات للاختبار/التشخيص
   W.__GhRatings = {
-    version: "1.3",
+    version: "1.4",
     device: state.device,
     avg: ratingsAvg,
   };
