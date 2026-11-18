@@ -412,6 +412,15 @@ tr:hover td{background:var(--subtle)}
   <div class="form-row"><div><label>عنوان العرض (عربي)</label><input id="o-titleAr"></div><div><label>عنوان العرض (إنجليزي)</label><input id="o-titleEn" dir="ltr"></div></div>
   <div class="form-row"><div><label>الوصف (عربي)</label><input id="o-descAr"></div><div><label>الوصف (إنجليزي)</label><input id="o-descEn" dir="ltr"></div></div>
   <div class="form-row"><div><label>السعر (ج)</label><input id="o-price" type="number"></div><div><label>الفرع المستهدف</label><select id="o-branchId"><option value="all">🌟 كل الفروع (عام)</option></select></div></div>
+  
+  <!-- ✅ تم إضافة القائمة المنسدلة دي عشان تربط العرض بالصنف -->
+  <div style="margin-top:12px; margin-bottom:12px;">
+    <label>ربط العرض بصنف معين (لكي يستطيع العميل طلبه)</label>
+    <select id="o-itemId">
+      <option value="">-- بدون ربط (إعلان فقط) --</option>
+    </select>
+  </div>
+
   <div style="margin-top:12px"><label>حالة العرض</label><select id="o-active"><option value="true">نشط (يعرض في المنيو)</option><option value="false">موقوف</option></select></div>
   <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px"><button class="btn btn-ghost" onclick="closeModal('offerModal')">إلغاء</button><button class="btn btn-primary" onclick="saveOffer()">حفظ العرض</button></div>
 </div></div>
@@ -491,7 +500,7 @@ onFbReady(()=>{
 async function loadUserData(uid){
   try {
     const {db, doc, getDoc} = window.FB;
-    if(!getDoc) return false;
+    if(!getDoc) { console.error("getDoc missing in FB"); return false; }
     const snap = await getDoc(doc(db,'users',uid));
     if(!snap.exists()) return false;
     currentUserData = { id: uid, ...snap.data() };
@@ -849,10 +858,16 @@ function renderOffers(){
   tb.innerHTML=offers.map(o=>{
     const branch = branches.find(b=>b.id === o.branchId);
     const branchName = o.branchId === 'all' ? '🌟 كل الفروع' : (branch ? branch.nameAr : 'فرع غير معروف');
+    const linkedItem = items.find(i => i.id === o.itemId);
+    const itemName = linkedItem ? linkedItem.nameAr : 'غير مرتبط';
+    
     return `<tr>
       <td><img class="thumb" src="${o.image}" onerror="this.style.opacity=.2"></td>
       <td><strong>${o.titleAr || '—'}</strong><br><small style="color:var(--muted)">${o.titleEn || ''}</small></td>
-      <td><span class="badge badge-blue">${branchName}</span></td>
+      <td>
+        <span class="badge badge-blue">${branchName}</span><br>
+        <small style="color:var(--gold); font-weight:bold; margin-top:4px; display:inline-block;">🍽️ ${itemName}</small>
+      </td>
       <td><strong style="color:var(--gold)">${o.price || 0} ج</strong></td>
       <td>${o.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td>
       <td style="white-space:nowrap">
@@ -865,6 +880,13 @@ function renderOffers(){
 function openOfferModal(id){
   const branchSelect = $('o-branchId');
   branchSelect.innerHTML = '<option value="all">🌟 كل الفروع (عام)</option>' + branches.map(b => `<option value="${b.id}">${b.nameAr}</option>`).join('');
+
+  // ✅ تعبئة قائمة الأصناف
+  const itemSelect = $('o-itemId');
+  if (itemSelect) {
+    itemSelect.innerHTML = '<option value="">-- بدون ربط (إعلان فقط) --</option>' + 
+      items.map(i => `<option value="${i.id}">${i.nameAr}</option>`).join('');
+  }
 
   if(id){
     const o = offers.find(x=>x.id === id);
@@ -880,6 +902,7 @@ function openOfferModal(id){
     $('o-active').value = o.active !== false ? 'true' : 'false';
     $('o-imageUrl').value = (o.image||'').startsWith('http') ? o.image : '';
     $('o-preview').src = o.image || '';
+    if($('o-itemId')) $('o-itemId').value = o.itemId || ''; // ✅ اختيار الصنف المرتبط
   } else {
     $('offerModalTitle').innerText='إضافة عرض ترويجي جديد';
     $('o-id').value='';
@@ -887,17 +910,21 @@ function openOfferModal(id){
     $('o-preview').src='';
     $('o-branchId').value='all';
     $('o-active').value='true';
+    if($('o-itemId')) $('o-itemId').value='';
   }
   $('offerModal').classList.add('open');
 }
 
 async function saveOffer(){
-  const {db, doc, setDoc, updateDoc} = window.FB;
+  const {db, doc, setDoc, updateDoc, addDoc, collection, serverTimestamp} = window.FB;
   const id = $('o-id').value;
   const isEdit = !!id;
   const titleAr = $('o-titleAr').value.trim();
   const price = Number($('o-price').value);
   const branchId = $('o-branchId').value;
+  
+  // ✅ قراءة الـ itemId
+  const itemId = $('o-itemId') && $('o-itemId').value ? Number($('o-itemId').value) : null;
 
   if(!titleAr || !price){ showToast('⚠️ يرجى إدخال عنوان العرض والسعر على الأقل'); return; }
 
@@ -919,7 +946,7 @@ async function saveOffer(){
       const ex = offers.find(o => o.id === id);
       imageUrl = ex ? ex.image : '';
     } else {
-      imageUrl = 'images/hot-coffee/01.jpg'; // صورة افتراضية في حال عدم الرفع
+      imageUrl = 'images/hot-coffee/01.jpg';
     }
   }
 
@@ -931,6 +958,7 @@ async function saveOffer(){
     price,
     image: imageUrl,
     branchId,
+    itemId: itemId, // ✅ حفظ الـ itemId
     active: $('o-active').value === 'true',
     updatedAt: new Date().toISOString()
   };
@@ -941,6 +969,19 @@ async function saveOffer(){
     } else {
       await setDoc(doc(db, 'offers', 'offer-' + Date.now()), data);
     }
+    
+    // ✅ إرسال إشعار للفرع لو العرض مخصص لفرع معين (لكي يسمعوا الصوت في صفحتهم)
+    if (branchId !== 'all') {
+        await addDoc(collection(db, 'notifications'), {
+            branchId: branchId,
+            title: 'عرض جديد!',
+            message: `تم إضافة عرض جديد: ${titleAr}`,
+            type: 'offer',
+            createdAt: serverTimestamp(),
+            read: false
+        });
+    }
+
     closeModal('offerModal');
     showToast('✅ تم حفظ العرض بنجاح');
   } catch(e){
@@ -1009,7 +1050,8 @@ async function saveItemBranches() {
     showToast('⏳ جاري الحفظ...');
     for (let b of relatedBranches) {
       const isChecked = $(`ib-branch-${b.id}`).checked;
-      const stockOverrides = b.stockOverrides || {};
+      // ✅ إصلاح: عمل نسخة جديدة من الكائن عشان منعدلش الداتا الأصلية قبل الحفظ
+      const stockOverrides = { ...(b.stockOverrides || {}) }; 
       
       if (isChecked) {
         delete stockOverrides[itemId];
@@ -1187,8 +1229,6 @@ function updateStats(){
   $('statOrders').innerText=ordersToday.length;
   updateSystemStatus();
 }
-
-window.addEventListener('fb-ready',()=>{ if(!window.FB.getDoc){ import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js").then(mod=>{ window.FB.getDoc = mod.getDoc; }); } });
 
 let reportData = { orders: [] };
 function initReportFilters() {
