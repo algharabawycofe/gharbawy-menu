@@ -2258,11 +2258,11 @@ async function submitRating(){
 })();
 
 </script>
-<!-- ===== تقييم الأصناف (gharbawy-ratings v1.2) ===== -->
+<!-- ===== تقييم الأصناف (gharbawy-ratings v1.3) ===== -->
 <script>
 /*!
  * ============================================================
- *  gharbawy-ratings.js — v1.2
+ *  gharbawy-ratings.js — v1.3
  *  تقييم الأصناف: نجوم لكل صنف بعد التسليم + متوسط التقييم
  *  يظهر على كارت الصنف. (من غير أي قفل موقع)
  * ------------------------------------------------------------
@@ -2274,7 +2274,7 @@ async function submitRating(){
 
   var W = window;
   if (W.__GHARBAWY_RATINGS__) return;
-  W.__GHARBAWY_RATINGS__ = "1.2";
+  W.__GHARBAWY_RATINGS__ = "1.3";
 
   /* =========================================================
      أدوات
@@ -2316,6 +2316,136 @@ async function submitRating(){
 
   function currentBranchSafe() {
     try { return typeof currentBranch !== "undefined" ? currentBranch : null; } catch (e) { return null; }
+  }
+
+  /* =========================================================
+     آخر أوردر محفوظ محليًا (عشان العميل يقدر يقيّم في أي وقت)
+     ========================================================= */
+  var QUEUE_KEY = "gharbaoui_rating_queue";
+
+  function readStoredOrders() {
+    try {
+      var arr = JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]");
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+
+  function saveLastOrder(lines) {
+    try {
+      var map = {};
+      var out = [];
+
+      function add(id, name, qty) {
+        var k = String(id);
+        if (map[k]) { map[k].qty += qty; return; }
+        map[k] = { id: Number(id), nameAr: name || "", qty: qty };
+        out.push(map[k]);
+      }
+
+      (lines || []).forEach(function (c) {
+        if (!c) return;
+        var qty = Number(c.qty) || 1;
+        if (c.isBundle && Array.isArray(c.bundleItems)) {
+          c.bundleItems.forEach(function (b) {
+            if (b && b.id != null) add(b.id, b.nameAr, (Number(b.qty) || 1) * qty);
+          });
+        } else if (c.id != null) {
+          add(c.id, c.nameAr, qty);
+        }
+      });
+
+      if (!out.length) return;
+
+      var arr = readStoredOrders();
+      arr.unshift({ at: Date.now(), items: out });
+      arr = arr.slice(0, 5);
+      localStorage.setItem(QUEUE_KEY, JSON.stringify(arr));
+
+      var b = $("ghRateBtn");
+      if (b) b.style.color = "#F1C40F";
+    } catch (e) { /* تجاهل */ }
+  }
+
+  function injectRateButton() {
+    if ($("ghRateBtn")) return;
+    var actions = document.querySelector(".header-actions");
+    if (!actions) {
+      if (!injectRateButton.tries) injectRateButton.tries = 0;
+      if (++injectRateButton.tries < 30) setTimeout(injectRateButton, 400);
+      return;
+    }
+
+    var btn = document.createElement("button");
+    btn.className = "icon-btn";
+    btn.id = "ghRateBtn";
+    btn.type = "button";
+    btn.title = t("قيّم طلبك", "Rate your order");
+    btn.setAttribute("aria-label", t("قيّم طلبك", "Rate your order"));
+    btn.textContent = "⭐";
+    if (readStoredOrders().length) btn.style.color = "#F1C40F";
+
+    btn.addEventListener("click", openLastRating);
+
+    var cartBtn = actions.querySelector(".cart-btn");
+    actions.insertBefore(btn, cartBtn || null);
+  }
+
+  function openLastRating() {
+    var list = readStoredOrders();
+    if (!list.length) {
+      toast(t("اطلب الأول وبعدها تقدر تقيّم", "Order first, then you can rate"), "⭐");
+      return;
+    }
+
+    var order = list[0];
+    var items = (order.items || []).filter(function (i) { return i && i.id != null; });
+    if (!items.length) {
+      toast(t("مفيش أصناف للتقييم", "No items to rate"), "⚠️");
+      return;
+    }
+
+    state.rating = { orderId: order.orderId || null, items: items, itemStars: {} };
+    try { ratingState = { orderId: order.orderId || null, stars: 0 }; } catch (e) { /* تجاهل */ }
+
+    if (typeof renderRatingStars === "function") renderRatingStars();
+    var c = $("ratingComment");
+    if (c) c.value = "";
+    injectItemRatings(items);
+
+    var bd = $("ratingBackdrop");
+    if (bd) bd.classList.add("open");
+    var sh = $("ratingSheet");
+    if (sh) sh.classList.add("open");
+  }
+
+  // نلتقط أصناف الأوردر وقت الإرسال (قبل ما السلة تتفرّغ)
+  function wrapSubmitOrder() {
+    var prev = W.submitOrder;
+    if (typeof prev !== "function") return;
+
+    W.submitOrder = function () {
+      var args = arguments;
+      var before = 0;
+      var snap = [];
+
+      try {
+        before = (typeof myOrders !== "undefined" && Array.isArray(myOrders)) ? myOrders.length : 0;
+      } catch (e) { /* تجاهل */ }
+      try {
+        snap = (typeof cart !== "undefined" && Array.isArray(cart)) ? JSON.parse(JSON.stringify(cart)) : [];
+      } catch (e) { /* تجاهل */ }
+
+      var res = prev.apply(W, args);
+      if (!res || typeof res.then !== "function") return res;
+
+      return res.then(function (out) {
+        try {
+          var after = (typeof myOrders !== "undefined" && Array.isArray(myOrders)) ? myOrders.length : 0;
+          if (after > before) saveLastOrder(snap);
+        } catch (e) { /* تجاهل */ }
+        return out;
+      });
+    };
   }
 
   /* =========================================================
@@ -2723,6 +2853,8 @@ async function submitRating(){
   function boot() {
     if (!document.body) return;
     injectCSS();
+    injectRateButton();
+    wrapSubmitOrder();
 
     var tries = 0;
     var timer = setInterval(function () {
@@ -2744,7 +2876,7 @@ async function submitRating(){
 
   // أدوات للاختبار/التشخيص
   W.__GhRatings = {
-    version: "1.2",
+    version: "1.3",
     device: state.device,
     avg: ratingsAvg,
   };
