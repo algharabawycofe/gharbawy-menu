@@ -1743,5 +1743,520 @@ async function submitRating(){
   }
 }
 </script>
+<!-- ===== إصلاح سعر العروض (gharbawy-offer-fix v1.0) ===== -->
+<script>
+/*!
+ * ============================================================
+ *  gharbawy-offer-fix.js  —  v1.0
+ *  إصلاح سعر العروض (الكومبو) في منيو الغرباوي
+ * ------------------------------------------------------------
+ *  المشكلة:
+ *    - لما العميل يضغط "اطلب دلوقتي" على عرض في السلايدر،
+ *      كان بيتضاف صنف واحد فقط، وبسعر الصنف (أو بسعر العرض
+ *      من غير باقي أصناف الكومبو).
+ *    - الأوردر كان بيتبعت من غير dateStr، فتقارير الأدمن
+ *      والإحصائيات كانت بتطلع فاضية.
+ *
+ *  الحل:
+ *    - العرض بيتضاف كسطر واحد اسمه عنوان العرض، بسعر العرض،
+ *      ومعاه كل أصناف الكومبو (bundleItems) زي ما الأدمن متوقع.
+ *    - الأوردر بيتبعت بـ dateStr + isBundle + bundleItems،
+ *      فالأدمن وشاشة المطبخ يعرضوا الكومبو صح.
+ *
+ *  التركيب: أضف الملف بعد سكريبت المنيو الأساسي مباشرة
+ *            (الخطوات بالتفصيل في README.md)
+ * ============================================================
+ */
+(function () {
+  "use strict";
+
+  var W = window;
+  if (W.__GHARBAWY_OFFER_FIX__) return;      // منع التحميل المكرر
+  W.__GHARBAWY_OFFER_FIX__ = "1.0";
+
+  // هل سكريبت المنيو الأساسي موجود؟ (لازم fix يتحمّل بعده)
+  var hadMenuScript = typeof W.heroCta === "function" && typeof W.addToCart === "function";
+
+  /* ---------------- أدوات مساعدة ---------------- */
+
+  function isAr() {
+    try { return typeof currentLang === "undefined" || currentLang === "ar"; }
+    catch (e) { return true; }
+  }
+
+  function t(arText, enText) { return isAr() ? arText : enText; }
+
+  function toast(msg, icon) {
+    try {
+      if (typeof W.toast === "function") W.toast(msg, icon || "✅");
+      else console.log("[offer-fix]", msg);
+    } catch (e) { /* لا تعطّل الواجهة */ }
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+
+  function money(n) {
+    var v = Math.round(Number(n) || 0);
+    return v.toLocaleString("en-US") + " ج";
+  }
+
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+
+  /** تاريخ محلي YYYY-MM-DD (مش UTC) عشان تقارير الأدمن تطابقه */
+  function localDateStr(d) {
+    d = d || new Date();
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+
+  function itemsList() {
+    return (typeof allItems !== "undefined" && Array.isArray(allItems)) ? allItems : [];
+  }
+
+  function offersList() {
+    return (typeof allOffers !== "undefined" && Array.isArray(allOffers)) ? allOffers : [];
+  }
+
+  function cartList() {
+    return (typeof cart !== "undefined" && Array.isArray(cart)) ? cart : [];
+  }
+
+  function findOffer(id) {
+    if (!id) return null;
+    var list = offersList();
+    for (var i = 0; i < list.length; i++) if (list[i] && list[i].id === id) return list[i];
+    return null;
+  }
+
+  function priceOf(item) {
+    try {
+      if (typeof getItemPrice === "function") return Number(getItemPrice(item)) || 0;
+    } catch (e) { /* fall back */ }
+    return Number(item && item.price) || 0;
+  }
+
+  function isAvailable(item) {
+    try {
+      if (typeof isItemAvailable === "function") return !!isItemAvailable(item);
+    } catch (e) { /* fall back */ }
+    return !!item && item.inStock !== false;
+  }
+
+  function nameOf(item) {
+    if (!item) return "";
+    return isAr() ? (item.nameAr || item.nameEn || "") : (item.nameEn || item.nameAr || "");
+  }
+
+  /**
+   * أصناف العرض (الكومبو) بشكل موحّد.
+   * بيدعم الشكل الجديد {items:[{itemId,qty}]} والشكل القديم {itemId}.
+   */
+  function offerBundle(offer) {
+    if (!offer) return [];
+    var raw = (Array.isArray(offer.items) && offer.items.length)
+      ? offer.items
+      : (offer.itemId ? [{ itemId: offer.itemId, qty: 1 }] : []);
+
+    var all = itemsList();
+    var out = [];
+    raw.forEach(function (row) {
+      var wanted = Number(row && row.itemId);
+      if (!wanted) return;
+      var item = null;
+      for (var i = 0; i < all.length; i++) {
+        if (Number(all[i].id) === wanted) { item = all[i]; break; }
+      }
+      if (item) {
+        out.push({ item: item, qty: Math.max(1, Number(row && row.qty) || 1) });
+      }
+    });
+    return out;
+  }
+
+  function bundleOriginal(bundle) {
+    return bundle.reduce(function (sum, b) {
+      return sum + priceOf(b.item) * b.qty;
+    }, 0);
+  }
+
+  function slides() {
+    return (typeof W.__slides !== "undefined" && Array.isArray(W.__slides)) ? W.__slides : [];
+  }
+
+  /** نبضة صغيرة على أيقونة السلة بعد الإضافة */
+  function pulseBadge() {
+    try {
+      var b = document.getElementById("cartBadge");
+      if (!b) return;
+      b.style.transform = "scale(1.4)";
+      setTimeout(function () { b.style.transform = "scale(1)"; }, 220);
+    } catch (e) { /* تجاهل */ }
+  }
+
+  /* ---------------- إضافة عرض للسلة ---------------- */
+
+  /**
+   * بيضيف سطر واحد للعرض: الاسم = عنوان العرض، السعر = سعر العرض،
+   * ومعاه كل أصناف الكومبو. مفيش دمج مع سطر عادي لنفس الصنف.
+   */
+  function addOfferLine(offer, qty, note) {
+    var bundle = offerBundle(offer);
+    if (!bundle.length) {
+      toast(t("العرض ده مش متاح حالياً", "This offer is unavailable"), "⚠️");
+      return false;
+    }
+
+    var missing = bundle.filter(function (b) { return !isAvailable(b.item); });
+    if (missing.length) {
+      toast(
+        t("العرض غير متاح: ", "Unavailable: ") +
+          missing.map(function (b) { return nameOf(b.item); }).join("، "),
+        "⚠️"
+      );
+      return false;
+    }
+
+    var unitPrice = Number(offer.price) || 0;
+    if (unitPrice <= 0) {
+      toast(t("سعر العرض غير محدد", "Offer price is missing"), "⚠️");
+      return false;
+    }
+
+    var qtyFinal = Math.max(1, Number(qty) || 1);
+    var noteTxt = String(note || "").trim();
+    var list = cartList();
+
+    // دمج فقط مع نفس العرض + نفس الملاحظة
+    var existing = null;
+    for (var i = 0; i < list.length; i++) {
+      var c = list[i];
+      if (c && c.isBundle && c.offerId === offer.id && (c.note || "") === noteTxt) {
+        existing = c; break;
+      }
+    }
+
+    if (existing) {
+      existing.qty += qtyFinal;
+    } else {
+      var original = bundleOriginal(bundle);
+      list.push({
+        id: bundle[0].item.id,               // يخلي شارة العدد تظهر على كارت أول صنف
+        offerId: offer.id,
+        isBundle: true,
+        nameAr: offer.titleAr || (offer.nameAr || nameOf(bundle[0].item)),
+        nameEn: offer.titleEn || offer.titleAr || (offer.nameEn || nameOf(bundle[0].item)),
+        basePrice: unitPrice,
+        unitPrice: unitPrice,
+        originalPrice: original,
+        qty: qtyFinal,
+        note: noteTxt,
+        selections: [],
+        selKey: "offer:" + offer.id,
+        bundleItems: bundle.map(function (b) {
+          return {
+            id: b.item.id,
+            nameAr: b.item.nameAr || b.item.nameEn || "",
+            nameEn: b.item.nameEn || b.item.nameAr || "",
+            qty: b.qty,
+            price: priceOf(b.item)
+          };
+        })
+      });
+    }
+
+    if (typeof saveCart === "function") saveCart();
+    else if (typeof W.updateCartBadge === "function") W.updateCartBadge();
+
+    toast(t("تمت إضافة العرض للسلة", "Offer added to cart"), "🔥");
+    return true;
+  }
+
+  /* ---------------- heroCta (زرار السلايدر) ---------------- */
+
+  W.heroCta = function (slideIdx) {
+    var slide = slides()[slideIdx];
+    if (!slide) return;
+
+    // 1) عرض حقيقي
+    if (slide.type === "offer" && slide.offerId) {
+      var offer = findOffer(slide.offerId);
+      if (offer) {
+        var bundle = offerBundle(offer);
+
+        // عرض على صنف واحد وفيه اختيارات: نفتح شيت الصنف بسعر العرض
+        if (bundle.length === 1 && (bundle[0].item.options || []).length > 0) {
+          if (typeof openItemSheet === "function") {
+            openItemSheet(bundle[0].item.id, Number(offer.price), offer.id);
+            return;
+          }
+        }
+        if (addOfferLine(offer, 1, "")) pulseBadge();
+        return;
+      }
+    }
+
+    // 2) صنف عادي (أو عرض مش لاقيينه)
+    if (!slide.targetItemId) {
+      toast(t("العرض متاح من خلال القائمة", "This offer is available in the menu"), "ℹ️");
+      return;
+    }
+
+    var item = null;
+    var all = itemsList();
+    for (var i = 0; i < all.length; i++) {
+      if (Number(all[i].id) === Number(slide.targetItemId)) { item = all[i]; break; }
+    }
+    if (!item) {
+      toast(t("الصنف غير متاح", "Item not available"), "⚠️");
+      return;
+    }
+    if (!isAvailable(item)) {
+      toast(t("هذا الصنف غير متوفر حالياً", "Item is out of stock"), "⚠️");
+      return;
+    }
+
+    var override = (slide.type === "offer" && Number(slide.price) > 0) ? Number(slide.price) : null;
+    var offerId = slide.offerId || null;
+
+    if ((item.options || []).length > 0) {
+      if (typeof openItemSheet === "function") openItemSheet(item.id, override, offerId);
+      return;
+    }
+    W.addToCart(item.id, 1, "", [], override, offerId);
+    toast(t("تمت الإضافة للسلة", "Added to cart"), "🛒");
+    pulseBadge();
+  };
+
+  /* ---------------- addToCart ---------------- */
+
+  /**
+   * نفس دالة المنيو، بس:
+   *  - أي offerId ليه كومبو => سطر عرض واحد بسعر العرض.
+   *  - الدمج بيحصل فقط لو نفس السعر، عشان سطر قديم بسعر الصنف
+   *    ما ياخدش الكمية الجديدة.
+   */
+  W.addToCart = function (id, qty, note, selections, priceOverride, offerId) {
+    var item = null;
+    var all = itemsList();
+    for (var i = 0; i < all.length; i++) {
+      if (Number(all[i].id) === Number(id)) { item = all[i]; break; }
+    }
+    if (!item || !isAvailable(item)) return;
+
+    var offer = offerId ? findOffer(offerId) : null;
+    if (offer) {
+      var bundle = offerBundle(offer);
+      // كومبو (أكتر من صنف) => سطر عرض واحد
+      if (bundle.length > 1) {
+        addOfferLine(offer, Math.max(1, Number(qty) || 1), note);
+        return;
+      }
+    }
+
+    var basePrice = priceOverride != null ? Number(priceOverride) : priceOf(item);
+    var extras = (selections || []).reduce(function (s, x) { return s + (Number(x.price) || 0); }, 0);
+    var unitPrice = basePrice + extras;
+    var selKey = JSON.stringify((selections || []).map(function (s) { return s.choiceId; }).sort());
+    var offerKey = offerId || "menu";
+    var qtyFinal = Math.max(1, Number(qty) || 1);
+    var noteTxt = note || "";
+    var list = cartList();
+
+    var existing = null;
+    for (var j = 0; j < list.length; j++) {
+      var c = list[j];
+      if (!c || c.isBundle) continue;
+      if (Number(c.id) !== Number(id)) continue;
+      if ((c.note || "") !== noteTxt) continue;
+      if (c.selKey !== selKey) continue;
+      if ((c.offerId || "menu") !== offerKey) continue;
+      if (Number(c.unitPrice) !== Number(unitPrice)) continue;   // ← إصلاح السعر القديم
+      existing = c; break;
+    }
+
+    if (existing) existing.qty += qtyFinal;
+    else list.push({
+      id: item.id,
+      offerId: offerId || null,
+      isBundle: false,
+      nameAr: nameOf(item),
+      nameEn: item.nameEn || item.nameAr || "",
+      basePrice: basePrice,
+      unitPrice: unitPrice,
+      qty: qtyFinal,
+      note: noteTxt,
+      selections: selections || [],
+      selKey: selKey
+    });
+
+    if (typeof saveCart === "function") saveCart();
+    else if (typeof W.updateCartBadge === "function") W.updateCartBadge();
+  };
+
+  /* ---------------- رسم السلة ---------------- */
+
+  W.renderCartBody = function () {
+    var body = document.getElementById("cartBody");
+    var footer = document.getElementById("cartFooter");
+    if (!body || !footer) return;
+
+    var list = cartList();
+    if (!list.length) {
+      body.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><p>' +
+        t("سلة الطلبات فاضية", "Your cart is empty") + "</p></div>";
+      footer.innerHTML = "";
+      return;
+    }
+
+    body.innerHTML = list.map(function (c, idx) {
+      var isOffer = !!c.isBundle;
+      var sels = (c.selections || []).map(function (s) { return s.choiceNameAr; }).join("، ");
+      var bundleTxt = isOffer
+        ? (c.bundleItems || []).map(function (b) { return b.nameAr + " ×" + b.qty; }).join(" + ")
+        : "";
+      var original = isOffer
+        ? (Number(c.originalPrice) || 0) || (c.bundleItems || []).reduce(function (s, b) {
+            return s + (Number(b.price) || 0) * (Number(b.qty) || 0);
+          }, 0)
+        : 0;
+      var saved = isOffer && original > Number(c.unitPrice) ? original - Number(c.unitPrice) : 0;
+
+      return '' +
+        '<div class="cart-row">' +
+          '<div class="cart-row-info">' +
+            '<div class="cart-row-name">' +
+              (isOffer ? '<span style="display:inline-block;background:linear-gradient(135deg,var(--coffee-gold),var(--coffee-gold-light));color:#1F1611;font-size:9px;font-weight:900;padding:2px 7px;border-radius:6px;margin-inline-end:6px;vertical-align:middle;">🔥 ' + t("عرض", "Offer") + "</span>" : "") +
+              esc(c.nameAr || "") +
+            "</div>" +
+            (bundleTxt ? '<div class="cart-row-sels">🍔 ' + esc(bundleTxt) + "</div>" : "") +
+            (sels ? '<div class="cart-row-sels">' + esc(sels) + "</div>" : "") +
+            (c.note ? '<div class="cart-row-note">📝 ' + esc(c.note) + "</div>" : "") +
+            '<div class="cart-row-price">' +
+              money(Number(c.unitPrice) * c.qty) +
+              (saved > 0 ? ' <s style="color:var(--text-muted);font-weight:600;font-size:10px;">' + money(original * c.qty) + "</s>" : "") +
+            "</div>" +
+            (saved > 0
+              ? '<div style="font-size:9.5px;color:var(--success);font-weight:800;margin-top:2px;">' + t("وفّرت ", "You saved ") + money(saved * c.qty) + "</div>"
+              : "") +
+          "</div>" +
+          '<div class="qty-stepper">' +
+            '<button class="qty-btn" onclick="changeCartQty(' + idx + ',-1)">−</button>' +
+            '<span class="qty-value">' + c.qty + "</span>" +
+            '<button class="qty-btn" onclick="changeCartQty(' + idx + ',1)">+</button>' +
+          "</div>" +
+        "</div>";
+    }).join("");
+
+    var total = list.reduce(function (s, c) { return s + Number(c.unitPrice) * c.qty; }, 0);
+
+    footer.innerHTML = '' +
+      '<div class="cart-total-row">' +
+        '<span class="cart-total-label">' + t("الإجمالي", "Total") + "</span>" +
+        '<span class="cart-total-amount">' + money(total) + "</span>" +
+      "</div>" +
+      '<button class="btn-primary" onclick="submitOrder()">' +
+        t("🛎️ إرسال الطلب وعرض للويتر", "🛎️ Send order & show to waiter") +
+      "</button>";
+  };
+
+  /* ---------------- إرسال الطلب ---------------- */
+
+  W.submitOrder = function () {
+    var list = cartList();
+    if (!list.length || W.__orderSubmitting) return Promise.resolve();
+
+    var branch = (typeof currentBranch !== "undefined") ? currentBranch : null;
+    if (!branch) return Promise.resolve();
+
+    var FB = W.FB || {};
+    if (!FB.db || !FB.collection || !FB.addDoc) {
+      toast(t("خدمة الطلبات مش متصلة، جرّب تحديث الصفحة", "Orders service is not ready"), "❌");
+      return Promise.resolve();
+    }
+
+    var total = list.reduce(function (s, c) { return s + Number(c.unitPrice) * c.qty; }, 0);
+    var tableNum = (typeof currentTable !== "undefined" && currentTable) ? currentTable : (isAr() ? "غير محدد" : "N/A");
+
+    var itemsSnapshot = list.map(function (c) {
+      var row = {
+        id: c.id,
+        nameAr: c.nameAr,
+        price: Number(c.unitPrice) || 0,
+        qty: c.qty,
+        note: c.note || "",
+        selections: c.selections || [],
+        offerId: c.offerId || null
+      };
+      if (c.isBundle) {
+        row.isBundle = true;
+        row.bundleItems = (c.bundleItems || []).map(function (b) {
+          return { id: b.id, nameAr: b.nameAr, nameEn: b.nameEn || b.nameAr, qty: b.qty, price: b.price };
+        });
+      }
+      return row;
+    });
+
+    var now = new Date();
+    var orderDoc = {
+      branchId: branch.id,
+      branchNameAr: branch.nameAr,
+      table: tableNum,
+      items: itemsSnapshot,
+      total: total,
+      status: "pending",
+      dateStr: localDateStr(now),     // ← عشان تقارير الأدمن والإحصائيات
+      createdAt: (typeof FB.serverTimestamp === "function") ? FB.serverTimestamp() : now
+    };
+
+    W.__orderSubmitting = true;
+
+    return Promise.resolve()
+      .then(function () { return FB.addDoc(FB.collection(FB.db, "orders"), orderDoc); })
+      .then(function (ref) {
+        try {
+          if (typeof myOrders !== "undefined" && Array.isArray(myOrders)) {
+            myOrders.push({ id: ref.id, table: tableNum, at: Date.now() });
+            var cutoff = Date.now() - 6 * 3600 * 1000;
+            for (var k = myOrders.length - 1; k >= 0; k--) {
+              if (!(myOrders[k] && myOrders[k].at > cutoff)) myOrders.splice(k, 1);
+            }
+            localStorage.setItem("gharbaoui_my_orders", JSON.stringify(myOrders));
+          }
+        } catch (e) { /* تجاهل */ }
+
+        // تفريغ السلة
+        list.length = 0;
+        if (typeof saveCart === "function") saveCart();
+        if (typeof closeCartModal === "function") closeCartModal();
+        if (typeof playBell === "function") playBell();
+        if (typeof W.renderWaiterDisplay === "function") W.renderWaiterDisplay(itemsSnapshot, total, tableNum);
+        if (typeof W.updateStatusChips === "function") W.updateStatusChips();
+
+        toast(t("تم إرسال الطلب بنجاح", "Order sent successfully"), "✅");
+        return ref;
+      })
+      .catch(function (err) {
+        console.error("[offer-fix] submitOrder", err);
+        toast(t("حدث خطأ أثناء إرسال الطلب", "Error sending order"), "❌");
+      })
+      .then(function (res) {
+        W.__orderSubmitting = false;
+        return res;
+      });
+  };
+
+  /* ---------------- فحص سريع ---------------- */
+  console.info(
+    "[Gharbawy offer-fix] v1.0 loaded",
+    hadMenuScript
+      ? "✅ اشتغل صح — العروض هتتحسب بسعر العرض"
+      : "⚠️ السكريبت اتحمّل قبل سكريبت المنيو! حطّه آخر حاجة قبل </body>"
+  );
+})();
+
+</script>
 </body>
 </html>
