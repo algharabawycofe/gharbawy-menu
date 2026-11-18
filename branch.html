@@ -632,6 +632,11 @@ html.dark .toast{background:var(--gold); color:#1F1611}
       if (!state.soundOn) return;
       const ctx = this.ensure();
       if (!ctx) return;
+      if (ctx.state !== "running") {
+        state.unlocked = false;
+        updateAudioBanner();
+        return;
+      }
       if (kind === "order") {
         this.tone(880, 0, 0.18, 0.5);
         this.tone(1175, 0.16, 0.24, 0.45);
