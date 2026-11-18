@@ -1,649 +1,1523 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" id="htmlRoot">
+<html lang="ar" dir="rtl" id="htmlRoot">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <meta name="theme-color" content="#2B1D14">
-<title id="pageTitle">Al-Gharbawy - Digital Menu</title>
+<title>الغرباوي — المنيو</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="logo-01.png">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
-:root { --bg-primary: #FAF6F0; --bg-surface: #FFFFFF; --bg-subtle: #F5EEE5; --text-primary: #1F1611; --text-secondary: #6F4E37; --text-muted: #A89080; --border: #E8DED2; --border-strong: #D4C4B0; --coffee-dark: #2B1D14; --coffee-medium: #6F4E37; --coffee-gold: #C89B5E; --coffee-gold-light: #E0BE85; --danger: #B33A3A; --success: #4A7C59; --shadow-sm: 0 1px 3px rgba(43,29,20,0.06); --shadow-md: 0 4px 16px rgba(43,29,20,0.08); --shadow-lg: 0 12px 40px rgba(43,29,20,0.12); }
-html.dark { --bg-primary: #1A1310; --bg-surface: #241B16; --bg-subtle: #1F1712; --text-primary: #FAF6F0; --text-secondary: #D4A56A; --text-muted: #8A7566; --border: #3A2A20; --border-strong: #4A3628; --coffee-dark: #FAF6F0; --coffee-medium: #C89B5E; --coffee-gold: #D4A56A; --coffee-gold-light: #E0BE85; }
-* { box-sizing: border-box; transition: background-color 0.25s, border-color 0.25s, color 0.25s; }
-body { font-family: 'Cairo', system-ui, sans-serif; background: var(--bg-primary); color: var(--text-primary); margin: 0; min-height: 100vh; }
-@media (max-width: 768px) { body { padding-bottom: 90px; } }
-.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-.app-header { background: color-mix(in srgb, var(--bg-surface) 92%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
-.icon-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--bg-subtle); border: 1.5px solid var(--border); color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; font-family: inherit; } .icon-btn:hover { background: var(--coffee-gold); color: #FFF; border-color: var(--coffee-gold); }
-.cart-btn-header { background: linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium)); color: #FFF; padding: 0 14px; height: 38px; border-radius: 12px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; cursor: pointer; position: relative; border: none; font-family: inherit; }
-.cart-badge { position: absolute; top: -6px; inset-inline-end: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--coffee-gold); color: #1F1611; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-surface); }
-.app-main { max-width: 860px; margin: 0 auto; padding: 1rem; width: 100%; }
-.search-wrap { position: relative; flex: 1; } .search-input { width: 100%; padding: 12px 16px 12px 42px; background: var(--bg-surface); border: 1.5px solid var(--border); border-radius: 16px; font-size: 13px; color: var(--text-primary); outline: none; font-family: inherit; } html[dir="rtl"] .search-input { padding: 12px 42px 12px 16px; } .search-input:focus { border-color: var(--coffee-gold); } .search-icon { position: absolute; top: 50%; transform: translateY(-50%); inset-inline-start: 14px; color: var(--text-muted); pointer-events: none; }
-.cat-tab { padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); font-family: inherit; display: inline-flex; align-items: center; gap: 6px; } .cat-tab .cat-count { font-size: 10px; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--coffee-gold) 15%, transparent); color: var(--coffee-gold); font-weight: 900; } .cat-tab.active { background: var(--coffee-dark); color: var(--bg-primary); border-color: var(--coffee-dark); }
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
 
-/* تصميم السلايدر الفخم والواسع زي الصورة بالظبط */
-.ultra-hero-slider { position: relative; width: 100%; height: 340px; background: #18110E; border-radius: 24px; overflow: hidden; margin-bottom: 24px; box-shadow: var(--shadow-lg); border: 1.5px solid var(--border); }
-.ultra-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s ease-in-out; display: flex; align-items: center; justify-content: space-between; padding: 30px 40px; background: radial-gradient(circle at center, #2B1D14 0%, #16100D 100%); }
-.ultra-slide.active { opacity: 1; z-index: 2; }
-.ultra-slide-left { flex: 1; display: flex; flex-direction: column; align-items: flex-start; z-index: 3; }
-.ultra-badge { background: #B33A3A; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 4px; }
-.ultra-title { font-size: 26px; font-weight: 900; color: #FAF6F0; margin: 0 0 6px; }
-.ultra-desc { font-size: 13px; color: #A89080; margin: 0 0 16px; font-weight: 600; }
-.ultra-price-row { display: flex; align-items: center; gap: 16px; width: 100%; }
-.ultra-price { font-size: 22px; font-weight: 900; color: var(--coffee-gold); }
-.ultra-btn { background: #FAF6F0; color: #1F1611; padding: 8px 18px; border-radius: 12px; font-weight: 900; font-size: 12px; border: none; cursor: pointer; }
-.ultra-slide-right { width: 180px; height: 180px; border-radius: 50%; overflow: hidden; border: 3px solid var(--coffee-gold); box-shadow: 0 10px 30px rgba(0,0,0,0.5); flex-shrink: 0; background: #2B1D14; display: flex; align-items: center; justify-content: center; }
-.ultra-slide-right img { width: 100%; height: 100%; object-fit: cover; }
+:root{
+  --bg-primary:#FAF6F0; --bg-surface:#FFFFFF; --bg-subtle:#F5EEE5; --bg-elevated:#FFFDF9;
+  --text-primary:#1F1611; --text-secondary:#6F4E37; --text-muted:#A89080;
+  --border:#E8DED2; --border-strong:#D4C4B0;
+  --coffee-dark:#2B1D14; --coffee-medium:#6F4E37;
+  --coffee-gold:#C89B5E; --coffee-gold-light:#E0BE85; --coffee-gold-dark:#A67A3D;
+  --danger:#B33A3A; --success:#4A7C59;
+  --shadow-sm:0 1px 3px rgba(43,29,20,.06);
+  --shadow-md:0 4px 16px rgba(43,29,20,.08);
+  --shadow-lg:0 12px 40px rgba(43,29,20,.14);
+  --shadow-gold:0 8px 24px rgba(200,155,94,.28);
+  --radius-sm:10px; --radius-md:16px; --radius-lg:24px; --radius-xl:28px;
+  --ease:cubic-bezier(.32,.72,0,1);
+}
+html.dark{
+  --bg-primary:#16100D; --bg-surface:#211813; --bg-subtle:#1A130F; --bg-elevated:#2A1F19;
+  --text-primary:#FAF6F0; --text-secondary:#D4A56A; --text-muted:#8A7566;
+  --border:#36271E; --border-strong:#4A3628;
+  --coffee-dark:#FAF6F0; --coffee-medium:#C89B5E;
+  --coffee-gold:#D4A56A; --coffee-gold-light:#E0BE85; --coffee-gold-dark:#B88A4D;
+  --shadow-lg:0 12px 40px rgba(0,0,0,.4);
+  --shadow-gold:0 8px 24px rgba(212,165,106,.2);
+}
+*{box-sizing:border-box;transition:background-color .25s, border-color .25s, color .25s;}
+html,body{overscroll-behavior-y:contain;}
+body{
+  font-family:'Cairo',system-ui,sans-serif;
+  background:var(--bg-primary); color:var(--text-primary);
+  margin:0; min-height:100vh; -webkit-font-smoothing:antialiased;
+}
+@media(max-width:768px){ body{padding-bottom:110px;} }
+img{display:block;max-width:100%;}
+button{font-family:inherit;}
+.no-scrollbar::-webkit-scrollbar{display:none;} .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
 
-/* أسهم التنقل وجوانب السلايدر */
-.ultra-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-size: 16px; transition: 0.2s; }
-.ultra-arrow:hover { background: var(--coffee-gold); color: #1F1611; }
-.ultra-arrow.prev { inset-inline-start: 16px; }
-.ultra-arrow.next { inset-inline-end: 16px; }
+/* ============ HEADER ============ */
+.app-header{
+  background:color-mix(in srgb, var(--bg-surface) 88%, transparent);
+  backdrop-filter:saturate(180%) blur(18px);
+  -webkit-backdrop-filter:saturate(180%) blur(18px);
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:50;
+}
+.header-inner{
+  max-width:920px; margin:0 auto; padding:10px 16px;
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+}
+.brand{display:flex; align-items:center; gap:10px; min-width:0;}
+.brand-logo{width:42px; height:42px; flex-shrink:0; border-radius:12px; background:var(--bg-subtle); padding:4px;}
+.brand-logo img{width:100%; height:100%; object-fit:contain;}
+.brand-text h1{margin:0; font-size:15px; font-weight:900; letter-spacing:-.2px;}
+.brand-branch{
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:10px; font-weight:800; color:var(--coffee-gold);
+  background:color-mix(in srgb, var(--coffee-gold) 12%, transparent);
+  padding:2px 8px; border-radius:20px; margin-top:3px; cursor:pointer; border:none;
+}
+.brand-branch:hover{background:color-mix(in srgb, var(--coffee-gold) 20%, transparent);}
 
-.ultra-dots { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
-.ultra-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: 0.3s; }
-.ultra-dot.active { width: 24px; border-radius: 4px; background: var(--coffee-gold); }
+.header-actions{display:flex; align-items:center; gap:6px;}
+.icon-btn{
+  width:40px; height:40px; border-radius:12px;
+  background:var(--bg-subtle); border:1.5px solid var(--border);
+  color:var(--text-primary); display:flex; align-items:center; justify-content:center;
+  font-size:15px; cursor:pointer; position:relative; transition:.2s;
+}
+.icon-btn:hover{background:var(--coffee-gold); color:#1F1611; border-color:var(--coffee-gold);}
+.icon-btn:active{transform:scale(.94);}
 
-@media (max-width: 600px) {
-  .ultra-hero-slider { height: 280px; }
-  .ultra-slide { padding: 20px; }
-  .ultra-title { font-size: 20px; }
-  .ultra-slide-right { width: 120px; height: 120px; }
+.cart-btn{
+  position:relative;
+  background:linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium));
+  color:#FAF6F0; border:none; height:40px; padding:0 16px;
+  border-radius:12px; font-weight:800; font-size:13px;
+  display:flex; align-items:center; gap:8px; cursor:pointer;
+  box-shadow:0 4px 14px rgba(43,29,20,.2); transition:.2s;
+}
+html.dark .cart-btn{background:linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light)); color:#1F1611; box-shadow:var(--shadow-gold);}
+.cart-btn:hover{transform:translateY(-1px); box-shadow:0 8px 20px rgba(43,29,20,.25);}
+.cart-btn:active{transform:scale(.96);}
+.cart-badge{
+  position:absolute; top:-6px; inset-inline-end:-6px;
+  min-width:20px; height:20px; padding:0 5px; border-radius:10px;
+  background:var(--coffee-gold); color:#1F1611; font-size:10px; font-weight:900;
+  display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--bg-surface);
 }
 
-.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; } @media (min-width: 700px) { .menu-grid { grid-template-columns: 1fr 1fr 1fr; gap: 14px; } }
-.menu-card { background: var(--bg-surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden; position: relative; display: flex; flex-direction: column; } .menu-card:hover { border-color: var(--coffee-gold); box-shadow: var(--shadow-md); } .menu-card.out-of-stock { opacity: 0.55; }
-.menu-card-img-wrap { position: relative; width: 100%; aspect-ratio: 1 / 1; background: var(--bg-subtle); overflow: hidden; } .menu-card-img { width: 100%; height: 100%; object-fit: cover; }
-.menu-card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
-.menu-card-title { font-size: 13px; font-weight: 900; color: var(--text-primary); margin: 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em; }
-.menu-card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 8px; gap: 6px; }
-.menu-card-price { font-size: 14px; font-weight: 900; color: var(--coffee-gold); white-space: nowrap; }
-.add-btn { padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 900; border: none; cursor: pointer; display: flex; align-items: center; gap: 3px; font-family: inherit; background: linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light)); color: #1F1611; }
+/* Order tracking chip */
+.order-chip{
+  display:none; align-items:center; gap:6px;
+  padding:6px 12px; border-radius:20px;
+  font-size:11px; font-weight:800; cursor:pointer; border:none;
+  background:color-mix(in srgb, var(--coffee-gold) 15%, transparent);
+  color:var(--coffee-gold);
+}
+.order-chip.show{display:inline-flex;}
+.order-chip .dot{
+  width:8px; height:8px; border-radius:50%; background:var(--coffee-gold);
+  animation:pulseDot 1.6s infinite;
+}
+.order-chip.done{background:color-mix(in srgb, var(--success) 15%, transparent); color:var(--success);}
+.order-chip.done .dot{background:var(--success); animation:none;}
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.5;transform:scale(1.4);}}
 
-.sheet-backdrop { position: fixed; inset: 0; background: rgba(26,19,16,0.7); z-index: 60; opacity: 0; pointer-events: none; backdrop-filter: blur(6px); } .sheet-backdrop.open { opacity: 1; pointer-events: auto; } .bottom-sheet { position: fixed; inset-inline: 0; bottom: 0; max-height: 90vh; background: var(--bg-surface); border-radius: 28px 28px 0 0; z-index: 61; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; overflow: hidden; } .bottom-sheet.open { transform: translateY(0); } .sheet-handle { width: 40px; height: 4px; background: var(--border-strong); border-radius: 2px; margin: 10px auto 0; } .sheet-scroll { overflow-y: auto; flex: 1; } .sheet-footer { background: var(--bg-surface); border-top: 1px solid var(--border); padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; }
-.primary-btn { padding: 14px 20px; border-radius: 14px; border: none; background: linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium)); color: #FFF; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; }
-.toast-container { position: fixed; top: 80px; inset-inline-end: 16px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; } .toast { background: var(--coffee-dark); color: var(--bg-primary); padding: 12px 16px; border-radius: 14px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 10px; pointer-events: auto; max-width: 300px; box-shadow: var(--shadow-lg); }
+/* ============ MAIN ============ */
+.app-main{max-width:920px; margin:0 auto; padding:16px; width:100%;}
 
-.welcome-screen { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 8%, rgba(200,155,94,.12), transparent 26%), linear-gradient(180deg, #FBF7F1 0%, #F4EDE3 100%); } .welcome-screen.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .65s, visibility .65s; } .welcome-card { width: min(92vw, 560px); padding: 18px 26px 22px; text-align: center; }
-.welcome-logo-wrap { width: 154px; height: 154px; margin: 0 auto 24px; border-radius: 50%; display: grid; place-items: center; position: relative; } .welcome-logo-wrap img { width: 116px; height: 116px; object-fit: contain; position: relative; z-index: 2; }
-.welcome-title { margin: 0; color: #2B1D14; font-size: clamp(34px, 8vw, 52px); font-weight: 900; } .welcome-subtitle { margin: 14px auto 0; max-width: 420px; color: #6F4E37; font-size: 14px; line-height: 2; font-weight: 600; } .welcome-enter-btn { min-width: 230px; padding: 14px 28px; border-radius: 14px; color: #FFFDF9; background: #2B1D14; font-size: 14px; font-weight: 900; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 8px 20px rgba(43,29,20,.15); }
+/* ============ HERO SLIDER ============ */
+.hero{
+  position:relative; width:100%; height:360px;
+  background:radial-gradient(circle at 70% 20%, #3A2A20 0%, #1A1310 60%, #0F0A07 100%);
+  border-radius:24px; overflow:hidden; margin-bottom:20px;
+  box-shadow:var(--shadow-lg); border:1px solid var(--border);
+  isolation:isolate;
+}
+.hero::before{
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(circle at 15% 90%, rgba(200,155,94,.18) 0%, transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(200,155,94,.1) 0%, transparent 45%);
+  pointer-events:none; z-index:1;
+}
+.hero::after{
+  content:''; position:absolute; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='2' cy='2' r='0.6' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:1; opacity:.6;
+}
+.slide{
+  position:absolute; inset:0; opacity:0;
+  transition:opacity .7s var(--ease);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:32px 40px; z-index:2;
+}
+.slide.active{opacity:1; z-index:3;}
+.slide-left{flex:1; display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:3; max-width:60%;}
+.slide-badge{
+  background:linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light));
+  color:#1F1611; padding:5px 14px; border-radius:20px;
+  font-size:10px; font-weight:900; margin-bottom:14px;
+  display:inline-flex; align-items:center; gap:5px;
+  box-shadow:var(--shadow-gold); letter-spacing:.3px;
+}
+.slide-title{
+  font-size:clamp(20px, 5vw, 30px); font-weight:900; color:#FAF6F0;
+  margin:0 0 8px; line-height:1.15; letter-spacing:-.5px;
+}
+.slide-desc{
+  font-size:13px; color:#A89080; margin:0 0 20px; font-weight:600;
+  line-height:1.6; max-width:320px;
+}
+.slide-price-row{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+.slide-price{
+  font-size:22px; font-weight:900;
+  background:linear-gradient(135deg, var(--coffee-gold-light), var(--coffee-gold));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.slide-cta{
+  background:linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light));
+  color:#1F1611; padding:10px 20px; border-radius:12px;
+  font-weight:900; font-size:12px; border:none; cursor:pointer;
+  box-shadow:var(--shadow-gold); transition:.2s;
+}
+.slide-cta:hover{transform:translateY(-2px); box-shadow:0 12px 28px rgba(200,155,94,.35);}
+.slide-cta:active{transform:scale(.97);}
+.slide-right{
+  width:200px; height:200px; border-radius:50%; flex-shrink:0;
+  position:relative; z-index:2;
+  display:grid; place-items:center;
+}
+.slide-right::before{
+  content:''; position:absolute; inset:-8px; border-radius:50%;
+  background:conic-gradient(from 180deg, rgba(200,155,94,.6), rgba(200,155,94,0), rgba(200,155,94,.6));
+  animation:rotateGlow 8s linear infinite; filter:blur(12px);
+}
+@keyframes rotateGlow{ to{ transform:rotate(360deg); } }
+.slide-right img{
+  width:200px; height:200px; object-fit:cover; border-radius:50%;
+  border:3px solid rgba(200,155,94,.4);
+  box-shadow:0 20px 50px rgba(0,0,0,.6), inset 0 0 30px rgba(0,0,0,.3);
+  position:relative; z-index:1; background:#2B1D14;
+}
+.hero-arrow{
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:38px; height:38px; border-radius:50%;
+  background:rgba(0,0,0,.5); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.15); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; z-index:10; font-size:14px; transition:.2s;
+}
+.hero-arrow:hover{background:var(--coffee-gold); color:#1F1611; border-color:var(--coffee-gold);}
+.hero-arrow.prev{inset-inline-start:14px;}
+.hero-arrow.next{inset-inline-end:14px;}
+.hero-dots{
+  position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+  display:flex; gap:6px; z-index:10;
+}
+.hero-dot{
+  width:6px; height:6px; border-radius:3px;
+  background:rgba(255,255,255,.3); cursor:pointer;
+  transition:.35s var(--ease);
+}
+.hero-dot.active{width:22px; background:var(--coffee-gold);}
+@media(max-width:600px){
+  .hero{height:280px; border-radius:20px;}
+  .slide{padding:20px;}
+  .slide-right, .slide-right img{width:120px; height:120px;}
+  .slide-desc{font-size:12px;}
+}
 
-.branch-select-screen { position: fixed; inset: 0; z-index: 900; display: none; align-items: center; justify-content: center; background: var(--bg-primary); padding: 20px; } .branch-select-screen.show { display: flex; } .branch-select-card { width: min(92vw, 480px); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); } .branch-option { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-subtle); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; width: 100%; text-align: inherit; color: var(--text-primary); }
+/* ============ SEARCH + CATEGORIES ============ */
+.sticky-tools{
+  position:sticky; top:62px; z-index:40;
+  background:var(--bg-primary); padding:10px 0 12px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:12px;
+}
+.search-wrap{position:relative;}
+.search-input{
+  width:100%; padding:13px 16px 13px 46px;
+  background:var(--bg-surface); border:1.5px solid var(--border);
+  border-radius:14px; font-size:13px; color:var(--text-primary);
+  outline:none; font-family:inherit; font-weight:600;
+}
+html[dir="rtl"] .search-input{padding:13px 46px 13px 16px;}
+.search-input:focus{border-color:var(--coffee-gold); box-shadow:0 0 0 3px rgba(200,155,94,.12);}
+.search-icon{
+  position:absolute; top:50%; transform:translateY(-50%);
+  inset-inline-start:16px; color:var(--text-muted);
+  pointer-events:none; font-size:14px;
+}
+.search-clear{
+  position:absolute; top:50%; transform:translateY(-50%);
+  inset-inline-end:10px; width:26px; height:26px; border-radius:50%;
+  background:var(--bg-subtle); border:none; color:var(--text-secondary);
+  cursor:pointer; display:none; align-items:center; justify-content:center;
+  font-size:14px; font-weight:900;
+}
+.search-clear.show{display:flex;}
+.cat-row{
+  display:flex; overflow-x:auto; gap:8px; padding:10px 0 4px; scroll-behavior:smooth;
+}
+.cat-chip{
+  padding:9px 16px; border-radius:12px; font-size:12px; font-weight:800;
+  white-space:nowrap; cursor:pointer; border:1.5px solid var(--border);
+  background:var(--bg-surface); color:var(--text-secondary);
+  display:inline-flex; align-items:center; gap:6px;
+  transition:.2s;
+}
+.cat-chip:hover{border-color:var(--coffee-gold); color:var(--coffee-gold);}
+.cat-chip.active{
+  background:linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium));
+  color:#FAF6F0; border-color:var(--coffee-dark);
+  box-shadow:0 4px 12px rgba(43,29,20,.15);
+}
+html.dark .cat-chip.active{background:linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light)); color:#1F1611;}
+.cat-chip .count{
+  font-size:9px; padding:1px 6px; border-radius:6px;
+  background:color-mix(in srgb, var(--coffee-gold) 15%, transparent);
+  color:var(--coffee-gold); font-weight:900;
+}
+.cat-chip.active .count{background:rgba(255,255,255,.15); color:inherit;}
 
-#callWaiterBtn { display: none; position: fixed; bottom: 30px; inset-inline-start: 20px; z-index: 100; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #C89B5E, #E0BE85); color: #fff; border: none; box-shadow: 0 8px 20px rgba(200,155,94,0.4); font-size: 24px; cursor: pointer; align-items: center; justify-content: center; }
-#callWaiterBtn.pending { animation: pulseBtn 1.5s infinite; opacity: 0.7; pointer-events: none; }
-@keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(200,155,94,0.8); } 100% { transform: scale(1); } }
+/* ============ MENU GRID ============ */
+.menu-grid{
+  display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;
+}
+@media(min-width:700px){ .menu-grid{grid-template-columns:repeat(3, 1fr); gap:16px;} }
+@media(min-width:1000px){ .menu-grid{grid-template-columns:repeat(4, 1fr);} }
 
-#waiterDisplayScreen { position: fixed; inset: 0; background: #1A1310; color: #FAF6F0; z-index: 2000; display: none; flex-direction: column; align-items: center; padding: 30px 20px; overflow-y: auto; text-align: center; }
-#waiterDisplayScreen.show { display: flex; }
+.menu-card{
+  background:var(--bg-surface); border-radius:18px;
+  border:1px solid var(--border); overflow:hidden;
+  display:flex; flex-direction:column; position:relative;
+  cursor:pointer; transition:.25s var(--ease);
+}
+.menu-card:hover{
+  transform:translateY(-3px);
+  border-color:var(--coffee-gold);
+  box-shadow:var(--shadow-md);
+}
+.menu-card:active{transform:translateY(-1px) scale(.99);}
+.menu-card.out{opacity:.55; cursor:not-allowed; pointer-events:none;}
+.menu-card.out:hover{transform:none; box-shadow:none;}
+.card-img-wrap{
+  position:relative; width:100%; aspect-ratio:1/1;
+  background:var(--bg-subtle); overflow:hidden;
+}
+.card-img{width:100%; height:100%; object-fit:cover; transition:transform .5s var(--ease);}
+.menu-card:hover .card-img{transform:scale(1.06);}
+.card-img-wrap::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,.35) 0%, transparent 40%);
+  pointer-events:none;
+}
+.card-qty-badge{
+  position:absolute; top:10px; inset-inline-end:10px;
+  min-width:26px; height:26px; padding:0 8px; border-radius:13px;
+  background:linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light));
+  color:#1F1611; font-size:12px; font-weight:900;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:var(--shadow-gold); z-index:2;
+  border:2px solid var(--bg-surface);
+}
+.card-out-label{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.4); backdrop-filter:blur(2px);
+  color:#fff; font-weight:900; font-size:12px; letter-spacing:.5px;
+}
+.card-body{padding:12px 14px 14px; display:flex; flex-direction:column; flex:1; min-width:0;}
+.card-title{
+  font-size:13px; font-weight:900; color:var(--text-primary);
+  margin:0 0 2px; line-height:1.4;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; min-height:2.75em;
+}
+.card-desc{
+  font-size:10px; color:var(--text-muted); margin:0 0 10px;
+  line-height:1.4; overflow:hidden; text-overflow:ellipsis;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
+}
+.card-bottom{display:flex; justify-content:space-between; align-items:center; margin-top:auto; gap:8px;}
+.card-price{
+  font-size:15px; font-weight:900; color:var(--coffee-gold);
+  display:flex; align-items:baseline; gap:2px;
+}
+.card-price small{font-size:10px; font-weight:700; color:var(--text-muted);}
+.card-add{
+  width:34px; height:34px; border-radius:10px;
+  background:linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light));
+  color:#1F1611; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:900; line-height:1;
+  box-shadow:var(--shadow-gold); transition:.2s;
+}
+.card-add:hover{transform:scale(1.08);}
+.card-add:active{transform:scale(.94);}
+
+/* ============ SHEETS ============ */
+.backdrop{
+  position:fixed; inset:0; background:rgba(15,10,7,.6);
+  backdrop-filter:blur(6px); z-index:60;
+  opacity:0; pointer-events:none; transition:opacity .3s;
+}
+.backdrop.open{opacity:1; pointer-events:auto;}
+.sheet{
+  position:fixed; inset-inline:0; bottom:0;
+  max-height:92vh; background:var(--bg-surface);
+  border-radius:28px 28px 0 0; z-index:61;
+  transform:translateY(100%);
+  transition:transform .45s var(--ease);
+  display:flex; flex-direction:column; overflow:hidden;
+  box-shadow:0 -20px 60px rgba(0,0,0,.25);
+}
+.sheet.open{transform:translateY(0);}
+.sheet-handle{
+  width:44px; height:4px; background:var(--border-strong);
+  border-radius:2px; margin:10px auto 4px; flex-shrink:0;
+}
+.sheet-header{
+  padding:12px 20px 14px; border-bottom:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center; flex-shrink:0;
+}
+.sheet-title{font-size:16px; font-weight:900; margin:0;}
+.sheet-close{
+  width:34px; height:34px; border-radius:50%;
+  background:var(--bg-subtle); border:none; color:var(--text-secondary);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:16px; font-weight:900;
+}
+.sheet-close:hover{background:var(--border);}
+.sheet-body{overflow-y:auto; flex:1; padding:16px 20px;}
+.sheet-footer{
+  padding:14px 20px calc(14px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--border); background:var(--bg-surface);
+  display:flex; flex-direction:column; gap:10px; flex-shrink:0;
+}
+
+/* Item detail sheet */
+.item-hero{
+  width:100%; aspect-ratio:16/10; border-radius:20px;
+  overflow:hidden; background:var(--bg-subtle); margin-bottom:16px;
+  position:relative;
+}
+.item-hero img{width:100%; height:100%; object-fit:cover;}
+.item-name{font-size:22px; font-weight:900; margin:0 0 6px; letter-spacing:-.3px;}
+.item-price{font-size:20px; font-weight:900; color:var(--coffee-gold); margin-bottom:12px;}
+.item-desc{font-size:13px; color:var(--text-secondary); line-height:1.7; margin-bottom:18px;}
+.item-section-label{
+  font-size:11px; font-weight:800; color:var(--text-muted);
+  text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;
+}
+.qty-row{display:flex; align-items:center; gap:12px; margin-bottom:18px;}
+.qty-stepper{
+  display:inline-flex; align-items:center; gap:0;
+  background:var(--bg-subtle); border-radius:12px; padding:4px;
+}
+.qty-btn{
+  width:36px; height:36px; border-radius:10px;
+  background:var(--bg-surface); border:1px solid var(--border);
+  color:var(--text-primary); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:900;
+}
+.qty-btn:active{transform:scale(.92);}
+.qty-value{min-width:40px; text-align:center; font-weight:900; font-size:16px;}
+.item-note{
+  width:100%; min-height:56px; padding:12px 14px;
+  border-radius:12px; border:1.5px solid var(--border);
+  background:var(--bg-subtle); color:var(--text-primary);
+  font-family:inherit; font-size:13px; resize:vertical;
+  outline:none; margin-bottom:6px;
+}
+.item-note:focus{border-color:var(--coffee-gold);}
+.btn-primary{
+  width:100%; padding:16px; border-radius:14px; border:none;
+  background:linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium));
+  color:#FAF6F0; font-size:14px; font-weight:900;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  gap:8px; transition:.2s; box-shadow:0 4px 16px rgba(43,29,20,.2);
+}
+html.dark .btn-primary{background:linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light)); color:#1F1611; box-shadow:var(--shadow-gold);}
+.btn-primary:hover{transform:translateY(-1px);}
+.btn-primary:active{transform:scale(.98);}
+.btn-primary:disabled{opacity:.6; cursor:not-allowed; transform:none;}
+
+/* Cart items */
+.cart-row{
+  display:flex; justify-content:space-between; align-items:center;
+  background:var(--bg-subtle); padding:12px 14px; border-radius:14px;
+  gap:10px;
+}
+.cart-row-info{flex:1; min-width:0;}
+.cart-row-name{font-size:13px; font-weight:800; margin:0 0 2px;}
+.cart-row-note{font-size:10px; color:var(--text-muted); font-weight:600; margin-top:3px; font-style:italic;}
+.cart-row-price{font-size:12px; color:var(--coffee-gold); font-weight:900; margin-top:3px;}
+.cart-total-row{
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding:0 4px; margin-bottom:4px;
+}
+.cart-total-label{font-size:13px; font-weight:800; color:var(--text-secondary);}
+.cart-total-amount{font-size:22px; font-weight:900; color:var(--coffee-gold);}
+.empty-state{
+  text-align:center; padding:48px 20px; color:var(--text-muted);
+}
+.empty-state .icon{font-size:44px; margin-bottom:10px; opacity:.7;}
+.empty-state p{margin:0; font-size:13px; font-weight:700;}
+
+/* ============ WELCOME ============ */
+.welcome-screen{
+  position:fixed; inset:0; z-index:1000;
+  display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(200,155,94,.14), transparent 35%),
+    linear-gradient(180deg, #FBF7F1 0%, #F4EDE3 100%);
+  opacity:1; visibility:visible;
+  transition:opacity .6s var(--ease), visibility .6s;
+}
+html.dark .welcome-screen{background:
+    radial-gradient(circle at 50% 15%, rgba(212,165,106,.12), transparent 35%),
+    linear-gradient(180deg, #1A1310 0%, #0F0A07 100%);}
+.welcome-screen.hidden{opacity:0; visibility:hidden; pointer-events:none;}
+.welcome-card{width:min(92vw, 520px); padding:24px; text-align:center;}
+.welcome-logo{
+  width:140px; height:140px; margin:0 auto 28px;
+  border-radius:50%; display:grid; place-items:center;
+  position:relative;
+}
+.welcome-logo::before{
+  content:''; position:absolute; inset:-10px; border-radius:50%;
+  background:conic-gradient(from 180deg, var(--coffee-gold), transparent, var(--coffee-gold));
+  animation:rotateGlow 10s linear infinite; filter:blur(8px); opacity:.6;
+}
+.welcome-logo img{width:110px; height:110px; object-fit:contain; position:relative; z-index:1;}
+.welcome-title{
+  margin:0 0 6px; color:var(--coffee-dark);
+  font-size:clamp(34px, 8vw, 48px); font-weight:900; letter-spacing:-1px;
+}
+html.dark .welcome-title{color:var(--text-primary);}
+.welcome-sub{
+  margin:0 auto 28px; max-width:400px;
+  color:var(--text-secondary); font-size:14px; line-height:1.9; font-weight:600;
+}
+.welcome-btn{
+  min-width:220px; padding:16px 30px; border-radius:16px;
+  background:linear-gradient(135deg, var(--coffee-dark), var(--coffee-medium));
+  color:#FFFDF9; font-size:14px; font-weight:900; border:none;
+  cursor:pointer; box-shadow:0 12px 30px rgba(43,29,20,.2);
+  transition:.2s;
+}
+.welcome-btn:hover{transform:translateY(-2px); box-shadow:0 16px 36px rgba(43,29,20,.3);}
+.welcome-btn:active{transform:scale(.97);}
+
+/* ============ BRANCH SELECTOR ============ */
+.branch-screen{
+  position:fixed; inset:0; z-index:900;
+  display:none; align-items:center; justify-content:center;
+  background:var(--bg-primary); padding:20px;
+}
+.branch-screen.show{display:flex;}
+.branch-card{
+  width:min(94vw, 480px); background:var(--bg-surface);
+  border:1px solid var(--border); border-radius:24px; padding:32px 24px;
+  text-align:center; max-height:90vh; overflow-y:auto;
+  box-shadow:var(--shadow-lg);
+}
+.branch-card h2{margin:0 0 6px; font-size:20px; font-weight:900;}
+.branch-card p{margin:0 0 24px; color:var(--text-muted); font-size:12px; font-weight:600;}
+.branch-opt{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px; background:var(--bg-subtle);
+  border:1.5px solid var(--border); border-radius:14px;
+  margin-bottom:10px; cursor:pointer; font-family:inherit; width:100%;
+  color:var(--text-primary); transition:.2s; text-align:inherit;
+}
+.branch-opt:hover{border-color:var(--coffee-gold); background:color-mix(in srgb, var(--coffee-gold) 8%, var(--bg-subtle));}
+.branch-opt strong{font-size:14px; font-weight:900;}
+.branch-opt small{font-size:11px; color:var(--coffee-gold); font-weight:800; background:color-mix(in srgb, var(--coffee-gold) 12%, transparent); padding:2px 8px; border-radius:8px;}
+
+/* ============ TOAST ============ */
+.toast-wrap{
+  position:fixed; top:80px; inset-inline:0; z-index:300;
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  pointer-events:none; padding:0 16px;
+}
+.toast{
+  background:var(--coffee-dark); color:#FAF6F0;
+  padding:12px 18px; border-radius:14px;
+  font-size:12px; font-weight:700;
+  display:flex; align-items:center; gap:10px;
+  max-width:360px; box-shadow:var(--shadow-lg);
+  animation:slideDown .35s var(--ease);
+  pointer-events:auto;
+}
+html.dark .toast{background:var(--coffee-gold); color:#1F1611;}
+@keyframes slideDown{from{transform:translateY(-20px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+.toast.hide{animation:fadeOut .3s forwards;}
+@keyframes fadeOut{to{opacity:0; transform:translateY(-10px);}}
+
+/* ============ CALL WAITER ============ */
+.call-fab{
+  display:none; position:fixed; bottom:26px; inset-inline-start:20px; z-index:55;
+  width:58px; height:58px; border-radius:50%;
+  background:linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light));
+  color:#fff; border:none; cursor:pointer;
+  box-shadow:0 8px 24px rgba(200,155,94,.4);
+  font-size:26px; align-items:center; justify-content:center;
+  transition:.2s;
+}
+.call-fab:hover{transform:scale(1.06);}
+.call-fab:active{transform:scale(.94);}
+.call-fab.pending{
+  animation:pulseBtn 1.5s infinite;
+  opacity:.7; pointer-events:none;
+}
+@keyframes pulseBtn{
+  0%,100%{transform:scale(1); box-shadow:0 8px 24px rgba(200,155,94,.4);}
+  50%{transform:scale(1.08); box-shadow:0 0 28px rgba(200,155,94,.7);}
+}
+
+/* ============ WAITER DISPLAY ============ */
+.display-screen{
+  position:fixed; inset:0; z-index:2000;
+  background:radial-gradient(circle at center, #2B1D14 0%, #0F0A07 100%);
+  color:#FAF6F0; display:none; flex-direction:column; align-items:center;
+  padding:40px 20px; overflow-y:auto; text-align:center;
+}
+.display-screen.show{display:flex;}
+.display-screen h1{margin:0 0 4px; font-size:26px; font-weight:900;}
+.display-branch{color:var(--coffee-gold); font-size:13px; margin:0 0 24px; font-weight:700;}
+.display-section-title{
+  font-size:14px; font-weight:800; color:var(--coffee-gold);
+  margin-bottom:16px; letter-spacing:.5px;
+}
+.display-items{width:100%; max-width:460px; display:flex; flex-direction:column; gap:10px; margin-bottom:20px;}
+.display-item{
+  background:rgba(255,255,255,.04); border:1px solid rgba(200,155,94,.2);
+  border-radius:14px; padding:12px 16px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.display-total{
+  width:100%; max-width:460px;
+  background:rgba(200,155,94,.1); border:1.5px solid rgba(200,155,94,.3);
+  border-radius:16px; padding:18px;
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:20px;
+}
+.display-total span:first-child{font-size:16px; font-weight:900;}
+.display-total span:last-child{font-size:22px; font-weight:900; color:var(--coffee-gold);}
+.display-footer{font-size:12px; color:#A89080; margin-top:20px;}
+.display-close{
+  position:absolute; top:20px; inset-inline-start:20px;
+  width:42px; height:42px; border-radius:50%;
+  background:rgba(255,255,255,.08); border:none; color:#fff;
+  font-size:18px; cursor:pointer;
+}
+
+/* ============ LOADING ============ */
+.skeleton{
+  background:linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-surface) 50%, var(--bg-subtle) 75%);
+  background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:12px;
+}
+@keyframes shimmer{to{background-position:-200% 0;}}
+.skeleton-card{height:280px; border-radius:18px; border:1px solid var(--border);}
 </style>
 </head>
 <body>
 
-<button id="callWaiterBtn" onclick="callWaiter()" title="استدعاء الويتر">🛎️</button>
-
-<div id="waiterDisplayScreen">
-  <button onclick="closeWaiterDisplay()" style="position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.1); border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer;">✕</button>
-  <div style="font-size: 48px; margin-bottom: 8px;">☕</div>
-  <h1 style="margin: 0; font-size: 26px; font-weight: 900;">الغرباوي</h1>
-  <p id="displayBranchName" style="color: var(--coffee-gold); font-size: 13px; margin: 4px 0 20px; font-weight: 700;"></p>
-  <div style="width: 100%; max-width: 480px; border-bottom: 2px dashed rgba(255,255,255,0.2); margin-bottom: 20px;"></div>
-  <div style="font-size: 14px; font-weight: 800; margin-bottom: 16px; color: var(--coffee-gold);">📋 تفاصيل الطلب (طربيزة <span id="displayTableNum"></span>)</div>
-  <div id="displayItemsContainer" style="width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div>
-  <div style="width: 100%; max-width: 480px; background: #241B16; border: 1px solid rgba(200,155,94,0.3); border-radius: 16px; padding: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <span style="font-size: 16px; font-weight: 900;">الإجمالي</span>
-    <span id="displayTotal" style="font-size: 20px; font-weight: 900; color: var(--coffee-gold);">0 جنيه</span>
-  </div>
-  <div style="width: 100%; max-width: 480px; border-bottom: 2px dashed rgba(255,255,255,0.2); margin-bottom: 20px;"></div>
-  <div style="font-size: 12px; color: #A89080; display: flex; align-items: center; gap: 6px; justify-content: center;">
-    <span id="displayTime"></span> ⏰
-  </div>
-  <p style="margin-top: 14px; font-size: 13px; color: var(--coffee-gold); font-weight: 900;">☕ شكراً لطلبك</p>
-</div>
-
-<div id="branchSelectScreen" class="branch-select-screen">
-  <div class="branch-select-card">
-    <div style="font-size: 48px; margin-bottom: 8px;">☕</div>
-    <h2 id="branchSelectTitle">اختار الفرع</h2>
-    <p id="branchSelectSub" style="color: var(--text-muted); font-size: 13px;">اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح</p>
-    <div id="branchList" style="margin-top: 16px;"></div>
-  </div>
-</div>
-
+<!-- ============ WELCOME ============ -->
 <div id="welcomeScreen" class="welcome-screen">
   <div class="welcome-card">
-    <div class="welcome-logo-wrap"><img id="welcomeLogo" src="logo-01.png" alt="Al-Gharbawy" onerror="this.style.display='none';"></div>
-    <h1 class="welcome-title" id="welcomeTitle">أهلاً وسهلاً بيك</h1>
-    <p class="welcome-subtitle" id="welcomeSubtitle">منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.</p>
-    <div style="margin-top: 24px;"><button type="button" class="welcome-enter-btn" id="welcomeEnterBtn" onclick="enterWelcome()">تفضل على القائمة</button></div>
+    <div class="welcome-logo">
+      <img id="welcomeLogo" src="logo-01.png" alt="Al-Gharbawy" onerror="this.style.display='none';">
+    </div>
+    <h1 class="welcome-title" id="welcomeTitle">أهلاً وسهلاً</h1>
+    <p class="welcome-sub" id="welcomeSub">
+      منور الغرباوي ☕<br>
+      خد وقتك، استكشف المنيو، واختار اللي نفسك فيه براحتك.
+    </p>
+    <button class="welcome-btn" id="welcomeBtn" onclick="enterWelcome()">تفضل على القائمة</button>
   </div>
 </div>
 
-<div id="toastContainer" class="toast-container"></div>
+<!-- ============ BRANCH SELECTOR ============ -->
+<div id="branchScreen" class="branch-screen">
+  <div class="branch-card">
+    <div style="font-size:52px; margin-bottom:8px;">☕</div>
+    <h2 id="branchTitle">اختار الفرع</h2>
+    <p id="branchSub">اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح</p>
+    <div id="branchList"></div>
+  </div>
+</div>
 
+<!-- ============ TOAST ============ -->
+<div id="toastWrap" class="toast-wrap"></div>
+
+<!-- ============ HEADER ============ -->
 <header class="app-header">
-  <div style="max-width: 860px; margin: 0 auto; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-    <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-      <div style="width: 42px; height: 42px;"><img id="headerLogo" src="logo-01.png" alt="Al-Gharbawy" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none';"></div>
-      <div><h1 id="brandTitle" style="font-size: 14px; font-weight: 900; margin: 0;">Al-Gharbawy</h1><p id="brandSub" style="font-size: 10px; color: var(--text-muted); margin: 2px 0 0;">Digital Menu</p></div>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-logo">
+        <img id="headerLogo" src="logo-01.png" alt="Al-Gharbawy" onerror="this.style.display='none';">
+      </div>
+      <div class="brand-text">
+        <h1 id="brandTitle">الغرباوي</h1>
+        <button class="brand-branch" id="branchPill" onclick="showBranchSelector()">
+          <span>📍</span><span id="branchPillText">اختار الفرع</span>
+        </button>
+      </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 6px;">
-      <button onclick="openCartModal()" class="cart-btn-header">🛒 <span id="cartCountBadge" class="cart-badge" style="display: none;">0</span></button>
-      <button onclick="document.documentElement.classList.toggle('dark')" class="icon-btn" title="تبديل المظهر">🌙</button>
-      <button onclick="toggleLanguage()" class="icon-btn"><span id="langBtnText" style="font-size: 12px; font-weight: 900;">EN</span></button>
+    <div class="header-actions">
+      <button class="order-chip" id="orderChip" onclick="openCartModal()">
+        <span class="dot"></span>
+        <span id="orderChipText">—</span>
+      </button>
+      <button class="icon-btn" onclick="toggleDark()" title="الوضع الليلي">🌙</button>
+      <button class="icon-btn" onclick="toggleLang()"><span id="langText" style="font-size:12px; font-weight:900;">EN</span></button>
+      <button class="cart-btn" onclick="openCartModal()">
+        🛒
+        <span id="cartBadge" class="cart-badge" style="display:none;">0</span>
+      </button>
     </div>
   </div>
 </header>
 
+<!-- ============ MAIN ============ -->
 <main class="app-main">
-  <!-- السلايدر الفخم والواسع -->
-  <div id="ultraSlider" class="ultra-hero-slider" style="display: none;">
-    <button class="ultra-arrow prev" onclick="moveSlide(-1)">❮</button>
-    <button class="ultra-arrow next" onclick="moveSlide(1)">❯</button>
-    <div id="ultraSlidesContainer"></div>
-    <div class="ultra-dots" id="ultraDotsContainer"></div>
+  <div id="hero" class="hero" style="display:none;">
+    <button class="hero-arrow prev" onclick="moveSlide(-1)">❮</button>
+    <button class="hero-arrow next" onclick="moveSlide(1)">❯</button>
+    <div id="slidesWrap"></div>
+    <div class="hero-dots" id="heroDots"></div>
   </div>
 
-  <div style="position: sticky; top: 62px; background: var(--bg-primary); padding: 12px 0; z-index: 40;">
-    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" oninput="filterMenu()" placeholder="ابحث في القائمة..." class="search-input">
-      </div>
+  <div class="sticky-tools">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="searchInput" class="search-input" type="text" placeholder="ابحث في القائمة..." oninput="onSearch()">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
     </div>
-    <div id="categoryTabs" class="no-scrollbar" style="display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px;"></div>
+    <div id="catRow" class="cat-row no-scrollbar"></div>
   </div>
-  <div id="customerMenuGrid" class="menu-grid"></div>
+
+  <div id="menuGrid" class="menu-grid">
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+  </div>
 </main>
 
-<div id="cartBackdrop" class="sheet-backdrop" onclick="closeCartModal()"></div>
-<div id="cartSheet" class="bottom-sheet">
+<!-- ============ ITEM SHEET ============ -->
+<div id="itemBackdrop" class="backdrop" onclick="closeItemSheet()"></div>
+<div id="itemSheet" class="sheet" role="dialog" aria-label="تفاصيل الصنف">
   <div class="sheet-handle"></div>
-  <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-    <h2 id="cartModalTitle" style="font-size: 15px; font-weight: 900; margin: 0;">📋 طلباتي الحالية</h2>
-    <button onclick="closeCartModal()" class="icon-btn" style="width: 32px; height: 32px;">✕</button>
+  <div class="sheet-body" id="itemBody"></div>
+  <div class="sheet-footer" id="itemFooter"></div>
+</div>
+
+<!-- ============ CART SHEET ============ -->
+<div id="cartBackdrop" class="backdrop" onclick="closeCartModal()"></div>
+<div id="cartSheet" class="sheet" role="dialog" aria-label="السلة">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <h2 class="sheet-title" id="cartTitle">📋 طلباتي</h2>
+    <button class="sheet-close" onclick="closeCartModal()">✕</button>
   </div>
-  <div class="sheet-scroll" style="padding: 16px 20px;"><div id="cartItemsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div></div>
+  <div class="sheet-body" id="cartBody"></div>
   <div class="sheet-footer" id="cartFooter"></div>
 </div>
 
+<!-- ============ WAITER DISPLAY ============ -->
+<div id="displayScreen" class="display-screen">
+  <button class="display-close" onclick="closeDisplay()">✕</button>
+  <div style="font-size:48px; margin-bottom:8px;">☕</div>
+  <h1>الغرباوي</h1>
+  <p id="displayBranch" class="display-branch"></p>
+  <div style="width:100%; max-width:460px; border-bottom:1.5px dashed rgba(255,255,255,.15); margin-bottom:20px;"></div>
+  <div class="display-section-title">📋 طلب طربيزة <span id="displayTable"></span></div>
+  <div id="displayItems" class="display-items"></div>
+  <div class="display-total"><span>الإجمالي</span><span id="displayTotal">0 ج</span></div>
+  <div style="width:100%; max-width:460px; border-bottom:1.5px dashed rgba(255,255,255,.15); margin-bottom:16px;"></div>
+  <div class="display-footer" id="displayTime"></div>
+  <p style="margin-top:18px; font-size:13px; color:var(--coffee-gold); font-weight:900;">☕ شكراً لطلبك</p>
+</div>
+
+<!-- ============ CALL WAITER FAB ============ -->
+<button id="callWaiterBtn" class="call-fab" onclick="callWaiter()" title="استدعاء الويتر">🛎️</button>
+
 <script type="module" src="firebase-config.js"></script>
 <script>
+/* =====================================================
+   STATE
+===================================================== */
 let currentLang = localStorage.getItem('gharbaoui_lang') || 'ar';
-let cart = JSON.parse(localStorage.getItem('gharbaoui_cart')) || [];
-let activeCategory = 'all', allCategories = [], allItems = [], allBranches = [], allOffers = [];
-let currentBranch = null, currentMenuId = null, currentTable = null;
-let activeWaiterCallId = null;
-let sliderInterval = null, currentSlideIndex = 0, slidesDataCount = 0;
+let cart = safeParse(localStorage.getItem('gharbaoui_cart'), []);
+let activeCategory = 'all';
+let allCategories = [], allItems = [], allBranches = [], allOffers = [];
+let currentBranch = null, currentTable = null;
+let myOrders = safeParse(localStorage.getItem('gharbaoui_my_orders'), []);
+let watchedOrders = {}; // id -> {status, table, total, items, createdAt}
+let unsubOrders = null;
 let audioCtx = null;
+let sliderInterval = null, slideIndex = 0, slideCount = 0;
+let itemSheetState = { item: null, qty: 1, note: '' };
 
-function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+function safeParse(s, fb){ try { const v = JSON.parse(s); return v == null ? fb : v; } catch { return fb; } }
+function $(id){ return document.getElementById(id); }
+
+/* =====================================================
+   AUDIO
+===================================================== */
+function initAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
 }
 document.addEventListener('click', initAudio, { once: true });
 document.addEventListener('touchstart', initAudio, { once: true });
 
-function playClientBellSound() {
-  try {
-    initAudio(); if (!audioCtx) return;
-    [0, 0.2].forEach(delay => {
-      let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+function playBell(){
+  try{
+    initAudio(); if(!audioCtx) return;
+    [0, .2].forEach(delay => {
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(800, audioCtx.currentTime + delay);
-      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + delay + 0.15);
-      gain.gain.setValueAtTime(0.8, audioCtx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.35);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + delay + .15);
+      gain.gain.setValueAtTime(.7, audioCtx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + delay + .35);
       osc.connect(gain); gain.connect(audioCtx.destination);
       osc.start(audioCtx.currentTime + delay);
-      osc.stop(audioCtx.currentTime + delay + 0.35);
+      osc.stop(audioCtx.currentTime + delay + .35);
     });
-  } catch(e) {}
+  }catch(e){}
 }
 
-function onFbReady(cb) { if (window.FB_READY) cb(); else window.addEventListener('fb-ready', cb, { once: true }); }
-
-function showToast(msg, icon = '✅') {
-  const c = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.innerHTML = `<span style="font-size:16px">${icon}</span><span>${msg}</span>`;
-  c.appendChild(t);
-  setTimeout(() => t.remove(), 4000);
+/* =====================================================
+   TOAST
+===================================================== */
+function toast(msg, icon = '✅'){
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<span style="font-size:16px">${icon}</span><span>${msg}</span>`;
+  $('toastWrap').appendChild(el);
+  setTimeout(() => { el.classList.add('hide'); setTimeout(() => el.remove(), 320); }, 3200);
 }
 
+/* =====================================================
+   INIT
+===================================================== */
 window.addEventListener('DOMContentLoaded', () => {
   readTableFromUrl();
-  applyLanguage();
+  applyLang();
   updateCartBadge();
-  onFbReady(() => { subscribeAll(); });
+  maybeShowWelcome();
+  onFbReady(() => subscribeAll());
 });
 
-function toggleLanguage() {
-  currentLang = currentLang === 'ar' ? 'en' : 'ar';
-  localStorage.setItem('gharbaoui_lang', currentLang);
-  applyLanguage();
-  renderCustomerMenu();
-  buildUltraSlider();
+function onFbReady(cb){
+  if(window.FB_READY) cb();
+  else window.addEventListener('fb-ready', cb, { once: true });
 }
 
-function applyLanguage() {
-  const root = document.getElementById('htmlRoot');
+function maybeShowWelcome(){
+  const seen = localStorage.getItem('gharbaoui_welcomed');
+  if(seen) $('welcomeScreen').classList.add('hidden');
+}
+function enterWelcome(){
+  localStorage.setItem('gharbaoui_welcomed', '1');
+  $('welcomeScreen').classList.add('hidden');
+  if(!currentBranch) showBranchSelector();
+}
+
+function readTableFromUrl(){
+  const p = new URLSearchParams(location.search);
+  const t = p.get('table');
+  if(t){ currentTable = t; localStorage.setItem('gharbaoui_table', t); }
+  else currentTable = localStorage.getItem('gharbaoui_table') || null;
+}
+
+/* =====================================================
+   LANG / DARK
+===================================================== */
+function toggleLang(){
+  currentLang = currentLang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('gharbaoui_lang', currentLang);
+  applyLang();
+  renderMenu();
+  renderCategories();
+  buildSlider();
+  renderCartBody();
+}
+
+function applyLang(){
+  const root = $('htmlRoot');
   root.setAttribute('lang', currentLang);
   root.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
-  document.getElementById('langBtnText').innerText = currentLang === 'ar' ? 'EN' : 'AR';
-  
-  if (currentLang === 'en') {
-    document.getElementById('welcomeTitle').innerText = 'Welcome';
-    document.getElementById('welcomeSubtitle').innerHTML = 'Welcome to Al-Gharbawy ☕<br>Take your time and explore our menu.';
-    document.getElementById('welcomeEnterBtn').innerText = 'Explore Menu';
-    document.getElementById('branchSelectTitle').innerText = 'Select Branch';
-    document.getElementById('branchSelectSub').innerText = 'Choose your current branch to view the correct menu';
-    document.getElementById('searchInput').placeholder = 'Search menu...';
-    document.getElementById('cartModalTitle').innerText = '📋 Current Orders';
+  $('langText').innerText = currentLang === 'ar' ? 'EN' : 'AR';
+  $('searchInput').placeholder = currentLang === 'ar' ? 'ابحث في القائمة...' : 'Search menu...';
+  $('cartTitle').innerText = currentLang === 'ar' ? '📋 طلباتي' : '📋 My Orders';
+  if(currentLang === 'en'){
+    $('welcomeTitle').innerText = 'Welcome';
+    $('welcomeSub').innerHTML = 'Welcome to Al-Gharbawy ☕<br>Take your time, explore our menu.';
+    $('welcomeBtn').innerText = 'Explore Menu';
+    $('branchTitle').innerText = 'Select Branch';
+    $('branchSub').innerText = 'Choose your current branch to see the right menu';
+    $('brandTitle').innerText = 'Al-Gharbawy';
   } else {
-    document.getElementById('welcomeTitle').innerText = 'أهلاً وسهلاً بيك';
-    document.getElementById('welcomeSubtitle').innerHTML = 'منور الغرباوي ☕<br>اتفضل خد وقتك، شوف اللي نفسك فيه واختار براحتك.';
-    document.getElementById('welcomeEnterBtn').innerText = 'تفضل على القائمة';
-    document.getElementById('branchSelectTitle').innerText = 'اختار الفرع';
-    document.getElementById('branchSelectSub').innerText = 'اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح';
-    document.getElementById('searchInput').placeholder = 'ابحث في القائمة...';
-    document.getElementById('cartModalTitle').innerText = '📋 طلباتي الحالية';
+    $('welcomeTitle').innerText = 'أهلاً وسهلاً';
+    $('welcomeSub').innerHTML = 'منور الغرباوي ☕<br>خد وقتك، استكشف المنيو، واختار اللي نفسك فيه براحتك.';
+    $('welcomeBtn').innerText = 'تفضل على القائمة';
+    $('branchTitle').innerText = 'اختار الفرع';
+    $('branchSub').innerText = 'اختار الفرع اللي إنت فيه عشان تشوف المنيو الصحيح';
+    $('brandTitle').innerText = 'الغرباوي';
   }
 }
 
-function readTableFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const t = params.get('table');
-  if (t) { currentTable = t; localStorage.setItem('gharbaoui_table', t); }
-  else { currentTable = localStorage.getItem('gharbaoui_table') || null; }
+function toggleDark(){
+  document.documentElement.classList.toggle('dark');
 }
 
-function subscribeAll() {
-  const { db, collection, onSnapshot, query, where, doc } = window.FB;
-  
+/* =====================================================
+   FIREBASE SUBSCRIPTIONS
+===================================================== */
+function subscribeAll(){
+  const { db, collection, onSnapshot, doc } = window.FB;
+
+  // Features (call waiter toggle)
   onSnapshot(doc(db, 'settings', 'features'), (snap) => {
-    if (snap.exists() && snap.data().callWaiter) { 
-      document.getElementById('callWaiterBtn').style.display = 'flex'; 
-    } else { 
-      document.getElementById('callWaiterBtn').style.display = 'none'; 
+    if(snap.exists() && snap.data().callWaiter){
+      $('callWaiterBtn').style.display = 'flex';
+    } else {
+      $('callWaiterBtn').style.display = 'none';
     }
   });
 
   onSnapshot(collection(db, 'branches'), (snap) => {
     allBranches = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.active !== false);
-    checkBranchFromUrl();
+    const saved = localStorage.getItem('gharbaoui_branch');
+    const urlBranch = new URLSearchParams(location.search).get('branch');
+    let chosen = null;
+    if(urlBranch) chosen = allBranches.find(b => b.code === urlBranch);
+    else if(saved) chosen = allBranches.find(b => b.id === saved);
+    if(chosen) selectBranch(chosen, false);
+    else if(!currentBranch) showBranchSelector();
   });
+
   onSnapshot(collection(db, 'menu'), (snap) => {
     allItems = snap.docs.map(d => ({ ...d.data(), id: Number(d.id) }));
-    renderCustomerMenu();
-    buildUltraSlider();
+    renderMenu();
+    buildSlider();
   });
+
   onSnapshot(collection(db, 'categories'), (snap) => {
     allCategories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderCustomerMenu();
+    renderCategories();
+    renderMenu();
   });
+
   onSnapshot(collection(db, 'offers'), (snap) => {
     allOffers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    buildUltraSlider();
+    buildSlider();
+  });
+}
+
+function subscribeOrders(){
+  if(unsubOrders){ unsubOrders(); unsubOrders = null; }
+  if(!currentBranch || !currentTable) return;
+  const { db, collection, query, where, onSnapshot } = window.FB;
+
+  const q = query(
+    collection(db, 'orders'),
+    where('branchId', '==', currentBranch.id),
+    where('table', '==', currentTable)
+  );
+
+  unsubOrders = onSnapshot(q, (snap) => {
+    snap.docChanges().forEach(ch => {
+      const data = ch.doc.data();
+      const id = ch.doc.id;
+      // Track order data in watchedOrders
+      watchedOrders[id] = { id, ...data };
+
+      // Only notify for orders placed from this device
+      const mine = myOrders.find(o => o.id === id);
+      if(mine && ch.type === 'modified'){
+        if(data.status === 'preparing'){
+          playBell();
+          toast(currentLang === 'ar'
+            ? `🔥 طلبك على طربيزة ${currentTable} بيتحضر دلوقتي...`
+            : `🔥 Your order for table ${currentTable} is being prepared...`, '👨‍🍳');
+        } else if(data.status === 'done'){
+          playBell();
+          toast(currentLang === 'ar'
+            ? `🎉 طلبك جاهز، جايلك حالاً!`
+            : `🎉 Your order is ready!`, '☕');
+        }
+      }
+    });
+    updateOrderChip();
+  });
+}
+
+/* =====================================================
+   BRANCH
+===================================================== */
+function showBranchSelector(){
+  $('branchScreen').classList.add('show');
+  $('branchList').innerHTML = allBranches.length
+    ? allBranches.map(b => `
+        <button class="branch-opt" onclick="selectBranchById('${b.id}')">
+          <strong>${currentLang === 'ar' ? b.nameAr : (b.nameEn || b.nameAr)}</strong>
+          <small>${b.code || ''}</small>
+        </button>
+      `).join('')
+    : `<p style="color:var(--text-muted); font-size:13px;">لا توجد فروع متاحة</p>`;
+}
+
+function selectBranchById(id){ selectBranch(allBranches.find(b => b.id === id)); }
+
+function selectBranch(branch, fromUser = true){
+  if(!branch) return;
+  currentBranch = branch;
+  localStorage.setItem('gharbaoui_branch', branch.id);
+  $('branchScreen').classList.remove('show');
+  $('branchPillText').innerText = currentLang === 'ar' ? branch.nameAr : (branch.nameEn || branch.nameAr);
+  $('displayBranch').innerText = branch.nameAr || '';
+  subscribeOrders();
+  renderCategories();
+  renderMenu();
+  buildSlider();
+}
+
+/* =====================================================
+   PRICE / STOCK HELPERS
+===================================================== */
+function getBranchItems(){
+  if(!currentBranch) return [];
+  return allItems.filter(i => i.menuId === currentBranch.menuId);
+}
+function getBranchCategories(){
+  if(!currentBranch) return [];
+  return allCategories.filter(c => c.menuId === currentBranch.menuId && c.active !== false);
+}
+
+// ✅ FIX: override keyed by item.id, not branch.id
+function getItemPrice(item){
+  if(!currentBranch) return Number(item.price) || 0;
+  const ov = currentBranch.priceOverrides || {};
+  const v = ov[item.id];
+  if(v == null) return Number(item.price) || 0;
+  if(typeof v === 'object' && v.price != null) return Number(v.price);
+  return Number(v);
+}
+
+function isItemAvailable(item){
+  if(item.inStock === false) return false;
+  if(!currentBranch) return true;
+  const ov = currentBranch.stockOverrides || {};
+  if(ov[item.id] === false) return false;
+  return true;
+}
+
+function itemName(item){
+  return currentLang === 'ar' ? item.nameAr : (item.nameEn || item.nameAr);
+}
+function itemDesc(item){
+  return currentLang === 'ar' ? (item.descAr || '') : (item.descEn || item.descAr || '');
+}
+
+/* =====================================================
+   MENU RENDER
+===================================================== */
+function renderCategories(){
+  const items = getBranchItems();
+  const cats = getBranchCategories();
+  const allLabel = currentLang === 'ar' ? 'الكل' : 'All';
+  let html = `<button class="cat-chip ${activeCategory === 'all' ? 'active' : ''}" onclick="setCategory('all')">${allLabel} <span class="count">${items.length}</span></button>`;
+  cats.forEach(c => {
+    const n = items.filter(i => i.categoryId === c.id).length;
+    const name = currentLang === 'ar' ? c.nameAr : (c.nameEn || c.nameAr);
+    html += `<button class="cat-chip ${activeCategory === c.id ? 'active' : ''}" onclick="setCategory('${c.id}')">${name} <span class="count">${n}</span></button>`;
+  });
+  $('catRow').innerHTML = html;
+}
+
+function setCategory(id){
+  activeCategory = id;
+  renderCategories();
+  renderMenu();
+}
+
+function renderMenu(){
+  if(!currentBranch) return;
+  const q = ($('searchInput').value || '').toLowerCase().trim();
+  const items = getBranchItems();
+  let filtered = items.filter(i => {
+    if(activeCategory !== 'all' && i.categoryId !== activeCategory) return false;
+    if(!q) return true;
+    const na = (i.nameAr || '').toLowerCase();
+    const ne = (i.nameEn || '').toLowerCase();
+    return na.includes(q) || ne.includes(q);
   });
 
-  if (currentTable) {
-    onSnapshot(query(collection(db, 'orders'), where('table', '==', currentTable)), (snap) => {
-      snap.docChanges().forEach(ch => {
-        if (ch.type === 'modified' || ch.type === 'added') {
-          const data = ch.doc.data();
-          if (data.status === 'preparing') {
-            playClientBellSound();
-            showToast(currentLang === 'ar' ? `🔥 جاري تحضير طلبك الآن لطربيزة ${currentTable}...` : `🔥 Your order for table ${currentTable} is being prepared...`, '👨‍🍳');
-          } else if (data.status === 'done') {
-            playClientBellSound();
-            showToast(currentLang === 'ar' ? `🎉 أوردر طربيزة ${currentTable} خلص وجايلك حالاً!` : `🎉 Your order for table ${currentTable} is ready!`, '☕');
-          }
-        }
-      });
-    });
-  }
-}
-
-function checkBranchFromUrl() {
-  if (!allBranches.length) return;
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('branch');
-  if (code) { const b = allBranches.find(x => x.code === code); if (b) { selectBranch(b); return; } }
-  showBranchSelector();
-}
-
-function showBranchSelector() {
-  document.getElementById('branchSelectScreen').classList.add('show');
-  document.getElementById('branchList').innerHTML = allBranches.map(b => `<button class="branch-option" onclick="selectBranchById('${b.id}')"><strong>${currentLang === 'ar' ? b.nameAr : (b.nameEn || b.nameAr)}</strong><small>${b.code}</small></button>`).join('');
-}
-function selectBranchById(id) { selectBranch(allBranches.find(x => x.id === id)); }
-function selectBranch(branch) {
-  currentBranch = branch; currentMenuId = branch.menuId;
-  document.getElementById('branchSelectScreen').classList.remove('show');
-  renderCustomerMenu();
-  buildUltraSlider();
-}
-
-/* بناء السلايدر الفخم والواسع (عروض أو مشروبات عشوائية) */
-function buildUltraSlider() {
-  const sliderEl = document.getElementById('ultraSlider');
-  const slidesContainer = document.getElementById('ultraSlidesContainer');
-  const dotsContainer = document.getElementById('ultraDotsContainer');
-
-  if (!currentBranch) {
-    sliderEl.style.display = 'none';
+  const grid = $('menuGrid');
+  if(!filtered.length){
+    grid.innerHTML = `
+      <div style="grid-column:1/-1">
+        <div class="empty-state">
+          <div class="icon">🔍</div>
+          <p>${currentLang === 'ar' ? 'لا توجد نتائج مطابقة' : 'No results found'}</p>
+        </div>
+      </div>
+    `;
     return;
   }
 
-  let slidesData = allOffers.filter(o => o.active !== false && (!o.branchId || o.branchId === currentBranch.id));
+  grid.innerHTML = filtered.map(item => {
+    const available = isItemAvailable(item);
+    const inCartQty = cart.filter(c => c.id === item.id).reduce((s, c) => s + c.qty, 0);
+    const price = getItemPrice(item);
+    const name = itemName(item);
+    const desc = itemDesc(item);
+    return `
+      <div class="menu-card ${available ? '' : 'out'}" onclick="openItemSheet(${item.id})">
+        <div class="card-img-wrap">
+          <img class="card-img" src="${item.image || ''}" loading="lazy" onerror="this.style.display='none';">
+          ${inCartQty > 0 ? `<div class="card-qty-badge">${inCartQty}</div>` : ''}
+          ${available ? '' : `<div class="card-out-label">${currentLang === 'ar' ? 'نفد' : 'Sold out'}</div>`}
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">${name}</h3>
+          ${desc ? `<p class="card-desc">${desc}</p>` : ''}
+          <div class="card-bottom">
+            <span class="card-price">${price}<small>ج</small></span>
+            ${available ? `<button class="card-add" onclick="event.stopPropagation(); quickAdd(${item.id})" aria-label="إضافة">+</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
 
-  if (!slidesData.length) {
-    const branchItems = getBranchItems().filter(i => i.inStock !== false);
-    const shuffled = [...branchItems].sort(() => 0.5 - Math.random());
-    slidesData = shuffled.slice(0, 5).map(item => ({
-      image: item.image,
-      titleAr: item.nameAr,
-      titleEn: item.nameEn || item.nameAr,
-      descAr: item.descAr || (currentLang === 'ar' ? 'جرب طعمنا المميز اليوم' : 'Try our special taste today'),
-      descEn: item.descEn || 'Try our special taste today',
-      price: getItemPrice(item),
-      isRandomItem: true
+function onSearch(){
+  const v = $('searchInput').value;
+  $('searchClear').classList.toggle('show', v.length > 0);
+  renderMenu();
+}
+function clearSearch(){
+  $('searchInput').value = '';
+  $('searchClear').classList.remove('show');
+  renderMenu();
+}
+
+/* =====================================================
+   HERO SLIDER
+===================================================== */
+function buildSlider(){
+  if(!currentBranch){ $('hero').style.display = 'none'; return; }
+
+  let slides = allOffers.filter(o =>
+    o.active !== false && (!o.branchId || o.branchId === currentBranch.id)
+  );
+
+  if(!slides.length){
+    const items = getBranchItems().filter(isItemAvailable);
+    const shuffled = [...items].sort(() => Math.random() - .5);
+    slides = shuffled.slice(0, 5).map(i => ({
+      image: i.image,
+      titleAr: i.nameAr, titleEn: i.nameEn || i.nameAr,
+      descAr: i.descAr || (currentLang === 'ar' ? 'جرب طعمنا المميز النهاردة' : 'Try our signature taste'),
+      descEn: i.descEn || 'Try our signature taste',
+      price: getItemPrice(i),
+      isFeatured: true
     }));
   }
 
-  if (!slidesData.length) {
-    sliderEl.style.display = 'none';
-    return;
-  }
+  if(!slides.length){ $('hero').style.display = 'none'; return; }
 
-  slidesDataCount = slidesData.length;
-  sliderEl.style.display = 'block';
-  if (sliderInterval) clearInterval(sliderInterval);
+  slideCount = slides.length;
+  slideIndex = 0;
+  $('hero').style.display = 'block';
 
-  slidesContainer.innerHTML = slidesData.map((slide, idx) => {
-    const title = currentLang === 'ar' ? (slide.titleAr || '') : (slide.titleEn || slide.titleAr || '');
-    const desc = currentLang === 'ar' ? (slide.descAr || '') : (slide.descEn || slide.descAr || '');
-    const badgeText = slide.isRandomItem ? (currentLang === 'ar' ? '⭐ مميز لأجلك' : '⭐ Featured') : (currentLang === 'ar' ? '🔥 عرض خاص' : '🔥 Special Offer');
-    const detailsText = currentLang === 'ar' ? 'التفاصيل' : 'Details';
-    
+  $('slidesWrap').innerHTML = slides.map((s, i) => {
+    const t = currentLang === 'ar' ? (s.titleAr || '') : (s.titleEn || s.titleAr || '');
+    const d = currentLang === 'ar' ? (s.descAr || '') : (s.descEn || s.descAr || '');
+    const badge = s.isFeatured
+      ? (currentLang === 'ar' ? '⭐ مميز' : '⭐ Featured')
+      : (currentLang === 'ar' ? '🔥 عرض خاص' : '🔥 Special');
+    const ctaText = currentLang === 'ar' ? 'اطلب دلوقتي' : 'Order Now';
     return `
-      <div class="ultra-slide ${idx === 0 ? 'active' : ''}" data-index="${idx}">
-        <div class="ultra-slide-left">
-          <span class="ultra-badge">🔥 ${badgeText}</span>
-          <h2 class="ultra-title">${title}</h2>
-          <p class="ultra-desc">${desc}</p>
-          <div class="ultra-price-row">
-            ${slide.price ? `<div class="ultra-price">${slide.price} جنيه</div>` : ''}
-            <button class="ultra-btn" onclick="openCartModal()">${detailsText}</button>
+      <div class="slide ${i === 0 ? 'active' : ''}" data-idx="${i}">
+        <div class="slide-left">
+          <span class="slide-badge">${badge}</span>
+          <h2 class="slide-title">${t}</h2>
+          ${d ? `<p class="slide-desc">${d}</p>` : ''}
+          <div class="slide-price-row">
+            ${s.price ? `<span class="slide-price">${s.price} ج</span>` : ''}
+            <button class="slide-cta" onclick="openCartModal()">${ctaText}</button>
           </div>
         </div>
-        <div class="ultra-slide-right">
-          <img src="${slide.image || ''}" onerror="this.style.display='none'">
+        <div class="slide-right">
+          <img src="${s.image || ''}" onerror="this.style.display='none';">
         </div>
       </div>
     `;
   }).join('');
 
-  dotsContainer.innerHTML = slidesData.map((_, idx) => `
-    <span class="ultra-dot ${idx === 0 ? 'active' : ''}" onclick="goToSlide(${idx})"></span>
+  $('heroDots').innerHTML = slides.map((_, i) =>
+    `<span class="hero-dot ${i === 0 ? 'active' : ''}" onclick="goSlide(${i})"></span>`
+  ).join('');
+
+  if(sliderInterval) clearInterval(sliderInterval);
+  if(slideCount > 1){
+    sliderInterval = setInterval(() => {
+      slideIndex = (slideIndex + 1) % slideCount;
+      updateSlide();
+    }, 5500);
+  }
+}
+
+function updateSlide(){
+  document.querySelectorAll('.slide').forEach((el, i) => el.classList.toggle('active', i === slideIndex));
+  document.querySelectorAll('.hero-dot').forEach((el, i) => el.classList.toggle('active', i === slideIndex));
+}
+
+function moveSlide(dir){
+  if(slideCount <= 1) return;
+  slideIndex = (slideIndex + dir + slideCount) % slideCount;
+  updateSlide();
+  resetSliderTimer();
+}
+function goSlide(i){
+  slideIndex = i; updateSlide(); resetSliderTimer();
+}
+function resetSliderTimer(){
+  if(sliderInterval) clearInterval(sliderInterval);
+  if(slideCount > 1){
+    sliderInterval = setInterval(() => {
+      slideIndex = (slideIndex + 1) % slideCount;
+      updateSlide();
+    }, 5500);
+  }
+}
+
+/* =====================================================
+   ITEM DETAIL SHEET
+===================================================== */
+function openItemSheet(id){
+  const item = allItems.find(i => i.id === id);
+  if(!item || !isItemAvailable(item)) return;
+  itemSheetState = { item, qty: 1, note: '' };
+  renderItemSheet();
+  $('itemBackdrop').classList.add('open');
+  $('itemSheet').classList.add('open');
+}
+function closeItemSheet(){
+  $('itemBackdrop').classList.remove('open');
+  $('itemSheet').classList.remove('open');
+}
+
+function renderItemSheet(){
+  const { item, qty, note } = itemSheetState;
+  const price = getItemPrice(item);
+  const name = itemName(item);
+  const desc = itemDesc(item);
+  const total = price * qty;
+
+  $('itemBody').innerHTML = `
+    <div class="item-hero">
+      <img src="${item.image || ''}" onerror="this.style.display='none';">
+    </div>
+    <h2 class="item-name">${name}</h2>
+    <div class="item-price">${price} ج</div>
+    ${desc ? `<p class="item-desc">${desc}</p>` : ''}
+    <div class="item-section-label">${currentLang === 'ar' ? 'الكمية' : 'Quantity'}</div>
+    <div class="qty-row">
+      <div class="qty-stepper">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-value">${qty}</span>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+    <div class="item-section-label">${currentLang === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (optional)'}</div>
+    <textarea class="item-note" id="itemNoteInput" placeholder="${currentLang === 'ar' ? 'مثلاً: بدون سكر، حليب خالي الدسم...' : 'e.g. no sugar, skim milk...'}">${note}</textarea>
+  `;
+  $('itemFooter').innerHTML = `
+    <button class="btn-primary" onclick="addFromItemSheet()">
+      ${currentLang === 'ar' ? `إضافة للسلة • ${total} ج` : `Add to cart • ${total} EGP`}
+    </button>
+  `;
+}
+
+function changeQty(delta){
+  itemSheetState.qty = Math.max(1, itemSheetState.qty + delta);
+  // Preserve note input
+  const noteVal = $('itemNoteInput')?.value || '';
+  itemSheetState.note = noteVal;
+  renderItemSheet();
+}
+
+function addFromItemSheet(){
+  const noteVal = $('itemNoteInput')?.value.trim() || '';
+  itemSheetState.note = noteVal;
+  addToCart(itemSheetState.item.id, itemSheetState.qty, noteVal);
+  closeItemSheet();
+}
+
+/* =====================================================
+   CART
+===================================================== */
+function quickAdd(id){
+  addToCart(id, 1, '');
+}
+
+function addToCart(id, qty, note){
+  const item = allItems.find(i => i.id === id);
+  if(!item || !isItemAvailable(item)) return;
+  const name = itemName(item);
+  const price = getItemPrice(item);
+  const existing = cart.find(c => c.id === id && (c.note || '') === (note || ''));
+  if(existing) existing.qty += qty;
+  else cart.push({ id, nameAr: name, price, qty, note: note || '' });
+  saveCart();
+  toast(currentLang === 'ar' ? 'تمت الإضافة للسلة' : 'Added to cart', '🛒');
+}
+
+function saveCart(){
+  localStorage.setItem('gharbaoui_cart', JSON.stringify(cart));
+  updateCartBadge();
+  renderMenu();
+}
+
+function updateCartBadge(){
+  const total = cart.reduce((s, c) => s + c.qty, 0);
+  const b = $('cartBadge');
+  if(total > 0){ b.style.display = 'flex'; b.innerText = total; }
+  else b.style.display = 'none';
+}
+
+function openCartModal(){
+  renderCartBody();
+  $('cartBackdrop').classList.add('open');
+  $('cartSheet').classList.add('open');
+}
+function closeCartModal(){
+  $('cartBackdrop').classList.remove('open');
+  $('cartSheet').classList.remove('open');
+}
+
+function renderCartBody(){
+  const body = $('cartBody');
+  const footer = $('cartFooter');
+
+  if(!cart.length){
+    body.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🛒</div>
+        <p>${currentLang === 'ar' ? 'سلة الطلبات فاضية' : 'Your cart is empty'}</p>
+      </div>
+    `;
+    footer.innerHTML = '';
+    return;
+  }
+
+  body.innerHTML = cart.map((c, idx) => `
+    <div class="cart-row" style="margin-bottom:10px;">
+      <div class="cart-row-info">
+        <div class="cart-row-name">${c.nameAr}</div>
+        ${c.note ? `<div class="cart-row-note">📝 ${c.note}</div>` : ''}
+        <div class="cart-row-price">${c.price * c.qty} ج</div>
+      </div>
+      <div class="qty-stepper">
+        <button class="qty-btn" onclick="changeCartQty(${idx}, -1)">−</button>
+        <span class="qty-value">${c.qty}</span>
+        <button class="qty-btn" onclick="changeCartQty(${idx}, 1)">+</button>
+      </div>
+    </div>
   `).join('');
 
-  currentSlideIndex = 0;
-  if (slidesDataCount > 1) {
-    sliderInterval = setInterval(() => {
-      currentSlideIndex = (currentSlideIndex + 1) % slidesDataCount;
-      updateSlidePosition();
-    }, 5000);
+  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  footer.innerHTML = `
+    <div class="cart-total-row">
+      <span class="cart-total-label">${currentLang === 'ar' ? 'الإجمالي' : 'Total'}</span>
+      <span class="cart-total-amount">${total} ج</span>
+    </div>
+    <button class="btn-primary" onclick="submitOrder()">
+      ${currentLang === 'ar' ? '🛎️ إرسال الطلب وعرض للويتر' : '🛎️ Send order & show to waiter'}
+    </button>
+  `;
+}
+
+function changeCartQty(idx, delta){
+  cart[idx].qty += delta;
+  if(cart[idx].qty <= 0) cart.splice(idx, 1);
+  saveCart();
+  renderCartBody();
+}
+
+/* =====================================================
+   SUBMIT ORDER
+===================================================== */
+async function submitOrder(){
+  if(!currentBranch || !cart.length) return;
+  const { db, collection, addDoc, serverTimestamp } = window.FB;
+  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const itemsSnapshot = [...cart];
+  const tableNum = currentTable || 'غير محدد';
+
+  try{
+    const docRef = await addDoc(collection(db, 'orders'), {
+      branchId: currentBranch.id,
+      branchNameAr: currentBranch.nameAr,
+      table: tableNum,
+      items: itemsSnapshot,
+      total,
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+
+    // Persist my order so we can track it later
+    myOrders.push({ id: docRef.id, table: tableNum, at: Date.now() });
+    // Clean up old ones (6 hours)
+    const cutoff = Date.now() - 6 * 3600 * 1000;
+    myOrders = myOrders.filter(o => o.at > cutoff);
+    localStorage.setItem('gharbaoui_my_orders', JSON.stringify(myOrders));
+
+    cart = [];
+    saveCart();
+    closeCartModal();
+    playBell();
+
+    // Show waiter display
+    renderWaiterDisplay(itemsSnapshot, total, tableNum);
+
+    toast(currentLang === 'ar' ? 'تم إرسال الطلب بنجاح' : 'Order sent successfully', '✅');
+    updateOrderChip();
+  }catch(e){
+    console.error(e);
+    toast(currentLang === 'ar' ? 'حدث خطأ أثناء إرسال الطلب' : 'Error sending order', '❌');
   }
 }
 
-function updateSlidePosition() {
-  const slides = document.querySelectorAll('.ultra-slide');
-  const dots = document.querySelectorAll('.ultra-dot');
-  slides.forEach((s, idx) => {
-    s.classList.toggle('active', idx === currentSlideIndex);
-  });
-  dots.forEach((d, idx) => {
-    d.classList.toggle('active', idx === currentSlideIndex);
-  });
-}
+/* =====================================================
+   ORDER TRACKING CHIP
+===================================================== */
+function updateOrderChip(){
+  const chip = $('orderChip');
+  const text = $('orderChipText');
+  // Find most recent order placed by this device on this table
+  const relevant = myOrders
+    .map(o => ({ ...o, data: watchedOrders[o.id] }))
+    .filter(o => o.data && o.table === currentTable)
+    .sort((a, b) => b.at - a.at);
 
-function moveSlide(dir) {
-  if (slidesDataCount <= 1) return;
-  currentSlideIndex = (currentSlideIndex + dir + slidesDataCount) % slidesDataCount;
-  updateSlidePosition();
-  resetInterval();
-}
+  const latest = relevant[0];
+  if(!latest){
+    chip.classList.remove('show', 'done');
+    return;
+  }
 
-function goToSlide(idx) {
-  currentSlideIndex = idx;
-  updateSlidePosition();
-  resetInterval();
-}
-
-function resetInterval() {
-  if (sliderInterval) {
-    clearInterval(sliderInterval);
-    sliderInterval = setInterval(() => {
-      currentSlideIndex = (currentSlideIndex + 1) % slidesDataCount;
-      updateSlidePosition();
-    }, 5000);
+  const status = latest.data.status;
+  if(status === 'pending'){
+    chip.classList.remove('done');
+    chip.classList.add('show');
+    text.innerText = currentLang === 'ar' ? 'بانتظار التأكيد' : 'Awaiting confirmation';
+  } else if(status === 'preparing'){
+    chip.classList.remove('done');
+    chip.classList.add('show');
+    text.innerText = currentLang === 'ar' ? 'بيتحضر 🔥' : 'Preparing 🔥';
+  } else if(status === 'done'){
+    chip.classList.add('show', 'done');
+    text.innerText = currentLang === 'ar' ? 'تم التسليم ✓' : 'Delivered ✓';
+    // Auto-hide after 30s
+    setTimeout(() => {
+      const still = watchedOrders[latest.id];
+      if(still && still.status === 'done'){
+        chip.classList.remove('show');
+      }
+    }, 30000);
+  } else {
+    chip.classList.remove('show', 'done');
   }
 }
 
-function getBranchItems() { if (!currentMenuId) return []; return allItems.filter(i => i.menuId === currentMenuId); }
-function getBranchCategories() { if (!currentMenuId) return []; return allCategories.filter(c => c.menuId === currentMenuId && c.active !== false); }
-function getItemPrice(item) { if (!currentBranch) return item.price; const overrides = currentBranch.priceOverrides || {}; return overrides[currentBranch.id] ? Number(overrides[currentBranch.id]) : Number(item.price); }
-
-function renderCustomerMenu() {
-  if (!currentBranch) return;
-  const cats = getBranchCategories(); const items = getBranchItems();
-  const allText = currentLang === 'ar' ? 'الكل' : 'All';
-  document.getElementById('categoryTabs').innerHTML = `<button onclick="filterCategory('all')" class="cat-tab ${activeCategory === 'all' ? 'active' : ''}">${allText} <span class="cat-count">${items.length}</span></button>` +
-    cats.map(c => `<button onclick="filterCategory('${c.id}')" class="cat-tab ${activeCategory === c.id ? 'active' : ''}">${currentLang === 'ar' ? c.nameAr : (c.nameEn || c.nameAr)} <span class="cat-count">${items.filter(i => i.categoryId === c.id).length}</span></button>`).join('');
-  filterMenu();
-}
-
-function filterCategory(catId) { activeCategory = catId; renderCustomerMenu(); }
-
-function filterMenu() {
-  if (!currentBranch) return;
-  const searchVal = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-  const items = getBranchItems();
-  const filtered = items.filter(item => {
-    const matchesCategory = (activeCategory === 'all' || item.categoryId === activeCategory);
-    const nAr = (item.nameAr || '').toLowerCase();
-    const nEn = (item.nameEn || '').toLowerCase();
-    return matchesCategory && (nAr.includes(searchVal) || nEn.includes(searchVal));
-  });
-
-  document.getElementById('customerMenuGrid').innerHTML = filtered.map(item => {
-    const isBranchOutOfStock = currentBranch?.stockOverrides?.[item.id] === false;
-    const inStock = isBranchOutOfStock ? false : (item.inStock !== false);
-    const itemName = currentLang === 'ar' ? item.nameAr : (item.nameEn || item.nameAr);
-    const addText = currentLang === 'ar' ? '+ إضافة' : '+ Add';
-    const outText = currentLang === 'ar' ? 'نفد' : 'Sold out';
-    return `<div class="menu-card ${inStock ? '' : 'out-of-stock'}">
-      <div class="menu-card-img-wrap"><img src="${item.image}" class="menu-card-img" loading="lazy" onerror="this.src='' "></div>
-      <div class="menu-card-body">
-        <h3 class="menu-card-title">${itemName}</h3>
-        <div class="menu-card-bottom">
-          <span class="menu-card-price">${getItemPrice(item)} ج</span>
-          ${inStock ? `<button class="add-btn" onclick="addToCart(${item.id})">${addText}</button>` : `<span style="font-size:11px;color:var(--danger);font-weight:900;">${outText}</span>`}
-        </div>
+/* =====================================================
+   WAITER DISPLAY
+===================================================== */
+function renderWaiterDisplay(items, total, tableNum){
+  $('displayBranch').innerText = currentBranch?.nameAr || '';
+  $('displayTable').innerText = tableNum;
+  $('displayTotal').innerText = total + ' ج';
+  const now = new Date();
+  $('displayTime').innerText = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) + ' • ' + now.toLocaleDateString('ar-EG');
+  $('displayItems').innerHTML = items.map(i => `
+    <div class="display-item">
+      <span style="font-weight:900; font-size:14px;">${i.nameAr}</span>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="background:rgba(255,255,255,.9); color:#1F1611; font-weight:900; padding:2px 10px; border-radius:8px; font-size:12px;">${i.qty} ×</span>
+        <span style="color:var(--coffee-gold); font-weight:900; font-size:13px;">${i.price * i.qty} ج</span>
       </div>
-    </div>`;
-  }).join('');
+    </div>
+  `).join('');
+  $('displayScreen').classList.add('show');
+}
+function closeDisplay(){
+  $('displayScreen').classList.remove('show');
 }
 
-async function callWaiter() {
-  if (!currentBranch) return;
-  const { db, collection, addDoc, onSnapshot, doc } = window.FB;
-  const btn = document.getElementById('callWaiterBtn');
-  
-  playClientBellSound();
-
-  try {
-    const docRef = await addDoc(collection(db, 'waiter_calls'), {
+/* =====================================================
+   CALL WAITER
+===================================================== */
+async function callWaiter(){
+  if(!currentBranch) return;
+  const { db, collection, addDoc, doc, onSnapshot } = window.FB;
+  const btn = $('callWaiterBtn');
+  playBell();
+  try{
+    const ref = await addDoc(collection(db, 'waiter_calls'), {
       branchId: currentBranch.id,
       branchNameAr: currentBranch.nameAr,
       table: currentTable || 'غير محدد',
       createdAt: new Date(),
       status: 'pending'
     });
-    activeWaiterCallId = docRef.id;
+    localStorage.setItem('gharbaoui_active_call', JSON.stringify({ id: ref.id, at: Date.now() }));
     btn.classList.add('pending');
-    showToast(currentLang === 'ar' ? 'تم استدعاء الويتر، جاري الاستجابة...' : 'Waiter called, awaiting response...', '🛎️');
+    toast(currentLang === 'ar' ? 'تم استدعاء الويتر، جاري الاستجابة...' : 'Waiter called, awaiting response...', '🛎️');
 
-    const unsubCall = onSnapshot(doc(db, 'waiter_calls', activeWaiterCallId), (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data.status === 'done' || data.responded === true) {
-          playClientBellSound();
-          showToast(currentLang === 'ar' ? 'الويتر في طريقه إليك 🚶‍♂️☕' : 'Waiter is on the way! 🚶‍♂️☕', '🏃‍♂️');
-          btn.style.display = 'none';
-          btn.classList.remove('pending');
-          activeWaiterCallId = null;
-          unsubCall();
-        }
+    const unsub = onSnapshot(doc(db, 'waiter_calls', ref.id), (snap) => {
+      if(!snap.exists()) return;
+      const d = snap.data();
+      if(d.status === 'done' || d.responded === true){
+        playBell();
+        toast(currentLang === 'ar' ? 'الويتر في طريقه إليك 🚶‍♂️' : 'Waiter is on the way! 🚶‍♂️', '🏃‍♂️');
+        btn.classList.remove('pending');
+        localStorage.removeItem('gharbaoui_active_call');
+        unsub();
       }
     });
-  } catch (e) {
+  }catch(e){
     console.error(e);
     btn.classList.remove('pending');
   }
 }
 
-function addToCart(id) {
-  const item = allItems.find(x => x.id === id);
-  if (!item) return;
-  const existing = cart.find(x => x.id === id);
-  const itemName = currentLang === 'ar' ? item.nameAr : (item.nameEn || item.nameAr);
-  if (existing) { existing.qty += 1; }
-  else { cart.push({ id: item.id, nameAr: itemName, price: getItemPrice(item), qty: 1 }); }
-  localStorage.setItem('gharbaoui_cart', JSON.stringify(cart));
-  updateCartBadge();
-  showToast(currentLang === 'ar' ? 'تمت الإضافة للسلة' : 'Added to cart');
-}
-
-function updateCartBadge() {
-  const badge = document.getElementById('cartCountBadge');
-  const totalQty = cart.reduce((s, i) => s + i.qty, 0);
-  if (totalQty > 0) { badge.style.display = 'flex'; badge.innerText = totalQty; }
-  else { badge.style.display = 'none'; }
-}
-
-function openCartModal() {
-  document.getElementById('cartSheet').classList.add('open');
-  document.getElementById('cartBackdrop').classList.add('open');
-  renderCartItems();
-}
-function closeCartModal() {
-  document.getElementById('cartSheet').classList.remove('open');
-  document.getElementById('cartBackdrop').classList.remove('open');
-}
-
-function renderCartItems() {
-  const c = document.getElementById('cartItemsContainer');
-  const footer = document.getElementById('cartFooter');
-  if (!cart.length) {
-    c.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:30px;">${currentLang === 'ar' ? 'سلة الطلبات فارغة' : 'Cart is empty'}</div>`;
-    footer.innerHTML = '';
-    return;
-  }
-  c.innerHTML = cart.map((i, idx) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-subtle);padding:10px 14px;border-radius:12px;">
-      <div><strong>${i.nameAr}</strong><div style="font-size:11px;color:var(--coffee-gold);">${i.price * i.qty} ج</div></div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button onclick="changeQty(${idx}, -1)" class="icon-btn" style="width:28px;height:28px;">-</button>
-        <span style="font-weight:900;">${i.qty}</span>
-        <button onclick="changeQty(${idx}, 1)" class="icon-btn" style="width:28px;height:28px;">+</button>
-      </div>
-    </div>
-  `).join('');
-
-  const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-  const totalText = currentLang === 'ar' ? 'الإجمالي:' : 'Total:';
-  const showToWaiterText = currentLang === 'ar' ? 'عرض للويتر 📺' : 'Show to Waiter 📺';
-  
-  footer.innerHTML = `
-    <div style="display:flex;justify-content:space-between;font-weight:900;font-size:15px;margin-bottom:8px;">
-      <span>${totalText}</span>
-      <span style="color:var(--coffee-gold);">${total} ج</span>
-    </div>
-    <button class="primary-btn" style="background: linear-gradient(135deg, var(--coffee-gold), var(--coffee-gold-light)); color: #1F1611;" onclick="submitAndShowToWaiter()">${showToWaiterText}</button>
-  `;
-}
-
-function changeQty(idx, delta) {
-  cart[idx].qty += delta;
-  if (cart[idx].qty <= 0) cart.splice(idx, 1);
-  localStorage.setItem('gharbaoui_cart', JSON.stringify(cart));
-  updateCartBadge();
-  renderCartItems();
-}
-
-async function submitAndShowToWaiter() {
-  if (!currentBranch || !cart.length) return;
-  const { db, collection, addDoc } = window.FB;
-  const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-  const orderItems = [...cart];
-  const tableNum = currentTable || 'غير محدد';
-
-  try {
-    await addDoc(collection(db, 'orders'), {
-      branchId: currentBranch.id,
-      branchNameAr: currentBranch.nameAr,
-      table: tableNum,
-      items: orderItems,
-      total: total,
-      status: 'pending',
-      createdAt: new Date()
+/* Restore pending waiter call on load */
+(function restoreWaiterCall(){
+  const saved = safeParse(localStorage.getItem('gharbaoui_active_call'), null);
+  if(!saved) return;
+  if(Date.now() - saved.at > 15 * 60 * 1000){ localStorage.removeItem('gharbaoui_active_call'); return; }
+  // Will be re-checked after FB ready
+  onFbReady(() => {
+    if(!window.FB) return;
+    const { db, doc, onSnapshot } = window.FB;
+    const unsub = onSnapshot(doc(db, 'waiter_calls', saved.id), (snap) => {
+      if(!snap.exists()){ localStorage.removeItem('gharbaoui_active_call'); unsub(); return; }
+      const d = snap.data();
+      if(d.status === 'done' || d.responded === true){
+        localStorage.removeItem('gharbaoui_active_call');
+        $('callWaiterBtn').classList.remove('pending');
+        unsub();
+      } else {
+        $('callWaiterBtn').classList.add('pending');
+      }
     });
-
-    cart = [];
-    localStorage.removeItem('gharbaoui_cart');
-    updateCartBadge();
-    closeCartModal();
-    playClientBellSound();
-
-    document.getElementById('displayBranchName').innerText = currentBranch.nameAr || '';
-    document.getElementById('displayTableNum').innerText = tableNum;
-    document.getElementById('displayTotal').innerText = total + ' جنيه';
-    
-    const now = new Date();
-    document.getElementById('displayTime').innerText = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) + ' • ' + now.toLocaleDateString('ar-EG');
-
-    document.getElementById('displayItemsContainer').innerHTML = orderItems.map(i => `
-      <div style="background: #241B16; border: 1px solid rgba(200,155,94,0.2); border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-weight: 900; font-size: 14px;">${i.nameAr}</span>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="background: #FAF6F0; color: #1F1611; font-weight: 900; padding: 2px 10px; border-radius: 8px; font-size: 13px;">${i.qty} ×</span>
-          <span style="color: var(--coffee-gold); font-weight: 900; font-size: 14px;">${i.price * i.qty} ج</span>
-        </div>
-      </div>
-    `).join('');
-
-    document.getElementById('waiterDisplayScreen').classList.add('show');
-
-  } catch (e) {
-    console.error(e);
-    showToast(currentLang === 'ar' ? 'حدث خطأ أثناء إرسال الطلب' : 'Error sending order', '❌');
-  }
-}
-
-function closeWaiterDisplay() {
-  document.getElementById('waiterDisplayScreen').classList.remove('show');
-}
-
-function enterWelcome() {
-  document.getElementById('welcomeScreen').classList.add('is-hidden');
-}
+  });
+})();
 </script>
 </body>
 </html>
