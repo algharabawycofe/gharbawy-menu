@@ -153,6 +153,7 @@ tr:hover td{background:var(--subtle)}
       <button class="nav-btn" data-page="categories" data-role="admin" onclick="showPage('categories')">🏷️ الأقسام</button>
       <button class="nav-btn" data-page="items" data-role="admin" onclick="showPage('items')">🍽️ المنتجات</button>
       <button class="nav-btn" data-page="offers" data-role="admin" onclick="showPage('offers')">🔥 العروض والترويج</button>
+      <button class="nav-btn" data-page="ratings" data-role="admin" onclick="showPage('ratings')">⭐ تقييمات الأصناف</button>
       <button class="nav-btn" data-page="orders" onclick="showPage('orders')">📦 الأوردرات</button>
       <button class="nav-btn" data-page="reports" data-role="admin" onclick="showPage('reports')">📈 التقارير</button>
       <button class="nav-btn" data-page="users" data-role="admin" onclick="showPage('users')">👥 المستخدمين</button>
@@ -351,6 +352,37 @@ tr:hover td{background:var(--subtle)}
           <h3 class="section-header" style="color:var(--danger)">🔴 منطقة الخطر</h3>
           <div id="systemStatusBox" style="margin-bottom:14px"><span class="badge badge-green" id="systemStatusBadge">● النظام يعمل</span></div>
           <button class="btn btn-danger" id="killSwitchBtn" onclick="toggleSystemStatus()">🔴 إيقاف النظام</button>
+        </div>
+      </div>
+      <div id="page-ratings" class="page">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h2 style="font-size:22px;font-weight:900;margin:0">⭐ تقييمات الأصناف</h2>
+          <button class="btn btn-gold btn-sm" onclick="loadRatingsAdmin()">🔄 تحديث</button>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat"><div class="stat-label">عدد التقييمات</div><div class="stat-value" id="rt-count">—</div></div>
+          <div class="stat"><div class="stat-label">المتوسط العام</div><div class="stat-value" id="rt-avg">—</div></div>
+          <div class="stat"><div class="stat-label">أعلى صنف</div><div class="stat-value" id="rt-top" style="font-size:16px">—</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="form-row" style="grid-template-columns:1fr auto;align-items:end">
+            <div><label>الفرع</label><select id="rt-branch" onchange="loadRatingsAdmin()"><option value="all">كل الفروع</option></select></div>
+            <div><button class="btn btn-ghost" style="width:100%" onclick="loadRatingsAdmin()">تحديث</button></div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <table>
+            <thead><tr><th>الصنف</th><th>التقييم</th><th>المتوسط</th><th>عدد التقييمات</th><th>آخر تقييم</th></tr></thead>
+            <tbody id="ratingsTable"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:15px;font-weight:900;margin:0 0 12px">💬 آخر التعليقات</h3>
+          <div id="ratingsComments"></div>
         </div>
       </div>
     </main>
@@ -631,6 +663,7 @@ function showPage(name){
   const b = document.querySelector(`[data-page="${name}"]`); if(b) b.classList.add('active');
   if(name === 'reports') initReportFilters();
   if(name === 'kds') renderKDS();
+  if(name === 'ratings') initRatingsPage();
 }
 
 function closeModal(id){ $(id).classList.remove('open'); }
@@ -1396,6 +1429,113 @@ function exportReportToPDF() {
   element.innerHTML = html;
   html2pdf().set({ margin: 10, filename: `Report_${from}_to_${to}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save();
 }
+
+/* ==================== ⭐ تقييمات الأصناف ==================== */
+
+function rEsc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function initRatingsPage(){
+  const sel = $('rt-branch');
+  if(sel && sel.options.length <= 1){
+    sel.innerHTML = '<option value="all">كل الفروع</option>' +
+      branches.map(function(b){ return '<option value="' + rEsc(b.id) + '">' + rEsc(b.nameAr || b.nameEn || b.id) + '</option>'; }).join('');
+  }
+  loadRatingsAdmin();
+}
+
+async function loadRatingsAdmin(){
+  const tb = $('ratingsTable');
+  if(!tb) return;
+  const { db, collection, getDocs } = window.FB;
+  const branchFilter = ($('rt-branch') && $('rt-branch').value) || 'all';
+
+  tb.innerHTML = '<tr><td colspan="5" class="empty">⏳ جاري التحميل...</td></tr>';
+
+  try {
+    const snap = await getDocs(collection(db, 'item_ratings'));
+    const rows = [];
+    snap.forEach(function(d){
+      const r = d.data() || {};
+      if(branchFilter !== 'all' && r.branchId !== branchFilter) return;
+      rows.push(r);
+    });
+
+    if(!rows.length){
+      $('rt-count').innerText = '0';
+      $('rt-avg').innerText = '—';
+      $('rt-top').innerText = '—';
+      tb.innerHTML = '<tr><td colspan="5" class="empty">مفيش تقييمات لسه — أول ما العملاء يقيّموا هتظهر هنا</td></tr>';
+      $('ratingsComments').innerHTML = '<div class="empty">مفيش تعليقات</div>';
+      return;
+    }
+
+    const map = new Map();
+    let totalStars = 0;
+
+    rows.forEach(function(r){
+      const key = String(r.itemId);
+      const ts = r.updatedAt && r.updatedAt.toDate ? r.updatedAt.toDate() : null;
+      if(!map.has(key)) map.set(key, { name: r.itemName || ('صنف ' + key), sum: 0, count: 0, last: ts });
+      const m = map.get(key);
+      m.sum += Number(r.stars) || 0;
+      m.count += 1;
+      totalStars += Number(r.stars) || 0;
+      if(ts && (!m.last || ts > m.last)) m.last = ts;
+    });
+
+    const list = Array.from(map.values()).sort(function(a, b){ return (b.sum / b.count) - (a.sum / a.count); });
+
+    $('rt-count').innerText = rows.length;
+    $('rt-avg').innerText = (totalStars / rows.length).toFixed(1) + ' ★';
+    $('rt-top').innerText = list[0] ? list[0].name : '—';
+
+    tb.innerHTML = list.map(function(m){
+      const avg = m.sum / m.count;
+      const full = Math.round(avg);
+      const stars = '★'.repeat(full) + '☆'.repeat(5 - full);
+      return '<tr>' +
+        '<td><strong>' + rEsc(m.name) + '</strong></td>' +
+        '<td style="color:#F1C40F;letter-spacing:1px;white-space:nowrap">' + stars + '</td>' +
+        '<td><strong style="color:var(--gold)">' + avg.toFixed(1) + '</strong></td>' +
+        '<td>' + m.count + '</td>' +
+        '<td>' + (m.last ? m.last.toLocaleDateString('ar-EG') : '—') + '</td>' +
+      '</tr>';
+    }).join('');
+
+    const comments = rows
+      .filter(function(r){ return !!r.comment; })
+      .sort(function(a, b){
+        const ta = a.updatedAt && a.updatedAt.toDate ? a.updatedAt.toDate().getTime() : 0;
+        const tb2 = b.updatedAt && b.updatedAt.toDate ? b.updatedAt.toDate().getTime() : 0;
+        return tb2 - ta;
+      })
+      .slice(0, 10);
+
+    $('ratingsComments').innerHTML = comments.length
+      ? comments.map(function(r){
+          const ts = r.updatedAt && r.updatedAt.toDate ? r.updatedAt.toDate().toLocaleDateString('ar-EG') : '';
+          const st = '★'.repeat(Math.max(0, Math.min(5, Number(r.stars) || 0)));
+          return '<div style="background:var(--subtle);border-radius:10px;padding:10px 12px;margin-bottom:8px">' +
+            '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">' +
+              '<span>' + rEsc(r.itemName || '') + (ts ? ' · ' + ts : '') + '</span>' +
+              '<span style="color:#F1C40F;letter-spacing:1px">' + st + '</span>' +
+            '</div>' +
+            '<div style="font-size:13px;line-height:1.7">' + rEsc(r.comment) + '</div>' +
+          '</div>';
+        }).join('')
+      : '<div class="empty">مفيش تعليقات</div>';
+
+  } catch(e){
+    console.error(e);
+    tb.innerHTML = '<tr><td colspan="5" class="empty">تعذر تحميل التقييمات (' + rEsc(e.code || e.message) + ')<br><small>اتأكد من قواعد Firestore</small></td></tr>';
+    $('ratingsComments').innerHTML = '';
+  }
+}
+
 </script>
 </body>
 </html>
