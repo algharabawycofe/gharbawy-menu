@@ -327,6 +327,25 @@ html.dark .toast{background:var(--gold); color:#1F1611}
 @keyframes toastIn{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
 @keyframes toastOut{to{opacity:0; transform:translateY(8px)}}
 
+/* ---------- Ratings ---------- */
+.rt-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.rt-head h2{margin:0;font-size:18px;font-weight:900}
+.rt-head p{margin:2px 0 0;font-size:11.5px;color:var(--muted)}
+.rt-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.rt-stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
+.rt-stat span{font-size:11px;color:var(--muted);font-weight:800}
+.rt-stat b{display:block;font-size:20px;font-weight:900;color:var(--gold);margin-top:2px}
+.rt-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:14px;overflow:auto}
+.rt-card h3{margin:0 0 10px;font-size:14px;font-weight:900}
+.rt-card table{width:100%;border-collapse:collapse;font-size:12.5px}
+.rt-card th{text-align:start;font-size:10.5px;color:var(--muted);font-weight:800;padding:8px 6px;border-bottom:1px solid var(--border);white-space:nowrap}
+.rt-card td{padding:9px 6px;border-bottom:1px solid var(--border)}
+.rt-card tr:last-child td{border-bottom:0}
+.rt-stars{color:#F1C40F;letter-spacing:1px;white-space:nowrap}
+.rt-comment{background:var(--subtle);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.rt-comment .top{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.rt-comment p{margin:0;font-size:12.5px;line-height:1.7}
+@media(max-width:560px){.rt-stats{grid-template-columns:1fr}}
 /* ---------- Responsive ---------- */
 @media (max-width:900px){
   .layout{grid-template-columns:1fr}
@@ -434,6 +453,7 @@ html.dark .toast{background:var(--gold); color:#1F1611}
         <span>🛎️ نداءات الويتر</span><b class="nav-badge" id="badge-calls">0</b>
       </button>
       <button class="nav-btn" data-page="stock"><span>🍽️ المخزون</span></button>
+      <button class="nav-btn" data-page="ratings"><span>⭐ التقييمات</span></button>
 
       <div class="side-foot">
         <b id="foot-branch">—</b>
@@ -468,6 +488,34 @@ html.dark .toast{background:var(--gold); color:#1F1611}
           <div class="stock-count" id="stock-count">—</div>
         </div>
         <div class="stock-list" id="stock-list"></div>
+      </section>
+      <!-- Ratings -->
+      <section id="page-ratings" class="page">
+        <div class="rt-head">
+          <div>
+            <h2>⭐ تقييمات الأصناف</h2>
+            <p>متوسط تقييم العملاء لأصناف الفرع + آخر التعليقات.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="rt-refresh">🔄 تحديث</button>
+        </div>
+
+        <div class="rt-stats">
+          <div class="rt-stat"><span>عدد التقييمات</span><b id="rt-count">—</b></div>
+          <div class="rt-stat"><span>المتوسط العام</span><b id="rt-avg">—</b></div>
+          <div class="rt-stat"><span>أعلى صنف</span><b id="rt-top" style="font-size:14px">—</b></div>
+        </div>
+
+        <div class="rt-card">
+          <table>
+            <thead><tr><th>الصنف</th><th>التقييم</th><th>المتوسط</th><th>عدد</th><th>آخر تقييم</th></tr></thead>
+            <tbody id="rt-table"></tbody>
+          </table>
+        </div>
+
+        <div class="rt-card">
+          <h3>💬 آخر التعليقات</h3>
+          <div id="rt-comments"></div>
+        </div>
       </section>
     </main>
   </div>
@@ -1230,6 +1278,7 @@ html.dark .toast{background:var(--gold); color:#1F1611}
     if (page) page.classList.add("active");
     const btn = document.querySelector('.nav-btn[data-page="' + pageId + '"]');
     if (btn) btn.classList.add("active");
+    if (pageId === "ratings") loadBranchRatings();
   }
 
   function updateClock() {
@@ -1315,6 +1364,7 @@ html.dark .toast{background:var(--gold); color:#1F1611}
     });
 
     $("btn-logout").addEventListener("click", doLogout);
+    $("rt-refresh").addEventListener("click", loadBranchRatings);
 
     // تنقل
     $$(".nav-btn").forEach(function (btn) {
@@ -1369,6 +1419,93 @@ html.dark .toast{background:var(--gold); color:#1F1611}
     window.addEventListener("offline", function () { setLive(false); });
   }
 
+  /* ---------- تقييمات الأصناف (الفرع) ---------- */
+  async function loadBranchRatings() {
+    const tb = $("rt-table");
+    const commentsEl = $("rt-comments");
+    if (!tb) return;
+
+    const FB = window.FB || {};
+    if (!FB.db || !FB.collection || !FB.getDocs) {
+      tb.innerHTML = '<tr><td colspan="5"><div class="empty">خدمة التقييمات مش متصلة</div></td></tr>';
+      return;
+    }
+
+    tb.innerHTML = '<tr><td colspan="5"><div class="empty">جارٍ التحميل…</div></td></tr>';
+
+    try {
+      const snap = await FB.getDocs(FB.collection(FB.db, "item_ratings"));
+      const branch = state.branch;
+      const rows = [];
+      snap.forEach(function (d) {
+        const r = d.data() || {};
+        if (!branch || r.branchId !== branch.id) return;
+        rows.push(r);
+      });
+
+      if (!rows.length) {
+        $("rt-count").textContent = "0";
+        $("rt-avg").textContent = "—";
+        $("rt-top").textContent = "—";
+        tb.innerHTML = '<tr><td colspan="5"><div class="empty">مفيش تقييمات لسه</div></td></tr>';
+        commentsEl.innerHTML = '<div class="empty">مفيش تعليقات</div>';
+        return;
+      }
+
+      const map = new Map();
+      let total = 0;
+
+      rows.forEach(function (r) {
+        const key = String(r.itemId);
+        const ts = r.updatedAt && r.updatedAt.toDate ? r.updatedAt.toDate() : null;
+        if (!map.has(key)) map.set(key, { name: r.itemName || ("صنف " + key), sum: 0, count: 0, last: ts });
+        const m = map.get(key);
+        m.sum += Number(r.stars) || 0;
+        m.count += 1;
+        total += Number(r.stars) || 0;
+        if (ts && (!m.last || ts > m.last)) m.last = ts;
+      });
+
+      const list = Array.from(map.values()).sort(function (a, b) { return (b.sum / b.count) - (a.sum / a.count); });
+
+      $("rt-count").textContent = rows.length;
+      $("rt-avg").textContent = (total / rows.length).toFixed(1) + " ★";
+      $("rt-top").textContent = list[0] ? list[0].name : "—";
+
+      tb.innerHTML = list.map(function (m) {
+        const avg = m.sum / m.count;
+        const full = Math.round(avg);
+        const stars = "★".repeat(full) + "☆".repeat(5 - full);
+        return "<tr>" +
+          "<td><b>" + esc(m.name) + "</b></td>" +
+          '<td class="rt-stars">' + stars + "</td>" +
+          "<td><b>" + avg.toFixed(1) + "</b></td>" +
+          "<td>" + m.count + "</td>" +
+          "<td>" + (m.last ? m.last.toLocaleDateString("ar-EG") : "—") + "</td>" +
+        "</tr>";
+      }).join("");
+
+      const comments = rows.filter(function (r) { return !!r.comment; }).sort(function (a, b) {
+        const ta = a.updatedAt && a.updatedAt.toDate ? a.updatedAt.toDate().getTime() : 0;
+        const tb2 = b.updatedAt && b.updatedAt.toDate ? b.updatedAt.toDate().getTime() : 0;
+        return tb2 - ta;
+      }).slice(0, 10);
+
+      commentsEl.innerHTML = comments.length
+        ? comments.map(function (r) {
+            const ts = r.updatedAt && r.updatedAt.toDate ? r.updatedAt.toDate().toLocaleDateString("ar-EG") : "";
+            const st = "★".repeat(Math.max(0, Math.min(5, Number(r.stars) || 0)));
+            return '<div class="rt-comment"><div class="top"><span>' + esc(r.itemName || "") +
+              (ts ? " · " + ts : "") + '</span><span class="rt-stars">' + st + "</span></div><p>" +
+              esc(r.comment) + "</p></div>";
+          }).join("")
+        : '<div class="empty">مفيش تعليقات</div>';
+    } catch (e) {
+      console.error(e);
+      tb.innerHTML = '<tr><td colspan="5"><div class="empty">تعذر تحميل التقييمات (' + esc(e.code || e.message) + ")</div></td></tr>";
+      commentsEl.innerHTML = "";
+    }
+  }
   async function doLogout() {
     try {
       cleanup();
