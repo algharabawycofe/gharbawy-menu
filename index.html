@@ -1743,7 +1743,7 @@ async function submitRating(){
   }
 }
 </script>
-<!-- ===== إصلاح سعر العروض (gharbawy-offer-fix v1.0) ===== -->
+<!-- ===== إصلاح سعر العروض (gharbawy-offer-fix v1.1) ===== -->
 <script>
 /*!
  * ============================================================
@@ -2247,6 +2247,223 @@ async function submitRating(){
         return res;
       });
   };
+
+  /* =========================================================
+     واجهة: عرض تفاصيل العرض + زرار إغلاق (X) للشيتات
+     ========================================================= */
+  function injectUICSS() {
+    if (document.getElementById("gh-offer-ui-style")) return;
+    var css = [
+      ".gh-sheet-x{position:absolute;top:10px;inset-inline-end:12px;z-index:9;width:34px;height:34px;",
+      "border-radius:50%;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.92);color:#1F1611;",
+      "font-size:14px;font-weight:900;line-height:1;cursor:pointer;display:grid;place-items:center;",
+      "box-shadow:0 2px 10px rgba(0,0,0,.14)}",
+      "html.dark .gh-sheet-x{background:#2b2119;color:#FAF6F0;border-color:#3A2A20}",
+      ".gh-offer-img{width:100%;aspect-ratio:16/10;border-radius:20px;overflow:hidden;background:var(--bg-subtle,#F5EEE5)}",
+      ".gh-offer-img img{width:100%;height:100%;object-fit:cover;display:block}",
+      ".gh-offer-title{font-size:21px;font-weight:900;margin:14px 0 4px;letter-spacing:-.3px}",
+      ".gh-offer-desc{font-size:13px;color:var(--text-secondary,#6F4E37);line-height:1.8;margin:0 0 14px;font-weight:600}",
+      ".gh-offer-label{font-size:11px;font-weight:900;color:var(--text-muted,#A89080);margin:0 0 8px}",
+      ".gh-offer-list{display:grid;gap:6px;margin-bottom:14px}",
+      ".gh-offer-row{display:flex;align-items:center;justify-content:space-between;gap:10px;",
+      "background:var(--bg-subtle,#F5EEE5);padding:9px 12px;border-radius:11px;font-size:13px;font-weight:700}",
+      ".gh-offer-row small{color:var(--text-muted,#A89080);font-weight:700;font-size:11px}",
+      ".gh-offer-total{display:flex;align-items:baseline;justify-content:space-between;gap:10px;",
+      "border-top:1px dashed var(--border,#E8DED2);padding-top:12px;font-size:12.5px;font-weight:800;",
+      "color:var(--text-muted,#A89080)}",
+      ".gh-offer-total b{font-size:21px;color:var(--coffee-gold,#C89B5E);font-weight:900}",
+      ".gh-offer-old{text-decoration:line-through;margin-inline-start:6px;font-size:12px}",
+      ".gh-offer-save{font-size:11.5px;font-weight:900;color:var(--success,#4A7C59);margin-top:4px}",
+      ".gh-offer-unavailable{font-size:11.5px;color:var(--danger,#B33A3A);font-weight:800;margin-top:6px}",
+    ].join("");
+    var tag = document.createElement("style");
+    tag.id = "gh-offer-ui-style";
+    tag.textContent = css;
+    document.head.appendChild(tag);
+  }
+
+  function injectSheetClose() {
+    var map = [
+      ["itemSheet", "closeItemSheet"],
+    ];
+
+    map.forEach(function (pair) {
+      var sheet = document.getElementById(pair[0]);
+      if (!sheet || sheet.querySelector(".gh-sheet-x")) return;
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "gh-sheet-x";
+      btn.setAttribute("aria-label", t("إغلاق", "Close"));
+      btn.textContent = "✕";
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var fn = W[pair[1]] || (typeof window[pair[1]] === "function" ? window[pair[1]] : null);
+        if (typeof fn === "function") fn();
+        else if (typeof closeItemSheet === "function" && pair[0] === "itemSheet") closeItemSheet();
+        else if (typeof closeRatingModal === "function") closeRatingModal();
+      });
+      sheet.appendChild(btn);
+    });
+  }
+
+  /* ---------- شيت تفاصيل العرض ---------- */
+  function buildOfferSheet() {
+    if (document.getElementById("ghOfferSheet")) return;
+
+    injectUICSS();
+
+    var backdrop = document.createElement("div");
+    backdrop.className = "backdrop";
+    backdrop.id = "ghOfferBackdrop";
+    backdrop.addEventListener("click", closeOfferSheet);
+
+    var sheet = document.createElement("div");
+    sheet.className = "sheet";
+    sheet.id = "ghOfferSheet";
+    sheet.innerHTML =
+      '<button type="button" class="gh-sheet-x" id="ghOfferX" aria-label="' + t("إغلاق", "Close") + '">✕</button>' +
+      '<div class="sheet-handle"></div>' +
+      '<div class="sheet-body" id="ghOfferBody"></div>' +
+      '<div class="sheet-footer" id="ghOfferFoot"></div>';
+
+    document.body.appendChild(backdrop);
+    document.body.appendChild(sheet);
+
+    document.getElementById("ghOfferX").addEventListener("click", function (e) {
+      e.preventDefault();
+      closeOfferSheet();
+    });
+  }
+
+  function closeOfferSheet() {
+    var b = document.getElementById("ghOfferBackdrop");
+    var s = document.getElementById("ghOfferSheet");
+    if (b) b.classList.remove("open");
+    if (s) s.classList.remove("open");
+  }
+
+  function openOfferSheet(offer, slide) {
+    buildOfferSheet();
+
+    var bundle = offerBundle(offer);
+    if (!bundle.length) {
+      toast(t("العرض ده مش متاح حالياً", "This offer is unavailable"), "⚠️");
+      return;
+    }
+
+    var body = document.getElementById("ghOfferBody");
+    var foot = document.getElementById("ghOfferFoot");
+    if (!body || !foot) return;
+
+    var price = Number(offer.price) || 0;
+    var original = bundleOriginal(bundle);
+    var img = offer.image || (slide && slide.image) || bundle[0].item.image || "";
+    var title = isAr()
+      ? (offer.titleAr || offer.nameAr || nameOf(bundle[0].item))
+      : (offer.titleEn || offer.titleAr || nameOf(bundle[0].item));
+    var desc = isAr()
+      ? (offer.descAr || "")
+      : (offer.descEn || offer.descAr || "");
+
+    var missing = bundle.filter(function (b) { return !isAvailable(b.item); });
+
+    var rows = bundle.map(function (b) {
+      return (
+        '<div class="gh-offer-row">' +
+          '<span>' + esc(nameOf(b.item)) + ' <small>×' + b.qty + "</small></span>" +
+          "<span>" + money(priceOf(b.item) * b.qty) + "</span>" +
+        "</div>"
+      );
+    }).join("");
+
+    var saved = original > price ? original - price : 0;
+
+    body.innerHTML =
+      (img ? '<div class="gh-offer-img"><img src="' + esc(img) + '" alt="" onerror="this.style.display=\'none\'"></div>' : "") +
+      '<h2 class="gh-offer-title">' + esc(title) + "</h2>" +
+      (desc ? '<p class="gh-offer-desc">' + esc(desc) + "</p>" : "") +
+      '<p class="gh-offer-label">' + t("أصناف العرض", "Offer items") + "</p>" +
+      '<div class="gh-offer-list">' + rows + "</div>" +
+      '<div class="gh-offer-total"><span>' + t("سعر العرض", "Offer price") +
+        (saved > 0 ? '<s class="gh-offer-old">' + money(original) + "</s>" : "") +
+      "</span><b>" + money(price) + "</b></div>" +
+      (saved > 0 ? '<div class="gh-offer-save">' + t("وفّرت ", "You save ") + money(saved) + "</div>" : "") +
+      (missing.length
+        ? '<div class="gh-offer-unavailable">' + t("غير متاح: ", "Unavailable: ") +
+          missing.map(function (b) { return esc(nameOf(b.item)); }).join("، ") + "</div>"
+        : "");
+
+    foot.innerHTML =
+      '<button type="button" class="btn-primary" id="ghOfferAdd" ' + (missing.length ? "disabled" : "") + ">" +
+        t("أضف للسلة • " + money(price), "Add to cart • " + money(price)) +
+      "</button>";
+
+    var addBtn = document.getElementById("ghOfferAdd");
+    if (addBtn) {
+      addBtn.addEventListener("click", function () {
+        if (addOfferLine(offer, 1, "")) {
+          pulseBadge();
+          closeOfferSheet();
+        }
+      });
+    }
+
+    document.getElementById("ghOfferBackdrop").classList.add("open");
+    document.getElementById("ghOfferSheet").classList.add("open");
+  }
+
+  function openSlideDetails(idx) {
+    var s = slides()[idx];
+    if (!s) return;
+
+    if (s.type === "offer" && s.offerId) {
+      var offer = findOffer(s.offerId);
+      if (offer) {
+        openOfferSheet(offer, s);
+        return;
+      }
+    }
+
+    if (s.targetItemId && typeof W.openItemSheet === "function") {
+      W.openItemSheet(s.targetItemId, null, null);
+      return;
+    }
+
+    toast(t("العرض متاح من خلال القائمة", "This offer is available in the menu"), "ℹ️");
+  }
+
+  function bindSlideClicks() {
+    var wrap = document.getElementById("slidesWrap");
+    if (!wrap || wrap.__ghSlideBound) return;
+    wrap.__ghSlideBound = true;
+
+    wrap.addEventListener("click", function (e) {
+      if (e.target.closest(".hero-cta") || e.target.closest(".hero-dot") || e.target.closest(".hero-arrow")) return;
+      var slide = e.target.closest(".hero-slide");
+      if (!slide) return;
+      var idx = Number(slide.getAttribute("data-idx"));
+      if (!isFinite(idx)) return;
+      openSlideDetails(idx);
+    });
+  }
+
+  function bootUI() {
+    injectUICSS();
+    injectSheetClose();
+    buildOfferSheet();
+    bindSlideClicks();
+
+    // لو الشيتات اتأخرت في الـ DOM
+    setTimeout(function () { injectSheetClose(); bindSlideClicks(); }, 800);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootUI);
+  } else {
+    bootUI();
+  }
 
   /* ---------------- فحص سريع ---------------- */
   console.info(
