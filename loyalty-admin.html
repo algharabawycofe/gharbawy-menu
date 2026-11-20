@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>الغرباوي — إدارة الولاء</title>
+<link rel="icon" href="logo-01.png">
+<link rel="stylesheet" href="loyalty.css">
+</head>
+<body><main>
+<div class="top"><h1>🎁 إدارة الولاء</h1><a href="admin.html">← لوحة الإدارة</a></div>
+<div id="gate" class="box"><p id="gateMsg">جاري التحقق من الدخول…</p><a class="b" href="admin.html" id="gateLink" hidden>سجّل دخول من لوحة الإدارة</a></div>
+
+<div id="app" hidden>
+<div id="rulesWarn" class="banner" hidden style="background:#F6D6D0">⚠️ مفيش صلاحية قراءة العملاء. ضيف قواعد <b>firestore-loyalty.rules</b> في Firebase ← Firestore ← Rules ثم Publish.</div>
+<div class="tabs" role="tablist"><button class="on" data-t="stamp">ختم</button><button data-t="members">العملاء</button><button data-t="set" id="tabSet">الإعدادات</button></div>
+
+<section class="pane" id="p-stamp">
+  <div class="box"><h2>تسجيل زيارة</h2>
+    <label for="q">رقم موبايل العميل (أو آخر 4 أرقام) أو الكود</label>
+    <div class="row"><input id="q" inputmode="search" dir="ltr" placeholder="01xxxxxxxxx" style="flex:3"><button id="find" class="b" type="button" style="flex:1">بحث</button></div>
+    <button id="scan" class="b ghost full" type="button" style="margin-top:8px">📷 امسح QR العميل</button>
+    <video id="vid" playsinline muted hidden></video>
+    <div id="hits"></div>
+  </div>
+  <div id="sel"></div>
+</section>
+
+<section class="pane" id="p-members" hidden>
+  <div class="box"><div class="stat"><div><b id="sTot">0</b>عميل</div><div><b id="sWk">0</b>جم الأسبوع ده</div><div><b id="sLate">0</b>غايبين</div></div>
+    <label for="lateD">اعتبره غايب بعد (يوم)</label><input id="lateD" type="number" min="3" value="14">
+    <label for="mq">بحث بالاسم أو الرقم</label><input id="mq"></div>
+  <div class="box" id="list"></div>
+</section>
+
+<section class="pane" id="p-set" hidden>
+  <div class="box"><h2>إعدادات الولاء</h2>
+    <label for="sOn">الحالة</label><select id="sOn"><option value="1">شغّال</option><option value="0">موقوف</option></select>
+    <div class="row"><div><label for="sGoal">عدد الأختام للمكافأة</label><input id="sGoal" type="number" min="2" max="20"></div>
+    <div><label for="sRad">مسافة التنبيه (متر)</label><input id="sRad" type="number" min="30" max="1000"></div></div>
+    <label for="sRew">المكافأة</label><input id="sRew" maxlength="40">
+    <h2 style="margin-top:16px">أماكن الفروع (للتنبيه)</h2>
+    <p class="mut">قف في الفرع ودوس "أضف موقعي الحالي".</p>
+    <div id="places"></div>
+    <div class="row" style="margin-top:8px"><input id="pName" placeholder="اسم الفرع" style="flex:2"><button id="addPlace" class="b ghost" type="button">📍 أضف موقعي الحالي</button></div>
+    <button id="saveSet" class="b gold full" type="button" style="margin-top:14px">حفظ الإعدادات</button>
+  </div>
+  <div class="box"><h2>QR كارت الولاء</h2><p class="mut">اطبعه جنب الكاشير. العميل يفتح صفحة الكارت مباشرة.</p>
+    <div class="qr" id="joinQr"></div><button class="b ghost full" id="copyJoin" type="button">نسخ اللينك</button></div>
+</section>
+</div>
+</main>
+<script src="loyalty-qr.js"></script>
+<script src="loyalty-common.js"></script>
+<script type="module" src="firebase-config.js"></script>
+<script type="module">
+const {$,esc,toast,phoneIntl,days,ago,dist,qrSvg,ready}=L;
+await ready();
+const {db,auth,doc,collection,getDoc,setDoc,updateDoc,addDoc,onSnapshot,increment,onAuthStateChanged}=FB;
+let cfg={goal:8,reward:'مشروب مجاني',radius:100,places:[],enabled:true},members=[],me=null,role='',selId=null,late=14;
+const STAFF=['super_admin','admin','branch_manager'],OWN=['super_admin','admin'];
+const joinUrl=()=>location.origin+location.pathname.replace(/[^/]*$/,'')+'loyalty.html';
+
+onAuthStateChanged(auth,async u=>{
+  if(!u){$('#gateMsg').textContent='لازم تسجّل دخول الأول.';$('#gateLink').hidden=false;return}
+  try{const s=await getDoc(doc(db,'users',u.uid));role=s.exists()?s.data().role:''}catch(e){}
+  if(!STAFF.includes(role)){$('#gateMsg').textContent='الحساب ده مالوش صلاحية على الولاء.';return}
+  me=u;$('#gate').hidden=true;$('#app').hidden=false;$('#tabSet').hidden=!OWN.includes(role);start();
+});
+function start(){
+  onSnapshot(doc(db,'settings','loyalty'),s=>{if(s.exists())cfg={...cfg,...s.data()};fillSet();renderSel()});
+  onSnapshot(collection(db,'loyalty_members'),s=>{members=s.docs.map(d=>({id:d.id,...d.data()}));renderList();renderSel()},e=>{console.warn(e);$('#rulesWarn').hidden=false});
+}
+/* tabs */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.pane').forEach(p=>p.hidden=p.id!=='p-'+b.dataset.t)});
+/* find / stamp */
+function find(v){
+  v=v.trim();if(!v)return;
+  const byId=members.find(m=>m.id===v);if(byId)return pick(byId.id);
+  const d=v.replace(/\D/g,'');
+  const hits=d.length>=4?members.filter(m=>(m.phone||'').endsWith(d.startsWith('0')?'2'+d:d)||(m.phone||'').endsWith(d)):members.filter(m=>(m.name||'').includes(v));
+  if(hits.length===1)return pick(hits[0].id);
+  $('#hits').innerHTML=hits.length?hits.map(m=>`<button class="pick" data-id="${m.id}">${esc(m.name)} <small class="mut">${esc(m.phone)}</small></button>`).join(''):'<p class="mut">مفيش نتيجة.</p>';
+  $('#hits').querySelectorAll('.pick').forEach(b=>b.onclick=()=>pick(b.dataset.id));
+}
+function pick(id){selId=id;$('#hits').innerHTML='';$('#q').value='';renderSel()}
+$('#find').onclick=()=>find($('#q').value);
+$('#q').onkeydown=e=>{if(e.key==='Enter')find(e.target.value)};
+function renderSel(){
+  const m=members.find(x=>x.id===selId);if(!m){$('#sel').innerHTML='';return}
+  const g=cfg.goal,n=m.stamps||0,ready=n>=g;
+  $('#sel').innerHTML=`<div class="lcard"><div class="big">أهلاً يا ${esc(m.name)}!</div><div class="mut">${esc(m.phone)} · ${m.visits||0} زيارة · آخر زيارة ${ago(m.lastVisit)}</div>
+   <div class="stamps">${Array.from({length:g},(_,i)=>`<div class="st${i<n?' on':''}">${i<n?'☕':''}</div>`).join('')}</div>
+   ${ready?`<div class="banner">🎉 المكافأة جاهزة: ${esc(cfg.reward)}</div>`:`<div class="mut">${n} من ${g}</div>`}
+   <div class="row" style="margin-top:10px"><button class="b gold" id="addS" type="button">＋ ختم</button>${ready?'<button class="b ghost" id="redeem" type="button">تسليم المكافأة</button>':''}${n>0&&!ready?'<button class="b ghost" id="undo" type="button" style="flex:0 0 auto">↩ تراجع</button>':''}</div></div>`;
+  $('#addS').onclick=()=>act(m,'stamp');const r=$('#redeem');if(r)r.onclick=()=>act(m,'redeem');const u=$('#undo');if(u)u.onclick=()=>act(m,'undo');
+}
+let busy=false;
+async function act(m,type){
+  if(busy)return;
+  if(type==='stamp'&&m.lastVisit&&Date.now()-m.lastVisit<30*6e4&&!confirm(`آخر ختم لـ ${m.name} من ${Math.max(1,Math.round((Date.now()-m.lastVisit)/6e4))} دقيقة. تختم تاني؟`))return;
+  busy=true;
+  try{
+    const ref=doc(db,'loyalty_members',m.id);
+    if(type==='stamp')await updateDoc(ref,{stamps:increment(1),visits:increment(1),lastVisit:Date.now()});
+    else if(type==='undo')await updateDoc(ref,{stamps:increment(-1),visits:increment(-1)});
+    else await updateDoc(ref,{stamps:increment(-cfg.goal),redeemed:increment(1)});
+    await addDoc(collection(db,'loyalty_log'),{memberId:m.id,name:m.name,type,by:me.email||me.uid,at:Date.now()}).catch(()=>{});
+    toast(type==='stamp'?'اتختم ✓':type==='undo'?'اتلغى آخر ختم':'اتسلّمت المكافأة ✓');
+  }catch(e){console.warn(e);toast('معرفتش أسجّل — راجع الصلاحيات')}
+  busy=false;
+}
+/* scan */
+let stream,timer;
+$('#scan').onclick=async()=>{
+  if(!('BarcodeDetector' in window))return toast('المتصفح مش بيدعم المسح — اكتب الرقم');
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})}catch(e){return toast('الكاميرا مش متاحة')}
+  const v=$('#vid');v.srcObject=stream;v.hidden=false;await v.play();
+  const det=new BarcodeDetector({formats:['qr_code']});
+  timer=setInterval(async()=>{try{const r=await det.detect(v);if(r.length){stopScan();find(r[0].rawValue)}}catch(e){}},350)};
+function stopScan(){clearInterval(timer);stream&&stream.getTracks().forEach(t=>t.stop());$('#vid').hidden=true}
+/* members */
+$('#lateD').onchange=e=>{late=Math.max(3,+e.target.value||14);renderList()};$('#mq').oninput=()=>renderList();
+function renderList(){
+  const q=($('#mq').value||'').trim(),arr=members.filter(m=>!q||(m.name||'').includes(q)||(m.phone||'').includes(q.replace(/\D/g,'')||'§')).sort((a,b)=>(b.lastVisit||0)-(a.lastVisit||0));
+  const isLate=m=>m.lastVisit&&days(m.lastVisit)>=late;
+  $('#sTot').textContent=members.length;$('#sWk').textContent=members.filter(m=>m.lastVisit&&days(m.lastVisit)<7).length;$('#sLate').textContent=members.filter(isLate).length;
+  $('#list').innerHTML=arr.map(m=>{const l=isLate(m);
+    const msg=`وحشتنا يا ${m.name}! كارتك في الغرباوي عليه ${m.stamps||0}/${cfg.goal} ختم. مستنيينك ☕`;
+    return `<div class="mem${l?' late':''}"><div><b>${esc(m.name)}</b><small>${m.stamps||0}/${cfg.goal} ختم · ${m.visits||0} زيارة · ${ago(m.lastVisit)}</small></div>`+
+      `<div class="row" style="flex:0 0 auto"><button class="b ghost" data-s="${m.id}" type="button">ختم</button>`+(l?`<a class="b gold" target="_blank" rel="noopener" href="https://wa.me/${phoneIntl(m.phone)}?text=${encodeURIComponent(msg)}">واتساب</a>`:'')+`</div></div>`}).join('')||'<p class="mut">لسه مفيش عملاء.</p>';
+  $('#list').querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{pick(b.dataset.s);document.querySelector('[data-t=stamp]').click()});
+}
+/* settings */
+function fillSet(){
+  $('#sOn').value=cfg.enabled===false?'0':'1';$('#sGoal').value=cfg.goal;$('#sRad').value=cfg.radius;$('#sRew').value=cfg.reward;
+  renderPlaces();$('#joinQr').innerHTML=qrSvg(joinUrl());
+}
+function renderPlaces(){
+  $('#places').innerHTML=(cfg.places||[]).map((p,i)=>`<div class="mem"><span>📍 ${esc(p.name)} <small>${(+p.lat).toFixed(4)}, ${(+p.lng).toFixed(4)}</small></span><button class="b ghost" data-d="${i}" type="button">حذف</button></div>`).join('')||'<p class="mut">لسه مفيش أماكن.</p>';
+  $('#places').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{cfg.places.splice(+b.dataset.d,1);renderPlaces()});
+}
+$('#addPlace').onclick=()=>navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{
+  (cfg.places=cfg.places||[]).push({name:$('#pName').value.trim()||'الفرع',lat:p.coords.latitude,lng:p.coords.longitude});$('#pName').value='';renderPlaces();toast('اتضاف — دوس حفظ')},
+  ()=>toast('مقدرتش أوصل للموقع — اسمح بالصلاحية'),{enableHighAccuracy:true}):toast('المتصفح مش بيدعم الموقع');
+$('#saveSet').onclick=async()=>{
+  if(!OWN.includes(role))return toast('للأدمن فقط');
+  const data={enabled:$('#sOn').value==='1',goal:Math.max(2,+$('#sGoal').value||8),radius:+$('#sRad').value||100,reward:$('#sRew').value.trim()||'مشروب مجاني',places:cfg.places||[]};
+  try{await setDoc(doc(db,'settings','loyalty'),data);toast('اتحفظ ✓')}catch(e){console.warn(e);toast('مفيش صلاحية كتابة — راجع قواعد Firestore')}
+};
+$('#copyJoin').onclick=async()=>{try{await navigator.clipboard.writeText(joinUrl());toast('اتنسخ ✓')}catch(e){prompt('انسخ:',joinUrl())}};
+</script>
+</body></html>
