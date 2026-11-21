@@ -156,6 +156,7 @@ tr:hover td{background:var(--subtle)}
       <button class="nav-btn" data-page="ratings" data-role="admin" onclick="showPage('ratings')">⭐ تقييمات الأصناف</button>
       <button class="nav-btn" data-page="orders" onclick="showPage('orders')">📦 الأوردرات</button>
       <button class="nav-btn" data-page="reports" data-role="admin" onclick="showPage('reports')">📈 التقارير</button>
+      <button class="nav-btn" data-page="loyalty" onclick="showPage('loyalty')">🎁 الولاء والإشعارات</button>
       <button class="nav-btn" data-page="users" data-role="admin" onclick="showPage('users')">👥 المستخدمين</button>
       <button class="nav-btn" data-page="settings" data-role="super" onclick="showPage('settings')">⚙️ الإعدادات</button>
     </aside>
@@ -354,6 +355,7 @@ tr:hover td{background:var(--subtle)}
           <button class="btn btn-danger" id="killSwitchBtn" onclick="toggleSystemStatus()">🔴 إيقاف النظام</button>
         </div>
       </div>
+      <div id="page-loyalty" class="page"><iframe id="loyaltyFrame" title="الولاء والإشعارات" style="width:100%;height:calc(100vh - 56px);min-height:560px;border:0;border-radius:14px;background:transparent"></iframe></div>
       <div id="page-ratings" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">⭐ تقييمات الأصناف</h2>
@@ -664,6 +666,7 @@ function showPage(name){
   if(name === 'reports') initReportFilters();
   if(name === 'kds') renderKDS();
   if(name === 'ratings') initRatingsPage();
+  if(name === 'loyalty'){ const f=$('loyaltyFrame'); if(f && !f.getAttribute('src')) f.setAttribute('src','loyalty-admin.html?embed=1'); }
 }
 
 function closeModal(id){ $(id).classList.remove('open'); }
