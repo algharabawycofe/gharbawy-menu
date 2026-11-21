@@ -1340,7 +1340,7 @@ function openUserModal(id){
   $('userModal').classList.add('open');
 }
 async function saveUser(){
-  const { db, doc, setDoc, updateDoc, firebaseConfig } = window.FB; const id = $('u-uid').value; const isEdit = !!id; const name = $('u-name').value.trim(); const email = $('u-email').value.trim(); const role = $('u-role').value; const branchId = role === 'branch_manager' ? $('u-branchId').value : ''; const password = $('u-password') ? $('u-password').value : '';
+  const { db, doc, setDoc, updateDoc, firebaseConfig } = window.FB; const id = $('u-uid').value; const isEdit = !!id; const name = $('u-name').value.trim(); const email = $('u-email').value.trim(); const role = $('u-role').value; const branchId = (role === 'branch_manager' || role === 'captain') ? $('u-branchId').value : ''; const password = $('u-password') ? $('u-password').value : '';
   if (!name || !email) { showToast('⚠️ اكمل البيانات'); return; } if ((role === 'branch_manager' || role === 'captain') && !branchId) { showToast('⚠️ اختر الفرع'); return; } if (role === 'super_admin' && currentUserData.role !== 'super_admin') { showToast('⚠️ غير مسموح'); return; }
   try {
     if (isEdit) { await updateDoc(doc(db, 'users', id), { name, role, branchId }); showToast('✅ تم التعديل'); }
