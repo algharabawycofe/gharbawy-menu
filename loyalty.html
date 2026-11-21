@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2B1D14">
+<title>الغرباوي — كارت الولاء</title>
+<link rel="icon" href="logo-01.png">
+<link rel="stylesheet" href="loyalty.css">
+</head>
+<body><main>
+<div class="top"><h1>🎁 كارت الولاء</h1><a id="back" href="index.html">← المنيو</a></div>
+<div id="msg"></div>
+<div id="off" class="box" hidden><p>كارت الولاء مش متاح دلوقتي. جرّب بعدين ☕</p></div>
+
+<section id="join" class="box" hidden>
+  <h2>خد كارتك مجاناً</h2>
+  <p class="mut">كل زيارة بتاخد ختم، ولما الأختام تكمل بتاخد <b id="jReward"></b>. من غير تطبيق.</p>
+  <label for="jn">اسمك</label><input id="jn" autocomplete="name" maxlength="40">
+  <label for="jp">رقم الموبايل</label><input id="jp" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" dir="ltr">
+  <button id="jgo" class="b gold full" type="button" style="margin-top:14px">اعمل كارتي</button>
+</section>
+
+<section id="card" hidden>
+  <div class="lcard">
+    <h2 id="cName"></h2>
+    <div class="mut" id="cSub"></div>
+    <div class="stamps" id="cStamps"></div>
+    <div class="qr" id="cQr"></div>
+    <div class="mut" style="text-align:center">وريه للكاشير عشان يختم كارتك</div>
+  </div>
+  <div class="box" id="inbox" hidden><h2>📨 رسائل من الغرباوي</h2><div id="inboxList"></div></div>
+  <div class="box" id="pushBox" hidden><h2>🔔 إشعارات على موبايلك</h2>
+    <p class="mut" id="pushTxt">هنبعتلك لما كارتك يكمل أو فيه عرض، حتى لو الموقع مقفول.</p>
+    <button id="pushOn" class="b gold full" type="button">فعّل الإشعارات</button><p class="mut" id="pushSt"></p></div>
+  <div class="box" id="geo" hidden>
+    <h2>تنبيه "قريب من الغرباوي"</h2>
+    <p class="mut">لما تقرّب من الكافيه هنقولك إن كارتك مستنيك. بيشتغل طول ما الصفحة مفتوحة.</p>
+    <div class="row"><button id="geoOn" class="b" type="button">فعّل التنبيه</button><button id="geoTest" class="b ghost" type="button">جرّب التنبيه</button></div>
+    <p class="mut" id="geoSt"></p>
+  </div>
+</section>
+</main>
+<script src="loyalty-qr.js"></script>
+<script src="loyalty-common.js"></script>
+<script type="module" src="firebase-config.js"></script>
+<script type="module">
+const {$,esc,toast,phoneIntl,dist,qrSvg,ready,fill}=L;
+await ready();
+const {db,doc,collection,getDoc,setDoc,onSnapshot}=FB;
+$('#back').href='index.html'+location.search;
+const KEY='gh_loyalty_id',rid=()=>Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>(b%36).toString(36)).join('');
+const today=()=>new Date().toDateString();
+const banner=t=>$('#msg').innerHTML=t?`<div class="banner">${esc(t)}</div>`:'';
+const vars=(extra)=>({name:member?.name||'',stamps:member?.stamps||0,goal:cfg?.goal||8,reward:cfg?.reward||'',place:'الغرباوي',...extra});
+let cfg=null,M=L.msgs(null),member=null,prev=null,prevRed=0,unsub=null,bcs=[];
+
+try{const s=await getDoc(doc(db,'settings','loyalty'));cfg=s.exists()?s.data():null}catch(e){console.warn(e)}
+try{const s=await getDoc(doc(db,'settings','loyalty_msgs'));M=L.msgs(s.exists()?s.data():null)}catch(e){}
+if(!cfg||cfg.enabled===false){$('#off').hidden=false}
+else{
+  cfg={goal:8,reward:'مشروب مجاني',radius:100,places:[],...cfg};
+  $('#jReward').textContent=cfg.reward;
+  const id=localStorage.getItem(KEY);
+  if(id)listen(id);else showJoin();
+  onSnapshot(collection(db,'loyalty_broadcasts'),s=>{bcs=s.docs.map(d=>({id:d.id,...d.data()}));renderInbox()},()=>{});
+}
+function showJoin(){$('#join').hidden=false;$('#card').hidden=true}
+function listen(id){
+  unsub&&unsub();
+  unsub=onSnapshot(doc(db,'loyalty_members',id),s=>{
+    if(!s.exists()){localStorage.removeItem(KEY);member=null;showJoin();return}
+    member=s.data();
+    if(prev===null){ // أول فتح للصفحة: رسالة "وحشتنا" لو غايب
+      const d=L.days(member.lastVisit||member.joinedAt);
+      if(M.win.on&&d!==null&&d>=(+M.win.days||14)&&localStorage.getItem('gh_loy_win')!==today()){localStorage.setItem('gh_loy_win',today());banner(fill(M.win.text,vars()))}
+    }else if(member.stamps!==prev){
+      if((member.redeemed||0)>prevRed)banner(`🎉 مبروك يا ${member.name}! خدت ${cfg.reward}`);
+      else if(member.stamps<prev){}
+      else if(member.stamps>=cfg.goal)M.reward.on&&banner(fill(M.reward.text,vars()));
+      else M.thanks.on&&banner(fill(M.thanks.text,vars()));
+    }
+    prev=member.stamps;prevRed=member.redeemed||0;render(id);renderInbox();
+  },e=>{console.warn(e);toast('مقدرتش أحمّل الكارت — جرّب تاني')});
+}
+function render(id){
+  $('#join').hidden=true;$('#card').hidden=false;
+  const g=cfg.goal,n=member.stamps||0;
+  $('#cName').textContent='أهلاً يا '+member.name;
+  $('#cSub').textContent=n>=g?`🎉 مكافأتك جاهزة: ${cfg.reward}`:`${n} من ${g} · المكافأة: ${cfg.reward}`+(member.redeemed?` · خدت ${member.redeemed} قبل كده`:'');
+  $('#cStamps').innerHTML=Array.from({length:g},(_,i)=>`<div class="st${i<n?' on':''}">${i<n?'☕':''}</div>`).join('');
+  $('#cQr').innerHTML=qrSvg(id);
+  $('#geo').hidden=!(cfg.places||[]).length||M.near.on===false;
+  initPush();
+}
+/* ===== رسائل الإدارة (Broadcasts) ===== */
+const getL=k=>{try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}};
+function renderInbox(){
+  if(!member||!cfg){$('#inbox').hidden=true;return}
+  const gone=getL('gh_loy_gone'),seen=getL('gh_loy_seen');
+  const list=bcs.filter(b=>b.active!==false&&(!b.endsAt||b.endsAt>Date.now())&&!gone.includes(b.id)&&L.match(member,b,cfg)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  $('#inbox').hidden=!list.length;
+  $('#inboxList').innerHTML=list.map(b=>`<div class="inbox"><div style="flex:1">${b.title?`<b>${esc(fill(b.title,vars()))}</b>`:''}<p>${esc(fill(b.body,vars()))}</p></div><button type="button" data-x="${esc(b.id)}" aria-label="إخفاء">✕</button></div>`).join('');
+  $('#inboxList').querySelectorAll('[data-x]').forEach(x=>x.onclick=()=>{gone.push(x.dataset.x);localStorage.setItem('gh_loy_gone',JSON.stringify(gone));renderInbox()});
+  const fresh=list.filter(b=>!seen.includes(b.id));
+  if(fresh.length){localStorage.setItem('gh_loy_seen',JSON.stringify(seen.concat(fresh.map(b=>b.id))));
+    try{if(Notification.permission==='granted'&&!localStorage.getItem('gh_push_on'))new Notification(fresh[0].title||'الغرباوي ☕',{body:fill(fresh[0].body,vars()),lang:'ar',dir:'rtl',icon:'logo-01.png'})}catch(e){}}
+}
+$('#jgo').onclick=async()=>{
+  const name=$('#jn').value.trim(),phone=phoneIntl($('#jp').value);
+  if(!name||phone.length<10)return toast('اكتب اسمك ورقمك صح');
+  const id=rid();$('#jgo').disabled=true;
+  try{await setDoc(doc(db,'loyalty_members',id),{name,phone,stamps:0,redeemed:0,visits:0,joinedAt:Date.now(),lastVisit:null});
+    localStorage.setItem(KEY,id);prev=0;member={name,phone,stamps:0};M.welcome.on&&banner(fill(M.welcome.text,vars()));listen(id);prev=0}
+  catch(e){console.warn(e);toast('حصلت مشكلة، جرّب تاني')}
+  $('#jgo').disabled=false;
+};
+/* ===== قريب من الكافيه ===== */
+function near(p,test){
+  if(!M.near.on&&!test)return;
+  banner(fill(M.near.text,vars({place:p.name||'الغرباوي'})));
+  try{if(Notification.permission==='granted')new Notification('الغرباوي ☕',{body:fill(M.near.text,vars({place:p.name||'الغرباوي'})),lang:'ar',dir:'rtl',icon:'logo-01.png'})}catch(e){}
+  if(!test)localStorage.setItem('gh_loyalty_near',today());
+}
+let wid=null;
+function watch(){
+  if(!navigator.geolocation)return $('#geoSt').textContent='المتصفح مش بيدعم الموقع';
+  if(wid!==null)return;
+  wid=navigator.geolocation.watchPosition(pos=>{
+    if(localStorage.getItem('gh_loyalty_near')===today())return;
+    const hit=(cfg.places||[]).find(p=>dist(pos.coords.latitude,pos.coords.longitude,p.lat,p.lng)<=cfg.radius);
+    if(hit)near(hit)},()=>$('#geoSt').textContent='مقدرتش أوصل للموقع — اسمح بالصلاحية',{enableHighAccuracy:true,maximumAge:15000});
+  $('#geoSt').textContent='التنبيه شغال ✓ سيب الصفحة مفتوحة';localStorage.setItem('gh_loyalty_watch','1');
+}
+$('#geoOn').onclick=async()=>{try{await Notification.requestPermission()}catch(e){}watch()};
+$('#geoTest').onclick=()=>{try{Notification.permission==='default'&&Notification.requestPermission()}catch(e){}near((cfg.places||[])[0]||{},true)};
+if(localStorage.getItem('gh_loyalty_watch')&&cfg)watch();
+
+/* ===== Push حقيقي (FCM) — بيظهر بس لما الإدارة تحط مفتاح Push وتفعّل الـ Functions ===== */
+const FV='10.12.2',IOS=/iphone|ipad|ipod/i.test(navigator.userAgent),STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+let pushInit=false;
+async function fcmLib(){
+  try{if(!('serviceWorker' in navigator)||!('Notification' in window)||!('PushManager' in window))return null;
+    const m=await import(`https://www.gstatic.com/firebasejs/${FV}/firebase-messaging.js`);
+    return (await m.isSupported())?m:null}catch(e){return null}
+}
+async function saveToken(m){
+  const {getApp}=await import(`https://www.gstatic.com/firebasejs/${FV}/firebase-app.js`);
+  const reg=await navigator.serviceWorker.register('firebase-messaging-sw.js',{scope:'./fcm-scope/'});
+  await new Promise(res=>{const w=reg.installing||reg.waiting;if(!w||reg.active)return res();w.addEventListener('statechange',()=>w.state==='activated'&&res());setTimeout(res,6000)});
+  const token=await m.getToken(m.getMessaging(getApp()),{vapidKey:cfg.vapidKey,serviceWorkerRegistration:reg});
+  if(!token)throw new Error('no-token');
+  const id=localStorage.getItem(KEY);
+  await setDoc(doc(db,'loyalty_push_tokens',id),{memberId:id,token,url:location.origin+location.pathname,at:Date.now()});
+  localStorage.setItem('gh_push_on','1');
+}
+async function initPush(){
+  if(pushInit||!cfg||!cfg.vapidKey||!member)return;pushInit=true;
+  if(IOS&&!STANDALONE){$('#pushBox').hidden=false;$('#pushOn').hidden=true;$('#pushTxt').textContent='على الآيفون: دوس زرار المشاركة واختار "إضافة إلى الشاشة الرئيسية"، وافتح الكارت منها وفعّل الإشعارات.';return}
+  const m=await fcmLib();if(!m)return;
+  $('#pushBox').hidden=false;
+  const done=()=>{$('#pushOn').hidden=true;$('#pushSt').textContent='الإشعارات شغّالة ✓'};
+  if(Notification.permission==='granted'){try{await saveToken(m);done()}catch(e){console.warn(e)}}
+  else if(Notification.permission==='denied'){$('#pushOn').hidden=true;$('#pushSt').textContent='الإشعارات متقفلة من إعدادات المتصفح'}
+  $('#pushOn').onclick=async()=>{
+    try{if(await Notification.requestPermission()!=='granted')return toast('لازم تسمح بالإشعارات');await saveToken(m);done();toast('اتفعّلت ✓')}
+    catch(e){console.warn(e);toast('معرفتش أفعّل الإشعارات دلوقتي')}
+  };
+}
+</script>
+</body></html>

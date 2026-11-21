@@ -13,8 +13,8 @@
 <div id="gate" class="box"><p id="gateMsg">جاري التحقق من الدخول…</p><a class="b" href="admin.html" id="gateLink" hidden>سجّل دخول من لوحة الإدارة</a></div>
 
 <div id="app" hidden>
-<div id="rulesWarn" class="banner" hidden style="background:#F6D6D0">⚠️ مفيش صلاحية قراءة العملاء. ضيف قواعد <b>firestore-loyalty.rules</b> في Firebase ← Firestore ← Rules ثم Publish.</div>
-<div class="tabs" role="tablist"><button class="on" data-t="stamp">ختم</button><button data-t="members">العملاء</button><button data-t="set" id="tabSet">الإعدادات</button></div>
+<div id="rulesWarn" class="banner" hidden style="background:#F6D6D0">⚠️ مفيش صلاحية قراءة العملاء. استخدم <b>firestore.rules</b> (الكاملة) أو ضيف <b>firestore-loyalty.rules</b> في Firebase ← Firestore ← Rules ثم Publish.</div>
+<div class="tabs" role="tablist"><button class="on" data-t="stamp">ختم</button><button data-t="members">العملاء</button><button data-t="note" id="tabNote" hidden>الإشعارات</button><button data-t="set" id="tabSet">الإعدادات</button></div>
 
 <section class="pane" id="p-stamp">
   <div class="box"><h2>تسجيل زيارة</h2>
@@ -34,7 +34,28 @@
   <div class="box" id="list"></div>
 </section>
 
+<section class="pane" id="p-note" hidden>
+  <div class="box"><h2>📣 رسالة للعملاء</h2>
+    <p class="mut">بتظهر في كارت العميل أول ما يفتحه، ومعاها إشعار المتصفح لو هو سمح بيه.</p>
+    <label for="bTitle">العنوان (اختياري)</label><input id="bTitle" maxlength="60" placeholder="عرض النهارده ☕">
+    <label for="bBody">نص الرسالة</label><textarea id="bBody" rows="3" maxlength="240" placeholder="اشترِ قهوة واتنين أختام النهارده بس"></textarea>
+    <p class="mut">المتغيرات: {name} {stamps} {goal} {reward}</p>
+    <div class="row"><div><label for="bAud">مين يستلمها</label><select id="bAud"><option value="all">كل العملاء</option><option value="lapsed">الغايبين</option><option value="near">قرّبوا من المكافأة</option><option value="new">عملاء جداد</option></select></div>
+    <div><label for="bDur">تفضل ظاهرة (يوم)</label><input id="bDur" type="number" min="1" value="7"></div></div>
+    <div id="bDaysW" hidden><label for="bDays">الغايب = بقاله كام يوم</label><input id="bDays" type="number" min="3" value="14"></div>
+    <p class="mut" style="margin-top:10px">هتوصل لـ <b id="bCount">0</b> عميل · المعاينة:</p>
+    <div id="bPrev"></div>
+    <label class="chk" id="bPushW" hidden style="margin-top:8px"><input type="checkbox" id="bPush"> 📲 ابعتها Push كمان (بتوصل والتطبيق مقفول)</label>
+    <div class="row" style="margin-top:6px"><button class="b gold" id="bPub" type="button">نشر جوه الكارت</button><button class="b ghost" id="bWa" type="button">واتساب للفئة</button></div>
+    <div id="waList"></div></div>
+  <div class="box"><h2>الرسائل المنشورة</h2><div id="bList"></div></div>
+  <div class="box"><h2>⚙️ الرسائل التلقائية</h2>
+    <p class="mut">بتظهر للعميل لوحدها. عدّل النص أو وقّفها. المتغيرات: {name} {stamps} {goal} {reward} {place}</p>
+    <div id="autoMsgs"></div><button class="b gold full" id="saveMsgs" type="button" style="margin-top:12px">حفظ الرسائل</button></div>
+</section>
+
 <section class="pane" id="p-set" hidden>
+  <div class="box"><h2>✅ جاهزية النظام</h2><div id="checkList"></div></div>
   <div class="box"><h2>إعدادات الولاء</h2>
     <label for="sOn">الحالة</label><select id="sOn"><option value="1">شغّال</option><option value="0">موقوف</option></select>
     <div class="row"><div><label for="sGoal">عدد الأختام للمكافأة</label><input id="sGoal" type="number" min="2" max="20"></div>
@@ -44,6 +65,9 @@
     <p class="mut">قف في الفرع ودوس "أضف موقعي الحالي".</p>
     <div id="places"></div>
     <div class="row" style="margin-top:8px"><input id="pName" placeholder="اسم الفرع" style="flex:2"><button id="addPlace" class="b ghost" type="button">📍 أضف موقعي الحالي</button></div>
+    <h2 style="margin-top:16px">📲 Push حقيقي (اختياري)</h2>
+    <p class="mut">بيوصّل الإشعار والموقع مقفول. محتاج خطة Blaze والـ Cloud Functions (الخطوات في PUSH-SETUP.md). بعد ما تخلّصها الصق هنا مفتاح الويب (VAPID).</p>
+    <label for="sVapid">مفتاح الويب Push (VAPID)</label><input id="sVapid" dir="ltr" placeholder="B…" autocomplete="off">
     <button id="saveSet" class="b gold full" type="button" style="margin-top:14px">حفظ الإعدادات</button>
   </div>
   <div class="box"><h2>QR كارت الولاء</h2><p class="mut">اطبعه جنب الكاشير. العميل يفتح صفحة الكارت مباشرة.</p>
@@ -55,9 +79,10 @@
 <script src="loyalty-common.js"></script>
 <script type="module" src="firebase-config.js"></script>
 <script type="module">
-const {$,esc,toast,phoneIntl,days,ago,dist,qrSvg,ready}=L;
+const {$,esc,toast,phoneIntl,days,ago,dist,qrSvg,ready,msgs,fill,match}=L;
+if(new URLSearchParams(location.search).get('embed'))document.body.classList.add('embed');
 await ready();
-const {db,auth,doc,collection,getDoc,setDoc,updateDoc,addDoc,onSnapshot,increment,onAuthStateChanged}=FB;
+const {db,auth,doc,collection,getDoc,setDoc,updateDoc,deleteDoc,addDoc,onSnapshot,increment,onAuthStateChanged}=FB;
 let cfg={goal:8,reward:'مشروب مجاني',radius:100,places:[],enabled:true},members=[],me=null,role='',selId=null,late=14;
 const STAFF=['super_admin','admin','branch_manager'],OWN=['super_admin','admin'];
 const joinUrl=()=>location.origin+location.pathname.replace(/[^/]*$/,'')+'loyalty.html';
@@ -66,11 +91,13 @@ onAuthStateChanged(auth,async u=>{
   if(!u){$('#gateMsg').textContent='لازم تسجّل دخول الأول.';$('#gateLink').hidden=false;return}
   try{const s=await getDoc(doc(db,'users',u.uid));role=s.exists()?s.data().role:''}catch(e){}
   if(!STAFF.includes(role)){$('#gateMsg').textContent='الحساب ده مالوش صلاحية على الولاء.';return}
-  me=u;$('#gate').hidden=true;$('#app').hidden=false;$('#tabSet').hidden=!OWN.includes(role);start();
+  me=u;$('#gate').hidden=true;$('#app').hidden=false;$('#tabSet').hidden=!OWN.includes(role);$('#tabNote').hidden=!OWN.includes(role);start();
 });
 function start(){
-  onSnapshot(doc(db,'settings','loyalty'),s=>{if(s.exists())cfg={...cfg,...s.data()};fillSet();renderSel()});
-  onSnapshot(collection(db,'loyalty_members'),s=>{members=s.docs.map(d=>({id:d.id,...d.data()}));renderList();renderSel()},e=>{console.warn(e);$('#rulesWarn').hidden=false});
+  startNotes();
+  onSnapshot(doc(db,'settings','loyalty'),s=>{if(s.exists()){cfg={...cfg,...s.data()};cfgSaved=true}fillSet();renderSel()});
+  onSnapshot(collection(db,'loyalty_push_tokens'),s=>{tokCount=s.size;renderCheck()},()=>{});
+  onSnapshot(collection(db,'loyalty_members'),s=>{members=s.docs.map(d=>({id:d.id,...d.data()}));rulesOk=true;renderList();renderSel();updComp();renderCheck()},e=>{console.warn(e);rulesOk=false;$('#rulesWarn').hidden=false;renderCheck()});
 }
 /* tabs */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
@@ -137,7 +164,17 @@ function renderList(){
 /* settings */
 function fillSet(){
   $('#sOn').value=cfg.enabled===false?'0':'1';$('#sGoal').value=cfg.goal;$('#sRad').value=cfg.radius;$('#sRew').value=cfg.reward;
-  renderPlaces();$('#joinQr').innerHTML=qrSvg(joinUrl());
+  $('#sVapid').value=cfg.vapidKey||'';$('#bPushW').hidden=!cfg.vapidKey;
+  renderPlaces();$('#joinQr').innerHTML=qrSvg(joinUrl());renderCheck();
+}
+let rulesOk=null,cfgSaved=false,tokCount=null;
+function renderCheck(){
+  const it=[[rulesOk===true,'قواعد Firestore شغّالة (قراءة العملاء)',rulesOk===false?'انشر firestore.rules في Rules':''],
+    [cfgSaved,'اتحفظت إعدادات الولاء','من تحت: حدد الأختام والمكافأة واضغط حفظ'],
+    [(cfg.places||[]).length>0,'مكان فرع واحد على الأقل (للتنبيه القريب)','قف في الفرع ودوس "أضف موقعي الحالي"'],
+    [members.length>0,'فيه عملاء مسجلين','اطبع QR الكارت وخلّي أول عميل يسجّل'],
+    [!!cfg.vapidKey,'Push حقيقي'+(tokCount?` (${tokCount} جهاز مفعّل)`:''),'اختياري — شوف PUSH-SETUP.md']];
+  $('#checkList').innerHTML=it.map(([ok,t,h])=>`<div class="mem"><span>${ok?'✅':'⬜'} ${t}</span>${!ok&&h?`<small>${h}</small>`:''}</div>`).join('');
 }
 function renderPlaces(){
   $('#places').innerHTML=(cfg.places||[]).map((p,i)=>`<div class="mem"><span>📍 ${esc(p.name)} <small>${(+p.lat).toFixed(4)}, ${(+p.lng).toFixed(4)}</small></span><button class="b ghost" data-d="${i}" type="button">حذف</button></div>`).join('')||'<p class="mut">لسه مفيش أماكن.</p>';
@@ -148,9 +185,55 @@ $('#addPlace').onclick=()=>navigator.geolocation?navigator.geolocation.getCurren
   ()=>toast('مقدرتش أوصل للموقع — اسمح بالصلاحية'),{enableHighAccuracy:true}):toast('المتصفح مش بيدعم الموقع');
 $('#saveSet').onclick=async()=>{
   if(!OWN.includes(role))return toast('للأدمن فقط');
-  const data={enabled:$('#sOn').value==='1',goal:Math.max(2,+$('#sGoal').value||8),radius:+$('#sRad').value||100,reward:$('#sRew').value.trim()||'مشروب مجاني',places:cfg.places||[]};
+  const data={enabled:$('#sOn').value==='1',goal:Math.max(2,+$('#sGoal').value||8),radius:+$('#sRad').value||100,reward:$('#sRew').value.trim()||'مشروب مجاني',places:cfg.places||[],vapidKey:$('#sVapid').value.trim()};
   try{await setDoc(doc(db,'settings','loyalty'),data);toast('اتحفظ ✓')}catch(e){console.warn(e);toast('مفيش صلاحية كتابة — راجع قواعد Firestore')}
 };
 $('#copyJoin').onclick=async()=>{try{await navigator.clipboard.writeText(joinUrl());toast('اتنسخ ✓')}catch(e){prompt('انسخ:',joinUrl())}};
+
+/* ===== مركز الإشعارات ===== */
+const AUD={all:'كل العملاء',lapsed:'الغايبين',near:'قرّبوا من المكافأة',new:'عملاء جداد'};
+const NAMES={welcome:'ترحيب بعد الانضمام',thanks:'شكر بعد الختم',reward:'المكافأة جاهزة',win:'"وحشتنا" للغايبين لما يفتحوا الكارت',near:'قريب من الفرع'};
+let M=msgs(null),bcs=[];
+const vv=m=>({name:m.name||'',stamps:m.stamps||0,goal:cfg.goal,reward:cfg.reward,place:'الغرباوي'});
+function startNotes(){
+  onSnapshot(doc(db,'settings','loyalty_msgs'),s=>{M=msgs(s.exists()?s.data():null);renderMsgs()},()=>{});
+  onSnapshot(collection(db,'loyalty_broadcasts'),s=>{bcs=s.docs.map(d=>({id:d.id,...d.data()}));renderBcs()},()=>{});
+}
+function renderMsgs(){
+  $('#autoMsgs').innerHTML=Object.keys(NAMES).map(k=>`<div class="mrow"><label class="chk"><input type="checkbox" data-k="${k}" data-f="on" ${M[k].on?'checked':''}> <b>${NAMES[k]}</b></label>`+
+    (k==='win'?`<div class="row" style="margin-bottom:6px;align-items:center"><span class="mut" style="flex:0 0 auto">لو غايب</span><input type="number" min="3" data-k="win" data-f="days" value="${M.win.days||14}" style="flex:0 0 90px"><span class="mut" style="flex:0 0 auto">يوم أو أكتر</span></div>`:'')+
+    `<textarea data-k="${k}" data-f="text" rows="2" maxlength="200">${esc(M[k].text)}</textarea></div>`).join('');
+}
+$('#saveMsgs').onclick=async()=>{
+  const o={};document.querySelectorAll('#autoMsgs [data-k]').forEach(e=>{const k=e.dataset.k,f=e.dataset.f;(o[k]=o[k]||{})[f]=f==='on'?e.checked:f==='days'?(+e.value||14):e.value.trim()});
+  try{await setDoc(doc(db,'settings','loyalty_msgs'),o);toast('اتحفظ ✓')}catch(e){console.warn(e);toast('مفيش صلاحية كتابة — راجع القواعد')}
+};
+const bState=()=>({title:$('#bTitle').value.trim(),body:$('#bBody').value.trim(),audience:$('#bAud').value,days:+$('#bDays').value||14});
+const recips=()=>{const b=bState();return members.filter(m=>match(m,b,cfg))};
+function updComp(){
+  const b=bState(),r=recips();$('#bDaysW').hidden=b.audience!=='lapsed';$('#bCount').textContent=r.length;
+  const m=r[0]||{name:'كريم',stamps:3};
+  $('#bPrev').innerHTML=b.body?`<div class="banner">${b.title?`<b>${esc(fill(b.title,vv(m)))}</b><br>`:''}${esc(fill(b.body,vv(m)))}</div>`:'<p class="mut">اكتب الرسالة عشان تشوف شكلها.</p>';
+}
+['bTitle','bBody','bAud','bDays'].forEach(i=>$('#'+i).oninput=updComp);
+$('#bPub').onclick=async()=>{
+  const b=bState();if(!b.body)return toast('اكتب نص الرسالة');
+  const dur=Math.max(1,+$('#bDur').value||7);
+  try{await addDoc(collection(db,'loyalty_broadcasts'),{...b,push:!!($('#bPush').checked&&cfg.vapidKey),active:true,createdAt:Date.now(),endsAt:Date.now()+dur*864e5,by:me.email||me.uid});
+    toast('اتنشرت ✓');$('#bPush').checked=false;$('#bTitle').value='';$('#bBody').value='';updComp()}
+  catch(e){console.warn(e);toast('مفيش صلاحية كتابة — راجع القواعد')}
+};
+$('#bWa').onclick=()=>{
+  const b=bState();if(!b.body)return toast('اكتب نص الرسالة');const r=recips();
+  $('#waList').innerHTML=r.length?r.map(m=>`<div class="mem"><div><b>${esc(m.name)}</b><small>${esc(m.phone)}</small></div><a class="b gold" target="_blank" rel="noopener" href="https://wa.me/${phoneIntl(m.phone)}?text=${encodeURIComponent((b.title?b.title+'\n':'')+fill(b.body,vv(m)))}">واتساب</a></div>`).join(''):'<p class="mut">مفيش عملاء مطابقين.</p>';
+};
+function renderBcs(){
+  const arr=[...bcs].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  $('#bList').innerHTML=arr.map(b=>{const live=b.active!==false&&(!b.endsAt||b.endsAt>Date.now());
+    return `<div class="mem"><div><b>${esc(b.title||'(بدون عنوان)')}</b><small>${esc(b.body)}</small><small>${AUD[b.audience]||''} · ${live?'شغّالة':'منتهية/موقوفة'}${b.push?(b.pushStats?` · 📲 وصلت ${b.pushStats.sent} من ${b.pushStats.targeted}`:' · 📲 جاري الإرسال…'):''}</small></div><div class="row" style="flex:0 0 auto"><button class="b ghost" data-tg="${b.id}" type="button">${b.active===false?'تفعيل':'إيقاف'}</button><button class="b ghost" data-rm="${b.id}" type="button">حذف</button></div></div>`}).join('')||'<p class="mut">لسه مفيش رسائل.</p>';
+  $('#bList').querySelectorAll('[data-tg]').forEach(x=>x.onclick=()=>{const b=bcs.find(y=>y.id===x.dataset.tg);updateDoc(doc(db,'loyalty_broadcasts',b.id),{active:b.active===false}).catch(()=>toast('معرفتش'))});
+  $('#bList').querySelectorAll('[data-rm]').forEach(x=>x.onclick=()=>{if(confirm('حذف الرسالة؟'))deleteDoc(doc(db,'loyalty_broadcasts',x.dataset.rm)).catch(()=>toast('معرفتش'))});
+}
+renderMsgs();updComp();
 </script>
 </body></html>
