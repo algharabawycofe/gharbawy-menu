@@ -72,8 +72,20 @@ tr:hover td{background:var(--subtle)}
 .qr-wrapper{background:#fff;padding:24px;border-radius:24px;box-shadow:0 10px 40px rgba(43,29,20,0.08);border:1px solid var(--border);text-align:center;position:relative;margin-bottom:16px}
 .qr-title-text{font-size:14px;font-weight:900;color:var(--dark);margin-bottom:16px;letter-spacing:1px}
 .qr-container{position:relative;display:inline-block;padding:16px;background:#fff;border-radius:20px;border:2px dashed var(--gold)}
-.qr-logo-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:#fff;border-radius:50%;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:2px solid var(--gold);object-fit:contain;z-index:10}
-.danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
+.qr-logo-overlay{
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:48px;              /* ✅ كان 60 */
+  height:48px;
+  background:#fff;
+  border-radius:50%;
+  padding:4px;             /* ✅ كان 6 */
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  border:2px solid var(--gold);
+  object-fit:contain;
+  z-index:10;
+}.danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
 .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
 .pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
 .section-header{font-size:15px;font-weight:900;margin:0 0 6px}
@@ -809,17 +821,64 @@ async function deleteBranch(id){ if(!confirm('تأكيد حذف الفرع؟')) 
 
 let currentQRBranch = null;
 function showQR(branchId){
-  currentQRBranch = branches.find(x=>x.id===branchId); if(!currentQRBranch) return;
-  $('qrTitle').innerText='📱 QR — '+currentQRBranch.nameAr; $('qrType').value='branch';
-  const tables = currentQRBranch.tables||[]; $('qrTable').innerHTML = tables.map(t=>`<option value="${t.number}">طربيزة ${t.number}</option>`).join('') || '<option>لا توجد طربيزات</option>';
-  $('qrTableSelectBox').style.display='none'; renderQRPreview(); $('qrModal').classList.add('open');
+  currentQRBranch = branches.find(x => x.id === branchId);
+  if(!currentQRBranch){ showToast('⚠️ الفرع غير موجود'); return; }
+  if(!currentQRBranch.code){ showToast('⚠️ الفرع ليس له كود — أضف كود أولاً'); return; }
+
+  $('qrTitle').innerText = '📱 QR — ' + currentQRBranch.nameAr;
+  $('qrType').value = 'branch';
+
+  const tables = currentQRBranch.tables || [];
+  $('qrTable').innerHTML = tables.length
+    ? tables.map(t => `<option value="${t.number}">طربيزة ${t.number}</option>`).join('')
+    : '<option value="">لا توجد طربيزات</option>';
+
+  $('qrTableSelectBox').style.display = 'none';
+
+  // ✅ افتح المودال الأول، بعدها ارسم (عشان html2canvas يشتغل صح)
+  $('qrModal').classList.add('open');
+  setTimeout(renderQRPreview, 60);
 }
+
 function renderQRPreview(){
-  if(!currentQRBranch) return; const type = $('qrType').value; let url = `https://algharabawycofe.github.io/gharbawy-menu/index.html?branch=${currentQRBranch.code}`;
-  if(type==='table'){ $('qrTableSelectBox').style.display='block'; const t = $('qrTable').value; url += `&table=${t}`; } else { $('qrTableSelectBox').style.display='none'; }
-  $('qrUrl').innerText = url; $('qrCode').innerHTML='';
-  new QRCode($('qrCode'),{ text:url, width:250, height:250, colorDark:'#2B1D14', colorLight:'#FFFFFF', correctLevel:QRCode.CorrectLevel.H });
-  const logoUrl = companyInfo.logo || 'logo-01.png'; const img = document.createElement('img'); img.src = logoUrl; img.className = 'qr-logo-overlay'; img.onerror = function() { this.style.display = 'none'; }; $('qrCode').appendChild(img);
+  if(!currentQRBranch) return;
+
+  const type = $('qrType').value;
+  const baseUrl = 'https://algharabawycofe.github.io/gharbawy-menu/index.html';
+  let url = `${baseUrl}?branch=${encodeURIComponent(currentQRBranch.code)}`;
+
+  if(type === 'table'){
+    $('qrTableSelectBox').style.display = 'block';
+    const t = $('qrTable').value;
+    if(t) url += `&table=${encodeURIComponent(t)}`;
+  } else {
+    $('qrTableSelectBox').style.display = 'none';
+  }
+
+  $('qrUrl').innerText = url;
+
+  // ✅ امسح القديم + ارسم جديد
+  const box = $('qrCode');
+  box.innerHTML = '';
+
+  new QRCode(box, {
+    text: url,
+    width: 280,
+    height: 280,
+    colorDark: '#000000',   // ✅ أسود نقي = سكان أفضل بكتير
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // ✅ اللوجو — اختياري + مع crossOrigin
+  if(companyInfo.logo){
+    const img = document.createElement('img');
+    img.src = companyInfo.logo;
+    img.className = 'qr-logo-overlay';
+    img.crossOrigin = 'anonymous';   // ⭐ مهم جداً لـ html2canvas
+    img.onerror = function(){ this.style.display = 'none'; };
+    box.appendChild(img);
+  }
 }
 function printQR() {
   const qrContainer = $('qrCodeContainer'); if(!qrContainer) { showToast('⚠️ خطأ في الطباعة'); return; }
