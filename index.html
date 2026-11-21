@@ -584,6 +584,7 @@ html.dark .toast{background:var(--coffee-gold);color:#1F1611;}
       </div>
     </div>
     <div class="header-actions">
+      <button class="icon-btn" id="loyaltyBtn" style="display:none" onclick="location.href='loyalty.html'+location.search" title="كارت الولاء" aria-label="كارت الولاء">🎁</button>
       <button class="icon-btn" onclick="toggleDark()" title="الوضع الليلي">🌙</button>
       <button class="icon-btn" onclick="toggleLang()"><span id="langText" style="font-size:12px;font-weight:900;">EN</span></button>
       <button class="cart-btn" onclick="openCartModal()">
@@ -3134,5 +3135,6 @@ async function submitRating(){
 })();
 
 </script>
+<script src="loyalty-hook.js"></script>
 </body>
 </html>
