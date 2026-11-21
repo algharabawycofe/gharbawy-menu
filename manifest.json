@@ -1,7 +1,7 @@
 {
   "name": "الغرباوي - القائمة الرقمية",
   "short_name": "الغرباوي",
-  "start_url": "/gharbawy-menu/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#FAF6F0",
   "theme_color": "#2B1D14",
