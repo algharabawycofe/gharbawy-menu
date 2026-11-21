@@ -18,6 +18,7 @@ body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);mar
 .role-badge{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:900}
 .role-super_admin{background:linear-gradient(135deg,#B33A3A,#E74C3C);color:#fff}
 .role-admin{background:linear-gradient(135deg,#C89B5E,#E0BE85);color:#1F1611}
+.role-captain{background:linear-gradient(135deg,#C89B5E,#E0BE85);color:#1F1611}
 .role-branch_manager{background:linear-gradient(135deg,#4A7C59,#6EBF82);color:#fff}
 .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 65px)}
 .side{background:var(--surface);border-left:1px solid var(--border);padding:16px 10px}
@@ -474,7 +475,7 @@ tr:hover td{background:var(--subtle)}
   <div class="form-row"><div><label>الاسم</label><input id="u-name"></div><div><label>الإيميل</label><input id="u-email" dir="ltr" type="email"></div></div>
   <div id="u-passwordBox" style="margin-bottom:12px"><label>الباسورد</label><input id="u-password" type="text" dir="ltr"><div class="pwd-box">⚠️ اكتبه في مكان آمن!</div></div>
   <div class="form-row">
-    <div><label>الدور</label><select id="u-role" onchange="onUserRoleChange()"><option value="admin">Admin</option><option value="branch_manager">Branch Manager</option><option value="super_admin" id="optSuperAdmin" style="display:none">Super Admin</option></select></div>
+    <div><label>الدور</label><select id="u-role" onchange="onUserRoleChange()"><option value="admin">Admin</option><option value="branch_manager">Branch Manager</option><option value="captain">كابتن صالة</option><option value="super_admin" id="optSuperAdmin" style="display:none">Super Admin</option></select></div>
     <div id="u-branchBox" style="display:none"><label>الفرع</label><select id="u-branchId"></select></div>
   </div>
   <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px"><button class="btn btn-ghost" onclick="closeModal('userModal')">إلغاء</button><button class="btn btn-primary" onclick="saveUser()">حفظ</button></div>
@@ -521,6 +522,7 @@ onFbReady(()=>{
       const ok = await loadUserData(user.uid);
       if(!ok){ showNoPermission(); return; }
 
+      if(currentUserData.role === 'captain'){ window.location.href = 'captain.html'; return; }
       if(currentUserData.role === 'branch_manager'){
           window.location.href = 'branch.html';
           return;
@@ -559,7 +561,7 @@ async function doLogout(){ await window.FB.signOut(window.FB.auth); location.rel
 
 function applyRoleUI(){
   const role = currentUserData.role;
-  const roleNames = {super_admin:'👑 Super Admin', admin:'🛡️ Admin', branch_manager:'👔 مدير فرع'};
+  const roleNames = {super_admin:'👑 Super Admin', admin:'🛡️ Admin', branch_manager:'👔 مدير فرع', captain:'🧑‍🍳 كابتن صالة'};
   $('userName').innerText = currentUserData.name || currentUser.email;
   $('userRoleBadge').className = 'role-badge role-'+role;
   $('userRoleBadge').innerText = roleNames[role] || role;
@@ -1322,7 +1324,7 @@ function renderSalesChart() {
 
 function renderUsers(){
   const tb=$('usersTable'); if(!users.length){ tb.innerHTML='<tr><td colspan="6" class="empty">لا يوجد مستخدمون</td></tr>'; return; }
-  const roleNames={super_admin:'👑 Super Admin',admin:'🛡️ Admin',branch_manager:'👔 مدير فرع'};
+  const roleNames={super_admin:'👑 Super Admin',admin:'🛡️ Admin',branch_manager:'👔 مدير فرع',captain:'🧑‍🍳 كابتن صالة'};
   const visibleUsers = currentUserData.role === 'super_admin' ? users : users.filter(u => u.role !== 'super_admin');
   tb.innerHTML=visibleUsers.map(u=>{
     const b=branches.find(x=>x.id===u.branchId);
@@ -1330,7 +1332,7 @@ function renderUsers(){
     return `<tr><td><strong>${u.name||'—'}</strong></td><td dir="ltr" style="font-size:12px">${u.email||'—'}</td><td><span class="badge ${u.role==='super_admin'?'badge-red':u.role==='admin'?'badge-gold':'badge-green'}">${roleNames[u.role]||u.role}</span></td><td>${b?b.nameAr:'—'}</td><td>${u.active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">موقوف</span>'}</td><td style="white-space:nowrap"><button class="btn btn-primary btn-sm" onclick="openUserModal('${u.id}')">✏️</button>${deleteBtn}</td></tr>`;
   }).join('');
 }
-function onUserRoleChange(){ const role = $('u-role').value; $('u-branchBox').style.display = role==='branch_manager' ? 'block' : 'none'; refreshSelect('u-branchId'); }
+function onUserRoleChange(){ const role = $('u-role').value; $('u-branchBox').style.display = (role==='branch_manager'||role==='captain') ? 'block' : 'none'; refreshSelect('u-branchId'); }
 function openUserModal(id){
   refreshSelect('u-branchId'); const superOpt = $('optSuperAdmin'); if(currentUserData.role === 'super_admin'){ superOpt.style.display = 'block'; } else { superOpt.style.display = 'none'; }
   if(id){ const u=users.find(x=>x.id===id); if(!u) return; $('userModalTitle').innerText='✏️ تعديل: '+u.name; $('u-uid').value=u.id; $('u-passwordBox').style.display='none'; $('u-name').value=u.name||''; $('u-email').value=u.email||''; $('u-email').disabled = true; $('u-role').value=u.role||'admin'; onUserRoleChange(); setTimeout(()=>{ $('u-branchId').value=u.branchId||''; },50); }
@@ -1339,7 +1341,7 @@ function openUserModal(id){
 }
 async function saveUser(){
   const { db, doc, setDoc, updateDoc, firebaseConfig } = window.FB; const id = $('u-uid').value; const isEdit = !!id; const name = $('u-name').value.trim(); const email = $('u-email').value.trim(); const role = $('u-role').value; const branchId = role === 'branch_manager' ? $('u-branchId').value : ''; const password = $('u-password') ? $('u-password').value : '';
-  if (!name || !email) { showToast('⚠️ اكمل البيانات'); return; } if (role === 'branch_manager' && !branchId) { showToast('⚠️ اختر الفرع'); return; } if (role === 'super_admin' && currentUserData.role !== 'super_admin') { showToast('⚠️ غير مسموح'); return; }
+  if (!name || !email) { showToast('⚠️ اكمل البيانات'); return; } if ((role === 'branch_manager' || role === 'captain') && !branchId) { showToast('⚠️ اختر الفرع'); return; } if (role === 'super_admin' && currentUserData.role !== 'super_admin') { showToast('⚠️ غير مسموح'); return; }
   try {
     if (isEdit) { await updateDoc(doc(db, 'users', id), { name, role, branchId }); showToast('✅ تم التعديل'); }
     else {

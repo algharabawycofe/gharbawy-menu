@@ -222,9 +222,9 @@ $('#copyJoin').onclick=async()=>{try{await navigator.clipboard.writeText(joinUrl
 
 /* ===== مركز الإشعارات ===== */
 const AUD={all:'كل العملاء',lapsed:'الغايبين',near:'قرّبوا من المكافأة',new:'عملاء جداد'};
-const NAMES={welcome:'ترحيب بعد الانضمام',thanks:'شكر بعد الختم',reward:'المكافأة جاهزة',win:'"وحشتنا" للغايبين لما يفتحوا الكارت',near:'قريب من الفرع'};
+const NAMES={welcome:'ترحيب بعد الانضمام',thanks:'شكر بعد الختم',reward:'المكافأة جاهزة',win:'"وحشتنا" للغايبين لما يفتحوا الكارت',near:'قريب من الفرع',remind:'تذكير دوري طالما الكارت مكملش (Push)'};
 let M=msgs(null),bcs=[];
-const vv=m=>({name:m.name||'',stamps:m.stamps||0,goal:cfg.goal,reward:cfg.reward,place:'الغرباوي'});
+const vv=m=>({name:m.name||'',stamps:m.stamps||0,goal:cfg.goal,reward:cfg.reward,place:'الغرباوي',left:Math.max(0,cfg.goal-(m.stamps||0))});
 function startNotes(){
   onSnapshot(doc(db,'settings','loyalty_msgs'),s=>{M=msgs(s.exists()?s.data():null);renderMsgs()},()=>{});
   onSnapshot(collection(db,'loyalty_broadcasts'),s=>{bcs=s.docs.map(d=>({id:d.id,...d.data()}));renderBcs()},()=>{});
@@ -232,10 +232,11 @@ function startNotes(){
 function renderMsgs(){
   $('#autoMsgs').innerHTML=Object.keys(NAMES).map(k=>`<div class="mrow"><label class="chk"><input type="checkbox" data-k="${k}" data-f="on" ${M[k].on?'checked':''}> <b>${NAMES[k]}</b></label>`+
     (k==='win'?`<div class="row" style="margin-bottom:6px;align-items:center"><span class="mut" style="flex:0 0 auto">لو غايب</span><input type="number" min="3" data-k="win" data-f="days" value="${M.win.days||14}" style="flex:0 0 90px"><span class="mut" style="flex:0 0 auto">يوم أو أكتر</span></div>`:'')+
+    (k==='remind'?`<div class="row" style="margin-bottom:6px;align-items:center"><span class="mut" style="flex:0 0 auto">كل</span><input type="number" min="1" data-k="remind" data-f="days" value="${M.remind.days||3}" style="flex:0 0 70px"><span class="mut" style="flex:0 0 auto">يوم، وبحد أقصى</span><input type="number" min="0" data-k="remind" data-f="max" value="${M.remind.max??5}" style="flex:0 0 70px"><span class="mut" style="flex:0 0 auto">تذكيرات (0 = بلا حد)</span></div>`:'')+
     `<textarea data-k="${k}" data-f="text" rows="2" maxlength="200">${esc(M[k].text)}</textarea></div>`).join('');
 }
 $('#saveMsgs').onclick=async()=>{
-  const o={};document.querySelectorAll('#autoMsgs [data-k]').forEach(e=>{const k=e.dataset.k,f=e.dataset.f;(o[k]=o[k]||{})[f]=f==='on'?e.checked:f==='days'?(+e.value||14):e.value.trim()});
+  const o={};document.querySelectorAll('#autoMsgs [data-k]').forEach(e=>{const k=e.dataset.k,f=e.dataset.f;(o[k]=o[k]||{})[f]=f==='on'?e.checked:f==='days'?(+e.value||(k==='remind'?3:14)):f==='max'?Math.max(0,+e.value||0):e.value.trim()});
   try{await setDoc(doc(db,'settings','loyalty_msgs'),o);toast('اتحفظ ✓')}catch(e){console.warn(e);toast('مفيش صلاحية كتابة — راجع القواعد')}
 };
 const bState=()=>({title:$('#bTitle').value.trim(),body:$('#bBody').value.trim(),audience:$('#bAud').value,days:+$('#bDays').value||14});

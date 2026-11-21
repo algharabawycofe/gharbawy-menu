@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>كابتن الصالة — الغرباوي</title>
+<link rel="icon" href="logo-01.png">
+<link rel="stylesheet" href="loyalty.css">
+<style>
+.tbl{border:1.5px solid var(--bd)}.tbl.late{border-color:var(--bad)}
+.tbl h2{display:flex;justify-content:space-between;align-items:center}
+.o{background:var(--sub);border-radius:14px;padding:10px 12px;margin-top:8px}
+.o .hd{display:flex;justify-content:space-between;font-size:13px;font-weight:800}
+.pill{padding:2px 10px;border-radius:99px;font-size:12px;font-weight:800;background:var(--gold2);color:#1F1611}.pill.prep{background:#CFE6D6}
+.o ul{margin:6px 0;padding:0 18px}.o li small{color:var(--mut)}
+.call{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--gold);color:#1F1611;border-radius:14px;padding:10px 14px;margin:8px 0;font-weight:800}
+</style>
+</head>
+<body><main>
+<div class="top"><h1 id="ttl">🧑‍🍳 كابتن الصالة</h1><div style="display:flex;gap:6px"><button class="ib" id="snd" type="button" aria-label="الصوت">🔊</button><button class="ib" id="out" type="button" hidden>خروج</button></div></div>
+
+<section id="login" class="box" hidden>
+  <h2>تسجيل الدخول</h2>
+  <label for="em">الإيميل</label><input id="em" type="email" dir="ltr" autocomplete="username">
+  <label for="pw">الباسوورد</label><input id="pw" type="password" dir="ltr" autocomplete="current-password">
+  <button id="go" class="b gold full" type="button" style="margin-top:12px">دخول</button>
+</section>
+<div id="msg" class="box" hidden></div>
+
+<div id="app" hidden>
+  <div class="stat" id="stats"></div>
+  <div id="calls"></div>
+  <div id="tables"></div>
+</div>
+</main>
+<script src="loyalty-common.js"></script>
+<script type="module" src="firebase-config.js"></script>
+<script type="module">
+const {$,esc,toast,ready}=L;
+await ready();
+const {db,auth,doc,collection,query,where,getDoc,updateDoc,onSnapshot,onAuthStateChanged,signInWithEmailAndPassword,signOut}=FB;
+let bId=null,orders=[],calls=[],unsubs=[],primed={o:false,c:false},seen=new Set(),sound=localStorage.getItem('gh_cap_snd')!=='0',actx=null;
+const ts=o=>{const t=o.createdAt;return t&&t.toMillis?t.toMillis():(typeof t==='number'?t:Date.now())};
+const mins=o=>Math.max(0,Math.round((Date.now()-ts(o))/6e4));
+const msg=(t,link)=>{$('#msg').hidden=false;$('#msg').innerHTML=`<p>${t}</p>${link?'<a class="b" href="admin.html">لوحة الإدارة</a>':''}`;$('#login').hidden=true;$('#app').hidden=true};
+function beep(){
+  if(!sound)return;try{navigator.vibrate&&navigator.vibrate([200,100,200]);
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    [880,1175].forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;o.connect(g);g.connect(actx.destination);
+      g.gain.setValueAtTime(.2,actx.currentTime+i*.18);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+i*.18+.16);o.start(actx.currentTime+i*.18);o.stop(actx.currentTime+i*.18+.17)})}catch(e){}
+}
+const setSnd=()=>{$('#snd').textContent=sound?'🔊':'🔇'};setSnd();
+$('#snd').onclick=()=>{sound=!sound;localStorage.setItem('gh_cap_snd',sound?'1':'0');setSnd();if(sound)beep()};
+$('#out').onclick=()=>signOut(auth);
+$('#go').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value)}catch(e){toast('الإيميل أو الباسوورد غلط')}};
+function cleanup(){unsubs.forEach(u=>u&&u());unsubs=[];primed={o:false,c:false};seen=new Set()}
+onAuthStateChanged(auth,async u=>{
+  cleanup();$('#msg').hidden=true;
+  if(!u){$('#login').hidden=false;$('#app').hidden=true;$('#out').hidden=true;return}
+  $('#out').hidden=false;
+  let p=null;try{const s=await getDoc(doc(db,'users',u.uid));p=s.exists()?s.data():null}catch(e){}
+  if(!p||p.active===false)return msg('الحساب ده مالوش صلاحية. كلّم الإدارة.');
+  if(['super_admin','admin'].includes(p.role))return msg('الحساب ده أدمن. شاشة الكابتن بتشتغل بحساب كابتن مربوط بفرع.',true);
+  if(!['captain','branch_manager'].includes(p.role))return msg('الحساب ده مش كابتن صالة.');
+  if(!p.branchId)return msg('الحساب مش مربوط بفرع. كلّم الإدارة.');
+  bId=p.branchId;$('#app').hidden=false;
+  try{const b=await getDoc(doc(db,'branches',bId));if(b.exists())$('#ttl').textContent='🧑‍🍳 '+(b.data().nameAr||'كابتن الصالة')}catch(e){}
+  unsubs.push(onSnapshot(query(collection(db,'orders'),where('branchId','==',bId)),s=>{
+    orders=s.docs.map(d=>({id:d.id,...d.data()})).filter(o=>o.branchId===bId&&o.status!=='done');
+    let fresh=false;orders.forEach(o=>{if(o.status==='pending'&&!seen.has(o.id)){seen.add(o.id);fresh=true}});
+    if(primed.o&&fresh)beep();primed.o=true;render()},e=>{console.warn(e);msg('مفيش صلاحية قراءة الأوردرات. راجع قواعد Firestore.')}));
+  unsubs.push(onSnapshot(query(collection(db,'waiter_calls'),where('branchId','==',bId)),s=>{
+    calls=s.docs.map(d=>({id:d.id,...d.data()})).filter(c=>c.branchId===bId&&c.status!=='done').sort((a,b)=>ts(a)-ts(b));
+    let fresh=false;calls.forEach(c=>{if(!seen.has('c'+c.id)){seen.add('c'+c.id);fresh=true}});
+    if(primed.c&&fresh)beep();primed.c=true;render()},()=>{}));
+});
+function render(){
+  const pend=orders.filter(o=>o.status==='pending').length,prep=orders.filter(o=>o.status==='preparing').length;
+  $('#stats').innerHTML=`<div><b>${pend}</b>جديد</div><div><b>${prep}</b>بيتحضّر</div><div><b>${calls.length}</b>نداءات</div>`;
+  $('#calls').innerHTML=calls.map(c=>`<div class="call"><span>🔔 طاولة ${esc(c.table||'؟')} بتنادي · ${mins(c)} د</span><button class="b" data-c="${c.id}" type="button">تم</button></div>`).join('');
+  const by={};orders.forEach(o=>(by[o.table||'غير محدد']=by[o.table||'غير محدد']||[]).push(o));
+  const keys=Object.keys(by).sort((a,b)=>Math.min(...by[a].map(ts))-Math.min(...by[b].map(ts)));
+  $('#tables').innerHTML=keys.map(t=>{const os=by[t].sort((a,b)=>ts(a)-ts(b)),old=Math.max(...os.map(mins));
+    return `<div class="box tbl${old>=10?' late':''}"><h2><span>طاولة ${esc(t)}</span><small class="mut">${old} د</small></h2>`+os.map(o=>`<div class="o"><div class="hd"><span class="pill${o.status==='preparing'?' prep':''}">${o.status==='preparing'?'بيتحضّر':'جديد'}</span><span>${esc(o.total??'')} ج</span></div><ul>${(o.items||[]).map(i=>`<li>${esc(i.qty||1)}× ${esc(i.nameAr||'')}${(i.selections||[]).length?` <small>(${i.selections.map(s=>esc(s.name||s.nameAr||s.label||s)).join('، ')})</small>`:''}${i.note?` <small>📝 ${esc(i.note)}</small>`:''}</li>`).join('')}</ul>`+
+      `<button class="b ${o.status==='pending'?'gold':''} full" data-o="${o.id}" data-s="${o.status==='pending'?'preparing':'done'}" type="button">${o.status==='pending'?'✅ قبول وبدء التحضير':'🍽️ تم التقديم'}</button></div>`).join('')+'</div>'}).join('')||'<div class="box"><p class="mut">مفيش طلبات شغّالة دلوقتي ☕</p></div>';
+}
+document.addEventListener('click',async e=>{
+  const o=e.target.closest('[data-o]'),c=e.target.closest('[data-c]');if(!o&&!c)return;e.target.closest('button').disabled=true;
+  try{if(o)await updateDoc(doc(db,'orders',o.dataset.o),{status:o.dataset.s});else await updateDoc(doc(db,'waiter_calls',c.dataset.c),{status:'done'})}
+  catch(err){console.warn(err);toast('معرفتش أحدّث — راجع الصلاحيات')}
+});
+setInterval(()=>{if(!$('#app').hidden)render()},30000);
+</script>
+</body></html>

@@ -19,7 +19,8 @@
     thanks:{on:true,text:'شكراً على زيارتك يا {name} ☕ بقى معاك {stamps} من {goal}'},
     reward:{on:true,text:'🎉 مبروك يا {name}! مكافأتك جاهزة: {reward}'},
     win:{on:true,days:14,text:'وحشتنا يا {name}! كارتك عليه {stamps}/{goal} ختم، مستنيينك ☕'},
-    near:{on:true,text:'إنت قريب من {place}، وكارتك مستنيك ☕'}};
+    near:{on:true,text:'إنت قريب من {place}، وكارتك مستنيك ☕'},
+    remind:{on:true,days:3,max:5,text:'كارتك لسه ناقصه {left} ختم وتاخد {reward} ☕ استنّاك!'}};
   const msgs=o=>{const r={};for(const k in DEF)r[k]={...DEF[k],...((o||{})[k]||{})};return r};
   const fill=(t,v)=>String(t||'').replace(/\{(\w+)\}/g,(_,k)=>v[k]??'');
   const match=(m,b,cfg)=>{switch(b.audience){

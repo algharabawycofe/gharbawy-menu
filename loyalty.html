@@ -6,6 +6,10 @@
 <meta name="theme-color" content="#2B1D14">
 <title>الغرباوي — كارت الولاء</title>
 <link rel="icon" href="logo-01.png">
+<link rel="manifest" href="loyalty-manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="loyalty.css">
 </head>
 <body><main>
@@ -30,6 +34,12 @@
     <div class="mut" style="text-align:center">وريه للكاشير عشان يختم كارتك</div>
   </div>
   <div class="box" id="inbox" hidden><h2>📨 رسائل من الغرباوي</h2><div id="inboxList"></div></div>
+  <div class="box" id="enableBox" hidden><h2>🔔 خلّي كارتك يفكّرك</h2>
+    <p class="mut">فعّل الإشعارات والموقع وضيف الكارت على شاشة موبايلك كاختصار، عشان يفتحلك بسرعة ويقولك لما تكون قريب.</p>
+    <button id="enableAll" class="b gold full" type="button">فعّل كل حاجة</button>
+    <button id="installBtn" class="b ghost full" type="button" hidden style="margin-top:8px">📲 ضيف الكارت على الشاشة</button>
+    <p class="mut" id="iosHint" hidden>على الآيفون: دوس زرار المشاركة واختار "إضافة إلى الشاشة الرئيسية".</p>
+    <p class="mut" id="enableSt"></p></div>
   <div class="box" id="pushBox" hidden><h2>🔔 إشعارات على موبايلك</h2>
     <p class="mut" id="pushTxt">هنبعتلك لما كارتك يكمل أو فيه عرض، حتى لو الموقع مقفول.</p>
     <button id="pushOn" class="b gold full" type="button">فعّل الإشعارات</button><p class="mut" id="pushSt"></p></div>
@@ -91,7 +101,7 @@ function render(id){
   $('#cStamps').innerHTML=Array.from({length:g},(_,i)=>`<div class="st${i<n?' on':''}">${i<n?'☕':''}</div>`).join('');
   $('#cQr').innerHTML=qrSvg(id);
   $('#geo').hidden=!(cfg.places||[]).length||M.near.on===false;
-  initPush();
+  initPush();renderEnable();
 }
 /* ===== رسائل الإدارة (Broadcasts) ===== */
 const getL=k=>{try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}};
@@ -167,5 +177,25 @@ async function initPush(){
     catch(e){console.warn(e);toast('معرفتش أفعّل الإشعارات دلوقتي')}
   };
 }
+
+/* ===== تفعيل الكل + تثبيت الاختصار ===== */
+let deferredInstall=null;
+try{navigator.serviceWorker&&navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;renderEnable()});
+addEventListener('appinstalled',()=>{deferredInstall=null;renderEnable()});
+function renderEnable(){
+  if(!member||!cfg){$('#enableBox').hidden=true;return}
+  const n=('Notification' in window)&&Notification.permission==='granted',g=!!localStorage.getItem('gh_loyalty_watch'),i=!!STANDALONE;
+  $('#enableBox').hidden=n&&g&&i;
+  $('#enableSt').textContent=[n?'✅ الإشعارات':'⬜ الإشعارات',g?'✅ الموقع':'⬜ الموقع',i?'✅ الاختصار':'⬜ الاختصار'].join(' · ');
+  $('#installBtn').hidden=i||!deferredInstall;$('#iosHint').hidden=!(IOS&&!i);
+}
+$('#enableAll').onclick=async()=>{
+  try{await Notification.requestPermission()}catch(e){}
+  watch();
+  const m=await fcmLib();if(m&&cfg.vapidKey&&Notification.permission==='granted'){try{await saveToken(m)}catch(e){console.warn(e)}}
+  renderEnable();
+};
+$('#installBtn').onclick=async()=>{if(!deferredInstall)return;deferredInstall.prompt();try{await deferredInstall.userChoice}catch(e){}deferredInstall=null;renderEnable()};
 </script>
 </body></html>

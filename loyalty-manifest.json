@@ -1,0 +1,26 @@
+{
+  "name": "كارت الغرباوي",
+  "short_name": "كارت الغرباوي",
+  "description": "كارت ولاء الغرباوي",
+  "start_url": "./loyalty.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FAF6F0",
+  "theme_color": "#2B1D14",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
