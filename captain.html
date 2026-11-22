@@ -41,7 +41,7 @@
 <script type="module">
 const {$,esc,toast,ready}=L;
 await ready();
-const {db,auth,doc,collection,query,where,getDoc,updateDoc,onSnapshot,onAuthStateChanged,signInWithEmailAndPassword,signOut}=FB;
+const {db,auth,doc,collection,query,where,getDoc,setDoc,addDoc,updateDoc,onSnapshot,onAuthStateChanged,signInWithEmailAndPassword,signOut}=FB;
 let bId=null,orders=[],calls=[],unsubs=[],primed={o:false,c:false},seen=new Set(),sound=localStorage.getItem('gh_cap_snd')!=='0',actx=null;
 const ts=o=>{const t=o.createdAt;return t&&t.toMillis?t.toMillis():(typeof t==='number'?t:Date.now())};
 const mins=o=>Math.max(0,Math.round((Date.now()-ts(o))/6e4));
@@ -78,6 +78,24 @@ onAuthStateChanged(auth,async u=>{
     let fresh=false;calls.forEach(c=>{if(!seen.has('c'+c.id)){seen.add('c'+c.id);fresh=true}});
     if(primed.c&&fresh)beep();primed.c=true;render()},()=>{}));
 });
+const awaitPay=o=>o.type==='pickup'&&o.payment==='wallet'&&o.paymentStatus!=='paid';
+const payTxt=o=>o.payment==='wallet'?(o.paymentStatus==='paid'?'📲 اتدفع ✓'+(o.paymentRef?' ('+esc(o.paymentRef)+')':''):'📲 <b style="color:var(--bad)">مستني تأكيد التحويل</b>'+(o.paymentRef?' · رقم العملية <b dir="ltr">'+esc(o.paymentRef)+'</b>':' · لسه مبعتش رقم العملية')):o.payment==='card'?'💳 فيزا عند التسليم':'💵 كاش عند التسليم';
+const dStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const phKey=async p=>{const d=String(p).replace(/\D/g,'').slice(-10);const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('gh|'+d));return [...new Uint8Array(h)].slice(0,8).map(x=>x.toString(16).padStart(2,'0')).join('')};
+const REASONS={1:['customer_changed','العميل غيّر رأيه'],2:['no_show','العميل ماجاش'],3:['mistake','غلط في التحضير'],4:['out_of_stock','الصنف خلص']};
+async function cancelFlow(id,preset){
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  let k=preset;if(!k){const r=prompt('سبب الإلغاء؟\n1 العميل غيّر رأيه\n2 العميل ماجاش\n3 غلط في التحضير\n4 الصنف خلص\n(اكتب الرقم أو سبب بالكلام)','1');if(!r)return;k=r.trim()}
+  const R=REASONS[k]||['other',String(k).slice(0,80)];
+  const wasted=['preparing','ready'].includes(o.status);
+  if(wasted&&!confirm('الأوردر ده اتحضّر. هيتسجل هالك ('+(o.total||0)+' ج). تكمّل؟'))return;
+  try{
+    if(wasted)await addDoc(collection(db,'waste_log'),{branchId:bId,orderId:id,type:o.type||'dine',table:String(o.table||''),items:(o.items||[]).map(i=>({nameAr:String(i.nameAr||'').slice(0,60),qty:Number(i.qty)||1})),value:Number(o.total)||0,recovered:o.paymentStatus==='paid',reason:R[0],reasonText:R[1],stage:o.status,by:(auth.currentUser&&auth.currentUser.email)||'',at:Date.now(),dateStr:dStr()});
+    await updateDoc(doc(db,'orders',id),Object.assign({status:'cancelled',cancelReason:R[1].slice(0,80),cancelledBy:(auth.currentUser&&auth.currentUser.email)||'',cancelledAt:Date.now()},wasted?{wasted:true}:{}));
+    if(R[0]==='no_show'&&o.type==='pickup'&&o.phone&&wasted){const kk=await phKey(o.phone),s=await getDoc(doc(db,'noshow',kk));await setDoc(doc(db,'noshow',kk),{count:((s.exists()&&s.data().count)||0)+1,last:Date.now(),branchId:bId})}
+    toast(wasted?'اتلغى وتسجّل هالك ✓':'اتلغى ✓')
+  }catch(err){console.warn(err);toast('معرفتش ألغي — راجع الصلاحيات')}
+}
 function render(){
   const pend=orders.filter(o=>o.status==='pending').length,prep=orders.filter(o=>o.status==='preparing').length,rdy=orders.filter(o=>o.status==='ready').length;
   $('#stats').innerHTML=`<div><b>${pend}</b>جديد</div><div><b>${prep}</b>بيتحضّر</div><div><b>${rdy}</b>جاهز</div><div><b>${calls.length}</b>نداءات</div>`;
@@ -85,17 +103,18 @@ function render(){
   const by={};orders.forEach(o=>(by[o.table||'غير محدد']=by[o.table||'غير محدد']||[]).push(o));
   const pri=t=>by[t].some(o=>o.arrived)?-1:0,keys=Object.keys(by).sort((a,b)=>pri(a)-pri(b)||Math.min(...by[a].map(ts))-Math.min(...by[b].map(ts)));
   $('#tables').innerHTML=keys.map(t=>{const os=by[t].sort((a,b)=>ts(a)-ts(b)),old=Math.max(...os.map(mins));
-    return `<div class="box tbl${old>=10?' late':''}"><h2><span>${t==='استلام'?'🚗 استلام / درايف ثرو':'طاولة '+esc(t)}</span><span><small class="mut">${old} د</small> <button class="ib" data-close="${esc(t)}" type="button">🔒 قفل</button></span></h2>`+os.map(o=>`<div class="o"><div class="hd"><span class="pill${o.status==='pending'?'':' prep'}">${o.status==='ready'?'🔔 جاهز للتقديم':o.status==='preparing'?'بيتحضّر':'جديد'}</span><span>${esc(o.total??'')} ج</span></div>${o.type==='pickup'?`<div class="pk">${o.mode==='drive'?`🚘 <b>${esc((o.car&&o.car.color)||'')} ${esc((o.car&&o.car.type)||'')}</b>${o.car&&o.car.plate?' · لوحة ...'+esc(o.car.plate):''}${o.bay?' · 📍 '+esc(o.bay):''}<br>`:''}${o.arrived?'✅ وصل — اطلعله الطلب':'🚗 يصل بعد '+esc(o.etaMin??'؟')+' د'}${!o.arrived&&o.prepAt&&o.status==='pending'?(Date.now()>=o.prepAt?' · <b style="color:var(--bad)">⏰ ابدأ التحضير دلوقتي</b>':' · ابدأ التحضير الساعة '+new Date(o.prepAt).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})):''} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a> · 💵 كاش عند الاستلام</div>`:''}<ul>${(o.items||[]).map(i=>`<li>${esc(i.qty||1)}× ${esc(i.nameAr||'')}${(i.selections||[]).length?` <small>(${i.selections.map(s=>esc(s.name||s.nameAr||s.label||s)).join('، ')})</small>`:''}${i.note?` <small>📝 ${esc(i.note)}</small>`:''}</li>`).join('')}</ul>`+
-      `<div class="row"><button class="b ${o.status==='pending'?'gold':''}" data-o="${o.id}" data-s="${o.status==='pending'?'preparing':'done'}" type="button" style="flex:3">${o.status==='pending'?'✅ قبول وبدء التحضير':(o.type==='pickup'?(o.mode==='drive'?'🚘 سلّمته للعربية':'✅ اتسلّم للعميل'):'🍽️ تم التقديم')}</button><button class="b ghost" data-x="${o.id}" type="button">إلغاء</button></div></div>`).join('')+'</div>'}).join('')||'<div class="box"><p class="mut">مفيش طلبات شغّالة دلوقتي ☕</p></div>';
+    return `<div class="box tbl${old>=10?' late':''}"><h2><span>${t==='استلام'?'🚗 استلام / درايف ثرو':'طاولة '+esc(t)}</span><span><small class="mut">${old} د</small> <button class="ib" data-close="${esc(t)}" type="button">🔒 قفل</button></span></h2>`+os.map(o=>`<div class="o"><div class="hd"><span class="pill${o.status==='pending'?'':' prep'}">${o.status==='ready'?'🔔 جاهز للتقديم':o.status==='preparing'?'بيتحضّر':'جديد'}</span><span>${esc(o.total??'')} ج</span></div>${o.type==='pickup'?`<div class="pk">${o.mode==='drive'?`🚘 <b>${esc((o.car&&o.car.color)||'')} ${esc((o.car&&o.car.type)||'')}</b>${o.car&&o.car.plate?' · لوحة ...'+esc(o.car.plate):''}${o.bay?' · 📍 '+esc(o.bay):''}<br>`:''}${o.arrived?'✅ وصل — اطلعله الطلب':'🚗 يصل بعد '+esc(o.etaMin??'؟')+' د'}${!o.arrived&&o.prepAt&&o.status==='pending'?(Date.now()>=o.prepAt?' · <b style="color:var(--bad)">⏰ ابدأ التحضير دلوقتي</b>':' · ابدأ التحضير الساعة '+new Date(o.prepAt).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})):''} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a> · ${payTxt(o)}</div>`:''}<ul>${(o.items||[]).map(i=>`<li>${esc(i.qty||1)}× ${esc(i.nameAr||'')}${(i.selections||[]).length?` <small>(${i.selections.map(s=>esc(s.name||s.nameAr||s.label||s)).join('، ')})</small>`:''}${i.note?` <small>📝 ${esc(i.note)}</small>`:''}</li>`).join('')}</ul>`+
+      `<div class="row">${awaitPay(o)?`<button class="b gold" data-pay="${o.id}" type="button" style="flex:3">💰 تأكيد استلام التحويل</button>`:`<button class="b ${o.status==='pending'?'gold':''}" data-o="${o.id}" data-s="${o.status==='pending'?'preparing':'done'}" type="button" style="flex:3">${o.status==='pending'?'✅ قبول وبدء التحضير':(o.type==='pickup'?(o.mode==='drive'?'🚘 سلّمته للعربية':'✅ اتسلّم للعميل'):'🍽️ تم التقديم')}</button>`}${o.type==='pickup'&&o.status!=='pending'&&!o.arrived?`<button class="b ghost" data-ns="${o.id}" type="button">🚫 ماجاش</button>`:''}<button class="b ghost" data-x="${o.id}" type="button">إلغاء</button></div></div>`).join('')+'</div>'}).join('')||'<div class="box"><p class="mut">مفيش طلبات شغّالة دلوقتي ☕</p></div>';
 }
 document.addEventListener('click',async e=>{
   const x=e.target.closest('[data-x]'),cl=e.target.closest('[data-close]');
-  if(x){const r=prompt('سبب الإلغاء؟ (هيوصل للعميل)','العميل غيّر رأيه');if(!r)return;
-    try{await updateDoc(doc(db,'orders',x.dataset.x),{status:'cancelled',cancelReason:r.slice(0,80),cancelledBy:(auth.currentUser&&auth.currentUser.email)||''});toast('اتلغى ✓')}catch(err){console.warn(err);toast('معرفتش ألغي — راجع الصلاحيات')}return}
+  if(x){cancelFlow(x.dataset.x);return}
+  const ns=e.target.closest('[data-ns]');if(ns){if(confirm('تسجّل إن العميل ماجاش؟ الأوردر هيتلغي ويتسجل هالك.'))cancelFlow(ns.dataset.ns,'2');return}
+  const pay=e.target.closest('[data-pay]');if(pay){pay.disabled=true;try{await updateDoc(doc(db,'orders',pay.dataset.pay),{paymentStatus:'paid',paidAt:Date.now(),paidBy:(auth.currentUser&&auth.currentUser.email)||''});toast('اتأكد الدفع ✓ ابدأ التحضير')}catch(err){console.warn(err);toast('معرفتش أأكد — راجع الصلاحيات');pay.disabled=false}return}
   if(cl){const t=cl.dataset.close;if(!confirm('قفل طاولة '+t+'؟ كل أوردراتها هتتعلّم تم التقديم.'))return;
     try{await Promise.all([...orders.filter(o=>String(o.table||'غير محدد')===t).map(o=>updateDoc(doc(db,'orders',o.id),{status:'done'})),...calls.filter(c=>String(c.table)===t).map(c=>updateDoc(doc(db,'waiter_calls',c.id),{status:'done'}))]);toast('اتقفلت الطاولة ✓')}catch(err){console.warn(err);toast('معرفتش أقفل — راجع الصلاحيات')}return}
   const o=e.target.closest('[data-o]'),c=e.target.closest('[data-c]');if(!o&&!c)return;e.target.closest('button').disabled=true;
-  try{if(o)await updateDoc(doc(db,'orders',o.dataset.o),{status:o.dataset.s});else await updateDoc(doc(db,'waiter_calls',c.dataset.c),{status:'done'})}
+  try{if(o){const ord=orders.find(z=>z.id===o.dataset.o)||{},extra=(o.dataset.s==='done'&&ord.type==='pickup'&&ord.paymentStatus!=='paid')?{paymentStatus:'paid',paidAt:Date.now(),paidBy:(auth.currentUser&&auth.currentUser.email)||''}:{};await updateDoc(doc(db,'orders',o.dataset.o),Object.assign({status:o.dataset.s},extra))}else await updateDoc(doc(db,'waiter_calls',c.dataset.c),{status:'done'})}
   catch(err){console.warn(err);toast('معرفتش أحدّث — راجع الصلاحيات')}
 });
 setInterval(()=>{if(!$('#app').hidden)render()},30000);

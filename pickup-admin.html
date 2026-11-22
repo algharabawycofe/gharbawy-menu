@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>الاستلام والدفع والهالك — الغرباوي</title>
+<link rel="icon" href="logo-01.png">
+<link rel="stylesheet" href="loyalty.css">
+<style>
+.f{display:grid;gap:6px;margin:10px 0}.f label{font-size:12px;font-weight:800;color:var(--tx2)}
+.f input[type=text],.f input[type=number],.f textarea,.f select{width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--bd);background:var(--sub);color:var(--tx);font:inherit}
+.ck{display:flex;gap:8px;align-items:center;font-weight:800;padding:8px 0}.ck input{width:20px;height:20px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}th,td{padding:8px 6px;text-align:start;border-bottom:1px solid var(--bd);vertical-align:top}th{color:var(--mut);font-size:11px}
+.tot{color:var(--bad)}.okc{color:var(--ok)}
+.hint{font-size:12px;color:var(--mut);line-height:1.8}
+</style>
+</head>
+<body><main>
+<div class="top"><h1>🚘 الاستلام والدفع والهالك</h1><div style="display:flex;gap:6px"><a class="ib" href="admin.html" aria-label="رجوع" style="text-decoration:none">→</a></div></div>
+
+<section id="login" class="box" hidden>
+  <h2>تسجيل الدخول (أدمن)</h2>
+  <label for="em">الإيميل</label><input id="em" type="email" dir="ltr" autocomplete="username">
+  <label for="pw">الباسوورد</label><input id="pw" type="password" dir="ltr" autocomplete="current-password">
+  <button id="go" class="b gold full" type="button" style="margin-top:12px">دخول</button>
+</section>
+<div id="msg" class="box" hidden></div>
+
+<div id="app" hidden>
+  <section class="box">
+    <h2>💳 طرق الدفع للاستلام</h2>
+    <p class="hint">دي اللي بتظهر للعميل لما يطلب "جاي في الطريق". الكاش والفيزا بيتحصّلوا عند التسليم. التحويل بيتأكد قبل ما الكابتن يبدأ التحضير، وده الأنسب للمشروبات المخصوصة لأنه بيحميك من الهالك.</p>
+    <label class="ck"><input type="checkbox" id="s-cash"> 💵 كاش عند التسليم</label>
+    <label class="ck"><input type="checkbox" id="s-card"> 💳 فيزا عند التسليم (ماكينة مع الكابتن)</label>
+    <label class="ck"><input type="checkbox" id="s-wallet"> 📲 تحويل مسبق (محفظة / إنستاباي)</label>
+    <div class="f"><label>اسم المحفظة / الحساب (يظهر للعميل)</label><input type="text" id="s-wl" placeholder="مثلاً: فودافون كاش — الغرباوي"></div>
+    <div class="f"><label>الرقم أو عنوان الدفع</label><input type="text" id="s-wn" dir="ltr" placeholder="01xxxxxxxxx أو name@instapay"></div>
+    <h2 style="margin-top:18px">🛡️ سياسة الإلغاء و"ماجاش"</h2>
+    <div class="f"><label>النص اللي بيظهر للعميل</label><textarea id="s-pol" rows="3"></textarea></div>
+    <div class="f"><label>بعد كام مرة "ماجاش" الطلب بيبقى بالتحويل بس؟</label><input type="number" id="s-lim" min="1" max="10"></div>
+    <p class="hint">العميل بيلغي بنفسه طول ما الطلب "جديد" (قبل ما الكابتن يدوس بدء التحضير). بعد كده الإلغاء بيتم من الكابتن وبيتسجل هالك.</p>
+    <button id="save" class="b gold full" type="button">💾 حفظ الإعدادات</button>
+  </section>
+
+  <section class="box">
+    <h2>🗑️ تقرير الهالك</h2>
+    <div class="row" style="align-items:end">
+      <div class="f" style="flex:1"><label>من</label><input type="date" id="w-from" style="padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--sub);color:var(--tx);font:inherit"></div>
+      <div class="f" style="flex:1"><label>إلى</label><input type="date" id="w-to" style="padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--sub);color:var(--tx);font:inherit"></div>
+      <div class="f" style="flex:1"><label>الفرع</label><select id="w-br"><option value="">كل الفروع</option></select></div>
+      <button id="w-go" class="b" type="button" style="margin-bottom:10px">عرض</button>
+    </div>
+    <div class="stat" id="w-stat"></div>
+    <div id="w-by" class="hint" style="margin:10px 0"></div>
+    <div style="overflow:auto"><table><thead><tr><th>التاريخ</th><th>الفرع</th><th>السبب</th><th>الأصناف</th><th>القيمة</th><th>اتعوّض؟</th></tr></thead><tbody id="w-rows"></tbody></table></div>
+  </section>
+
+  <section class="box">
+    <h2>🚫 تصفير عميل "ماجاش"</h2>
+    <p class="hint">لو عميل وصل للحد وعايز ترجّعله الكاش/الفيزا، اكتب موبايله.</p>
+    <div class="row"><input id="ns-ph" type="tel" dir="ltr" placeholder="01xxxxxxxxx" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--bd);background:var(--sub);color:var(--tx);font:inherit"><button id="ns-go" class="b ghost" type="button">تصفير</button></div>
+  </section>
+</div>
+</main>
+<script src="loyalty-common.js"></script>
+<script type="module" src="firebase-config.js"></script>
+<script type="module">
+const {$,esc,toast,ready}=L;
+await ready();
+const {db,auth,doc,collection,query,where,getDoc,getDocs,setDoc,deleteDoc,onAuthStateChanged,signInWithEmailAndPassword}=FB;
+const msg=t=>{$('#msg').hidden=false;$('#msg').innerHTML='<p>'+t+'</p><a class="b" href="admin.html">لوحة الإدارة</a>';$('#login').hidden=true;$('#app').hidden=true};
+const dStr=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const DEF={cash:true,card:true,wallet:false,walletLabel:'',walletNumber:'',noShowLimit:2,policy:'الطلب بيتحضّر مخصوص ليك. تقدر تلغيه لحد ما نبدأ التحضير، وبعدها مش بيتلغي.'};
+const REASON={customer_changed:'العميل غيّر رأيه',no_show:'العميل ماجاش',mistake:'غلط في التحضير',out_of_stock:'الصنف خلص',other:'سبب تاني'};
+let branches={};
+$('#go').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value)}catch(e){toast('الإيميل أو الباسوورد غلط')}};
+onAuthStateChanged(auth,async u=>{
+  $('#msg').hidden=true;
+  if(!u){$('#login').hidden=false;$('#app').hidden=true;return}
+  let p=null;try{const s=await getDoc(doc(db,'users',u.uid));p=s.exists()?s.data():null}catch(e){}
+  if(!p||p.active===false||!['admin','super_admin'].includes(p.role))return msg('الصفحة دي للأدمن بس.');
+  $('#login').hidden=true;$('#app').hidden=false;
+  try{const bs=await getDocs(collection(db,'branches'));bs.docs.forEach(d=>{branches[d.id]=d.data().nameAr||d.id});$('#w-br').innerHTML='<option value="">كل الفروع</option>'+Object.entries(branches).map(([k,v])=>`<option value="${esc(k)}">${esc(v)}</option>`).join('')}catch(e){}
+  const t=new Date(),f=new Date(t.getFullYear(),t.getMonth(),1);$('#w-from').value=dStr(f);$('#w-to').value=dStr(t);
+  await loadCfg();loadWaste();
+});
+async function loadCfg(){
+  let c={...DEF};try{const s=await getDoc(doc(db,'settings','pickup'));if(s.exists())c={...DEF,...s.data()}}catch(e){}
+  $('#s-cash').checked=!!c.cash;$('#s-card').checked=!!c.card;$('#s-wallet').checked=!!c.wallet;
+  $('#s-wl').value=c.walletLabel||'';$('#s-wn').value=c.walletNumber||'';$('#s-pol').value=c.policy||'';$('#s-lim').value=c.noShowLimit||2;
+}
+$('#save').onclick=async()=>{
+  const c={cash:$('#s-cash').checked,card:$('#s-card').checked,wallet:$('#s-wallet').checked,walletLabel:$('#s-wl').value.trim().slice(0,60),walletNumber:$('#s-wn').value.trim().slice(0,60),policy:$('#s-pol').value.trim().slice(0,300),noShowLimit:Math.min(10,Math.max(1,+$('#s-lim').value||2))};
+  if(!c.cash&&!c.card&&!c.wallet)return toast('لازم طريقة دفع واحدة على الأقل');
+  if(c.wallet&&!c.walletNumber)return toast('اكتب رقم المحفظة أو عنوان إنستاباي');
+  try{await setDoc(doc(db,'settings','pickup'),c);toast('اتحفظ ✓')}catch(e){console.warn(e);toast('معرفتش أحفظ — راجع القواعد')}
+};
+async function loadWaste(){
+  const from=$('#w-from').value,to=$('#w-to').value,br=$('#w-br').value;
+  try{
+    const s=await getDocs(query(collection(db,'waste_log'),where('dateStr','>=',from),where('dateStr','<=',to)));
+    let rows=s.docs.map(d=>d.data()).filter(r=>!br||r.branchId===br).sort((a,b)=>(b.at||0)-(a.at||0));
+    const val=rows.reduce((t,r)=>t+(+r.value||0),0),rec=rows.filter(r=>r.recovered).reduce((t,r)=>t+(+r.value||0),0),loss=val-rec;
+    $('#w-stat').innerHTML=`<div><b>${rows.length}</b>أوردر هالك</div><div><b>${Math.round(val)}</b>قيمته (ج)</div><div><b class="tot">${Math.round(loss)}</b>خسارة فعلية (ج)</div>`;
+    const by={};rows.forEach(r=>{const k=REASON[r.reason]||r.reasonText||'سبب تاني';by[k]=(by[k]||0)+1});
+    $('#w-by').textContent=Object.entries(by).map(([k,v])=>k+': '+v).join(' · ')||'مفيش هالك في الفترة دي 🎉';
+    $('#w-rows').innerHTML=rows.map(r=>`<tr><td>${esc(r.dateStr)}</td><td>${esc(branches[r.branchId]||r.branchId)}</td><td>${esc(REASON[r.reason]||r.reasonText||'')}</td><td>${(r.items||[]).map(i=>esc(i.qty+'× '+i.nameAr)).join('<br>')}</td><td>${Math.round(r.value||0)}</td><td class="${r.recovered?'okc':'tot'}">${r.recovered?'اتدفع ✓':'لا'}</td></tr>`).join('');
+  }catch(e){console.warn(e);toast('معرفتش أحمّل التقرير — راجع القواعد')}
+}
+$('#w-go').onclick=loadWaste;
+$('#ns-go').onclick=async()=>{
+  const d=$('#ns-ph').value.replace(/\D/g,'').slice(-10);if(d.length<10)return toast('اكتب الموبايل صح');
+  const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('gh|'+d)),k=[...new Uint8Array(h)].slice(0,8).map(x=>x.toString(16).padStart(2,'0')).join('');
+  try{await deleteDoc(doc(db,'noshow',k));toast('اتصفّر ✓');$('#ns-ph').value=''}catch(e){toast('معرفتش — راجع القواعد')}
+};
+</script>
+</body></html>
