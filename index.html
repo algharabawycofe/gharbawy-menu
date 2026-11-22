@@ -544,6 +544,7 @@ html.dark .toast{background:var(--coffee-gold);color:#1F1611;}
 @keyframes shimmer{to{background-position:-200% 0;}}
 .skeleton-card{height:280px;border-radius:18px;border:1px solid var(--border);}
 </style>
+<link rel="stylesheet" href="mobile.css">
 </head>
 <body>
 
@@ -774,8 +775,13 @@ function enterWelcome(){
 function readTableFromUrl(){
   const p = new URLSearchParams(location.search);
   const t = p.get('table');
-  if(t){ currentTable = t; localStorage.setItem('gharbaoui_table', t); }
-  else currentTable = localStorage.getItem('gharbaoui_table') || null;
+  if(t){ currentTable = t; localStorage.setItem('gharbaoui_table', t); localStorage.setItem('gharbaoui_table_at', String(Date.now())); }
+  else {
+    // الطاولة المتخزنة بتنتهي بعد 3 ساعات، عشان العميل اللي مشي مايفضلش "قاعد" على الطاولة
+    const at = Number(localStorage.getItem('gharbaoui_table_at')) || 0;
+    if(Date.now() - at < 3*3600*1000) currentTable = localStorage.getItem('gharbaoui_table') || null;
+    else { currentTable = null; localStorage.removeItem('gharbaoui_table'); localStorage.removeItem('gharbaoui_table_at'); }
+  }
 }
 
 /* =====================================================
@@ -817,7 +823,7 @@ function subscribeAll(){
   const { db, collection, onSnapshot, doc } = window.FB;
 
   onSnapshot(doc(db, 'settings', 'features'), (snap) => {
-    const show = snap.exists() && snap.data().callWaiter;
+    const show = snap.exists() && snap.data().callWaiter && !!currentTable; // أزرار الويتر للي قاعد على طاولة بس
     $('callWaiterBtn').style.display = show ? 'flex' : 'none'; $('billBtn').style.display = show ? 'flex' : 'none';
   });
 
@@ -3158,6 +3164,7 @@ async function submitRating(){
 
 </script>
 <script src="reorder.js"></script>
+<script src="retain.js"></script>
 <script src="pickup.js"></script>
 <script src="loyalty-hook.js"></script>
 </body>

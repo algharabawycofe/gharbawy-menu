@@ -3,7 +3,7 @@
   const $ = (id) => document.getElementById(id), LS = localStorage;
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const DEFCFG = { cash: true, card: true, wallet: false, walletLabel: '', walletNumber: '', noShowLimit: 2, policy: 'الطلب بيتحضّر مخصوص ليك. تقدر تلغيه لحد ما نبدأ التحضير، وبعدها مش بيتلغي.' };
-  let cfg = Object.assign({}, DEFCFG);
+  let cfg = Object.assign({}, DEFCFG), presetDrive = false;
   const phKey = async (p) => { const d = String(p).replace(/\D/g, '').slice(-10); const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('gh|' + d)); return [...new Uint8Array(h)].slice(0, 8).map((x) => x.toString(16).padStart(2, '0')).join(''); };
   let pickup = null, place = null, wid = null, last = { t: 0, eta: null }, unsub = null, orderId = null;
   const dist = (a, b, c, d) => { const R = 6371000, r = (x) => x * Math.PI / 180, dl = r(c - a), dn = r(d - b), h = Math.sin(dl / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
@@ -32,7 +32,7 @@
     const drawPay = () => { $('pkPayBox').innerHTML = '<label style="font-size:12px;font-weight:800">طريقة الدفع</label><div style="display:grid;gap:6px;margin:4px 0 10px">' + MS.map((m) => `<button type="button" data-m="${m[0]}" style="text-align:start;padding:11px;border-radius:10px;border:2px solid ${method === m[0] ? '#C89B5E' : '#E8DED2'};background:${method === m[0] ? '#C89B5E33' : 'none'};font:inherit;font-weight:800;color:inherit">${m[1]}</button>`).join('') + (method === 'wallet' ? `<div style="font-size:12px;opacity:.85">بعد ما تبعت الطلب هتلاقي رقم التحويل والمبلغ، والتحضير بيبدأ بعد ما نتأكد من التحويل.</div>` : '') + '</div>'; $('pkPayBox').querySelectorAll('[data-m]').forEach((b) => b.onclick = () => { method = b.dataset.m; drawPay(); }); };
     if (!MS.length) { $('pkWarn').textContent = 'الاستلام المسبق مش متاح دلوقتي.'; $('pkGo').disabled = true; } else drawPay();
     const setMode = (d) => { drive = d; $('pkCar').hidden = !d; $('pkDrive').style.cssText += ';border-color:' + (d ? '#C89B5E' : '#E8DED2') + ';background:' + (d ? '#C89B5E33' : 'none'); $('pkWalk').style.cssText += ';border-color:' + (d ? '#E8DED2' : '#C89B5E') + ';background:' + (d ? 'none' : '#C89B5E33'); };
-    $('pkWalk').onclick = () => setMode(false); $('pkDrive').onclick = () => setMode(true);
+    $('pkWalk').onclick = () => setMode(false); $('pkDrive').onclick = () => setMode(true); if (presetDrive) setMode(true);
     $('pkLoc').onclick = () => navigator.geolocation ? navigator.geolocation.getCurrentPosition((p) => {
       if (!place) { $('pkInfo').textContent = 'مفيش موقع مسجّل للفرع، اختار الوقت يدوي.'; return; }
       dm = dist(p.coords.latitude, p.coords.longitude, place.lat, place.lng); const e = etaFrom(dm);
@@ -106,11 +106,14 @@
     FB.getDoc(FB.doc(FB.db, 'settings', 'pickup')).then((s) => { if (s.exists()) cfg = Object.assign({}, DEFCFG, s.data()); }).catch(() => {});
     FB.getDoc(FB.doc(FB.db, 'settings', 'loyalty')).then((s) => { const ps = (s.exists() && s.data().places) || []; place = ps.find((p) => p.branchId === currentBranch.id) || null; }).catch(() => {});
     const saved = LS.getItem('gh_pickup_order'); if (saved) track(saved);
-    if (new URLSearchParams(location.search).get('table')) return true; // فاتح من QR طاولة: مش محتاج استلام (الطاولة المتخزنة قديماً مبتمنعش الاستلام)
+    const QS = new URLSearchParams(location.search), DRIVE_LINK = QS.get('mode') === 'drive';
+    if (QS.get('table') && !DRIVE_LINK) return true; // فاتح من QR طاولة: مش محتاج استلام (الطاولة المتخزنة قديماً مبتمنعش الاستلام)
     const row = $('statusRow'); if (!row || !row.parentNode || $('pkStrip')) return true;
     const d = document.createElement('div'); d.id = 'pkStrip';
     d.style.cssText = 'display:flex;align-items:center;gap:10px;margin:10px 14px;padding:11px 14px;border-radius:16px;background:linear-gradient(135deg,#C89B5E,#E0BE85);color:#1F1611;font-weight:800;font-size:13px;cursor:pointer';
-    d.innerHTML = '<span style="font-size:22px">🚗</span><span style="flex:1">جاي في الطريق؟ اطلب دلوقتي واستلم أول ما توصل</span>'; d.onclick = openSheet; row.parentNode.insertBefore(d, row); return true;
+    d.innerHTML = '<span style="font-size:22px">🚗</span><span style="flex:1">'+(DRIVE_LINK ? '🚘 اطلب من عربيتك واستلم من غير ما تنزل' : 'جاي في الطريق؟ اطلب دلوقتي واستلم أول ما توصل')+'</span>'; d.onclick = openSheet; row.parentNode.insertBefore(d, row);
+    if (DRIVE_LINK && !LS.getItem('gh_pickup_order')) { presetDrive = true; setTimeout(openSheet, 500); }
+    return true;
   }
   let n = 0; const t = setInterval(() => { if (init() || ++n > 40) clearInterval(t); }, 500);
 })();

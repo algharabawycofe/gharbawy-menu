@@ -57,6 +57,15 @@ table{width:100%;border-collapse:collapse;font-size:12.5px}th,td{padding:8px 6px
   </section>
 
   <section class="box">
+    <h2>📊 طلبات الاستلام والدرايف ثرو</h2>
+    <p class="hint">بيستخدم نفس التاريخ والفرع بتوع تقرير الهالك. بيوريك كام عميل جه من الاستلام مقارنة بطلبات الصالة.</p>
+    <button id="st-go" class="b" type="button">عرض الإحصائيات</button>
+    <div class="stat" id="st-stat" style="margin-top:12px"></div>
+    <div id="st-by" class="hint" style="margin:10px 0"></div>
+    <div style="overflow:auto"><table><thead><tr><th>اليوم</th><th>صالة</th><th>استلام</th><th>درايف ثرو</th><th>ملغي</th></tr></thead><tbody id="st-rows"></tbody></table></div>
+  </section>
+
+  <section class="box">
     <h2>🚫 تصفير عميل "ماجاش"</h2>
     <p class="hint">لو عميل وصل للحد وعايز ترجّعله الكاش/الفيزا، اكتب موبايله.</p>
     <div class="row"><input id="ns-ph" type="tel" dir="ltr" placeholder="01xxxxxxxxx" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--bd);background:var(--sub);color:var(--tx);font:inherit"><button id="ns-go" class="b ghost" type="button">تصفير</button></div>
@@ -109,6 +118,25 @@ async function loadWaste(){
   }catch(e){console.warn(e);toast('معرفتش أحمّل التقرير — راجع القواعد')}
 }
 $('#w-go').onclick=loadWaste;
+$('#st-go').onclick=async()=>{
+  const from=$('#w-from').value,to=$('#w-to').value,br=$('#w-br').value;
+  try{
+    const s=await getDocs(query(collection(db,'orders'),where('dateStr','>=',from),where('dateStr','<=',to)));
+    const rows=s.docs.map(d=>d.data()).filter(o=>!br||o.branchId===br);
+    const days={},pay={cash:0,card:0,wallet:0};let dine=0,walk=0,drive=0,canc=0,rev=0;
+    rows.forEach(o=>{
+      const k=o.type==='pickup'?(o.mode==='drive'?'drive':'walk'):'dine';
+      const d=days[o.dateStr]=days[o.dateStr]||{dine:0,walk:0,drive:0,canc:0};d[k]++;
+      if(o.status==='cancelled'){canc++;d.canc++;return}
+      if(k==='dine')dine++;else if(k==='walk')walk++;else drive++;
+      if(k!=='dine'){pay[o.payment||'cash']=(pay[o.payment||'cash']||0)+1;rev+=Number(o.total)||0}
+    });
+    const pk=walk+drive,all=dine+pk;
+    $('#st-stat').innerHTML=`<div><b>${all}</b>إجمالي الأوردرات</div><div><b>${pk}</b>استلام (${all?Math.round(pk/all*100):0}%)</div><div><b>${drive}</b>درايف ثرو</div>`;
+    $('#st-by').textContent='طرق دفع الاستلام: كاش '+pay.cash+' · فيزا '+pay.card+' · تحويل '+pay.wallet+' — مبيعات الاستلام: '+Math.round(rev)+' ج — ملغي: '+canc;
+    $('#st-rows').innerHTML=Object.keys(days).sort().reverse().map(k=>`<tr><td>${esc(k)}</td><td>${days[k].dine}</td><td>${days[k].walk}</td><td>${days[k].drive}</td><td>${days[k].canc}</td></tr>`).join('');
+  }catch(e){console.warn(e);toast('معرفتش أحمّل الإحصائيات — راجع القواعد')}
+};
 $('#ns-go').onclick=async()=>{
   const d=$('#ns-ph').value.replace(/\D/g,'').slice(-10);if(d.length<10)return toast('اكتب الموبايل صح');
   const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('gh|'+d)),k=[...new Uint8Array(h)].slice(0,8).map(x=>x.toString(16).padStart(2,'0')).join('');

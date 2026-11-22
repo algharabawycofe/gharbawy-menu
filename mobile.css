@@ -1,0 +1,47 @@
+/* تحسين العرض على الموبايل (بيتحمّل بعد ستايل الصفحة) */
+@media (max-width:700px){
+  .app-main{padding:8px 12px 12px}
+  /* الهيدر: مايتداخلش على الشاشات الصغيرة */
+  .header-inner{padding:8px 12px;gap:6px}
+  .brand{gap:8px;flex:1 1 auto}
+  .brand-logo{width:36px;height:36px;border-radius:10px;padding:3px}
+  .brand-text h1{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand-branch-static{font-size:10.5px;padding:2px 8px;max-width:100%}
+  .brand-branch-static span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .header-actions{gap:4px;flex:0 0 auto}
+  .header-actions .icon-btn,.header-actions .cart-btn{width:36px;height:36px;min-width:36px;padding:0;font-size:15px;border-radius:11px}
+  /* السلايدر: شريط عرض بدل ما ياخد الشاشة */
+  .hero{height:176px;border-radius:18px;margin-bottom:10px;box-shadow:0 10px 26px rgba(15,10,7,.22),0 0 0 1px rgba(200,155,94,.15)}
+  .hero-content{padding:14px 16px;gap:4px;align-content:center}
+  .hero-text{gap:6px}
+  .hero-image-wrap{width:58px;height:58px;top:12px;inset-inline-end:14px}
+  .hero-image-ring{inset:-5px}
+  .hero-badge{padding:3px 10px;font-size:10px}
+  .hero-title{font-size:19px;letter-spacing:-.5px;line-height:1.15}
+  .hero-desc{font-size:11.5px;max-width:70%;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .hero-cta-row{gap:10px;margin-top:2px}
+  .hero-price .num{font-size:22px}
+  .hero-price .cur{font-size:11px}
+  .hero-cta{padding:8px 14px;font-size:12px;border-radius:12px}
+  .hero-arrow{display:none}
+  .hero-footer{bottom:8px}
+  .hero-counter{display:none}
+  /* البانرات اللي فوق: سطر واحد */
+  #loyaltyStrip,#pkStrip{margin:6px 12px!important;padding:8px 12px!important;font-size:12px!important;border-radius:13px!important;gap:8px!important;line-height:1.4}
+  #loyaltyStrip>span:first-child,#pkStrip>span:first-child{font-size:18px!important}
+  #loyaltyStrip>span:nth-child(2),#pkStrip>span:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  /* أزرار الويتر: أصغر وفي الركن */
+  .call-fab{width:46px;height:46px;font-size:20px!important;bottom:16px!important;inset-inline-start:14px}
+  #billBtn.call-fab{bottom:70px!important}
+  /* البحث والتصنيفات */
+  .sticky-tools{padding:6px 0 8px;margin-bottom:8px}
+  .search-input{padding-top:11px;padding-bottom:11px}
+  .cat-chip{padding:8px 13px}
+  .menu-grid{gap:10px}
+}
+@media (max-width:380px){
+  .header-actions .icon-btn,.header-actions .cart-btn{width:33px;height:33px;min-width:33px}
+  .hero{height:164px}
+  .hero-desc{max-width:100%}
+  .hero-image-wrap{display:none}
+}

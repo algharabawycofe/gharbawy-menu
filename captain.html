@@ -60,7 +60,7 @@ function cleanup(){unsubs.forEach(u=>u&&u());unsubs=[];primed={o:false,c:false};
 onAuthStateChanged(auth,async u=>{
   cleanup();$('#msg').hidden=true;
   if(!u){$('#login').hidden=false;$('#app').hidden=true;$('#out').hidden=true;return}
-  $('#out').hidden=false;
+  $('#out').hidden=false;$('#login').hidden=true;
   let p=null;try{const s=await getDoc(doc(db,'users',u.uid));p=s.exists()?s.data():null}catch(e){}
   if(!p||p.active===false)return msg('الحساب ده مالوش صلاحية. كلّم الإدارة.');
   if(['super_admin','admin'].includes(p.role))return msg('الحساب ده أدمن. شاشة الكابتن بتشتغل بحساب كابتن مربوط بفرع.',true);

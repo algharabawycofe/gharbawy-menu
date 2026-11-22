@@ -25,7 +25,7 @@
     if (!lines.length || !row || !row.parentNode) { old && old.remove(); return; }
     if (old) return;
     const b = document.createElement('button'); b.id = 'ghReorder'; b.type = 'button';
-    b.style.cssText = 'display:block;width:calc(100% - 28px);margin:10px 14px;padding:12px;border-radius:14px;border:1.5px solid var(--coffee-gold,#C89B5E);background:none;color:inherit;font:inherit;font-weight:800;cursor:pointer';
+    b.style.cssText = 'display:block;width:calc(100% - 24px);margin:6px 12px;padding:9px;font-size:13px;border-radius:13px;border:1.5px solid var(--coffee-gold,#C89B5E);background:none;color:inherit;font:inherit;font-weight:800;cursor:pointer';
     b.textContent = '🔁 كرر آخر طلب (' + lines.reduce((s, l) => s + l.qty, 0) + ' صنف)';
     b.onclick = repeat; row.parentNode.insertBefore(b, row);
   }

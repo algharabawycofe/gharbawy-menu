@@ -406,7 +406,7 @@ tr:hover td{background:var(--subtle)}
 
 <div id="qrModal" class="modal-overlay"><div class="modal" style="width:480px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 id="qrTitle" style="font-size:17px;font-weight:900;margin:0">QR</h3><button class="btn btn-ghost btn-sm" onclick="closeModal('qrModal')">✕</button></div>
-  <div style="margin-bottom:12px"><label>نوع الـ QR</label><select id="qrType" onchange="renderQRPreview()"><option value="branch">QR عام للفرع</option><option value="table">QR لكل طربيزة</option></select></div>
+  <div style="margin-bottom:12px"><label>نوع الـ QR</label><select id="qrType" onchange="renderQRPreview()"><option value="branch">QR عام للفرع</option><option value="table">QR لكل طربيزة</option><option value="drive">🚘 درايف ثرو (للافتة قدام الفرع)</option></select></div>
   <div id="qrTableSelectBox" style="display:none;margin-bottom:12px"><label>اختار الطربيزة</label><select id="qrTable" onchange="renderQRPreview()"></select></div>
   <div class="qr-wrapper">
     <div class="qr-title-text">امسح الكود لفتح المنيو 📱</div>
@@ -819,12 +819,13 @@ function showQR(branchId){
 }
 function renderQRPreview(){
   if(!currentQRBranch) return; const type = $('qrType').value; let url = qrBase()+'index.html?branch='+currentQRBranch.code;
-  if(type==='table'){ $('qrTableSelectBox').style.display='block'; url += '&table='+$('qrTable').value; } else { $('qrTableSelectBox').style.display='none'; }
+  if(type==='drive'){ url += '&mode=drive'; $('qrTableSelectBox').style.display='none'; } else if(type==='table'){ $('qrTableSelectBox').style.display='block'; url += '&table='+$('qrTable').value; } else { $('qrTableSelectBox').style.display='none'; }
   $('qrUrl').innerText = url; $('qrCode').innerHTML = QRT.svg(url); const sv = $('qrCode').firstChild; sv.style.cssText='width:250px;height:250px;display:block';
   const img = document.createElement('img'); img.src = companyInfo.logo || 'logo-01.png'; img.className = 'qr-logo-overlay'; img.onerror = function(){ this.style.display = 'none'; }; $('qrCode').appendChild(img);
 }
 function qrBase(){ return location.origin+location.pathname.replace(/[^/]*$/,''); }
 function qrCardOpts(table){
+  if(!table && $('qrType').value==='drive'){ const bd=currentQRBranch; return { url: qrBase()+'index.html?branch='+bd.code+'&mode=drive', company: companyInfo.nameAr || 'الغرباوي', title: '🚘 اطلب وإنت في عربيتك', foot: 'امسح الكود، اطلب، واستلم من غير ما تنزل', logo: companyInfo.logo || 'logo-01.png' }; }
   const b = currentQRBranch, t = table!==undefined ? table : ($('qrType').value==='table' ? $('qrTable').value : null);
   return { url: qrBase()+'index.html?branch='+b.code+(t!==null?'&table='+t:''), company: companyInfo.nameAr || 'الغرباوي', title: t!==null ? 'طاولة '+t+' · '+b.nameAr : b.nameAr, logo: companyInfo.logo || 'logo-01.png' };
 }
