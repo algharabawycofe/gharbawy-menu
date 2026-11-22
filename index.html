@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" id="htmlRoot">
 <head>
+<link rel="icon" href="logo-01.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <meta name="theme-color" content="#2B1D14">
@@ -2226,6 +2227,12 @@ async function submitRating(){
       createdAt: (typeof FB.serverTimestamp === "function") ? FB.serverTimestamp() : now
     };
 
+    // طلب استلام / درايف ثرو (pickup.js): نضيف بياناته، والطاولة تبقى "استلام" مهما كانت طاولة قديمة متخزنة
+    var extra = {};
+    try { extra = (typeof W.GH_ORDER_EXTRA === "function" && W.GH_ORDER_EXTRA()) || {}; } catch (e) { extra = {}; }
+    var isPickup = extra.type === "pickup";
+    if (isPickup) { tableNum = "استلام"; Object.assign(orderDoc, extra, { table: "استلام" }); }
+
     W.__orderSubmitting = true;
 
     return Promise.resolve()
@@ -2233,7 +2240,7 @@ async function submitRating(){
       .then(function (ref) {
         try {
           if (typeof myOrders !== "undefined" && Array.isArray(myOrders)) {
-            myOrders.push({ id: ref.id, table: tableNum, at: Date.now() });
+            if (!isPickup) myOrders.push({ id: ref.id, table: tableNum, at: Date.now() });
             var cutoff = Date.now() - 6 * 3600 * 1000;
             for (var k = myOrders.length - 1; k >= 0; k--) {
               if (!(myOrders[k] && myOrders[k].at > cutoff)) myOrders.splice(k, 1);
@@ -2247,10 +2254,11 @@ async function submitRating(){
         if (typeof saveCart === "function") saveCart();
         if (typeof closeCartModal === "function") closeCartModal();
         if (typeof playBell === "function") playBell();
-        if (typeof W.renderWaiterDisplay === "function") W.renderWaiterDisplay(itemsSnapshot, total, tableNum);
+        if (!isPickup && typeof W.renderWaiterDisplay === "function") W.renderWaiterDisplay(itemsSnapshot, total, tableNum);
         if (typeof W.updateStatusChips === "function") W.updateStatusChips();
+        try { W.dispatchEvent(new CustomEvent("gh-order", { detail: { id: ref.id, table: tableNum, items: itemsSnapshot, pickup: isPickup } })); } catch (e) { /* تجاهل */ }
 
-        toast(t("تم إرسال الطلب بنجاح", "Order sent successfully"), "✅");
+        toast(isPickup ? t("وصل طلبك للفرع ✅ تابع حالته من الشريط تحت", "Order sent to the branch ✅") : t("تم إرسال الطلب بنجاح", "Order sent successfully"), "✅");
         return ref;
       })
       .catch(function (err) {

@@ -47,12 +47,13 @@
           const w = MS.find((m) => m[0] === 'wallet'); $('pkWarn').textContent = w ? 'فيه طلبات اتحضّرت لرقمك قبل كده ومحدش استلمها، فالطلب ده بيتأكد بالتحويل. اختار "تحويل" وكمّل.' : 'رقمك عليه طلبات اتحضّرت قبل كده ومحدش استلمها. كلّم الفرع عشان نأكد طلبك.'; if (w) { method = 'wallet'; drawPay(); } return; } } catch (e) { /* لو القراءة فشلت منمنعش العميل */ }
       LS.setItem('gh_pk_phone', ph); pickup = { method, phone: ph, eta: +$('pkEta').value, dist: dm ? Math.round(dm) : null, car };
       s.remove(); bar(`<span>${pickup.car ? '🚘 درايف ثرو' : '🚗 وضع الاستلام'} شغّال (${{ cash: 'كاش', card: 'فيزا', wallet: 'تحويل' }[pickup.method]}) · ضيف أصنافك وابعت الطلب</span><button id="pkOff" type="button" style="background:none;border:1px solid #fff5;color:#fff;border-radius:8px;padding:6px 10px;font:inherit">إلغاء</button>`, 'pkBar');
-      $('pkOff').onclick = () => { pickup = null; $('pkBar').remove(); };
+      $('pkOff').onclick = () => { pickup = null; $('pkBar').remove(); refreshCart(); };
+      refreshCart();
     };
   }
   /* بعد إرسال الطلب: متابعة الحالة + حساب الوصول لايف */
   function track(id) {
-    orderId = id; LS.setItem('gh_pickup_order', id); const { db, doc, onSnapshot, updateDoc } = window.FB;
+    orderId = id; LS.setItem('gh_pickup_order', id); const stp = $('pkStrip'); if (stp) stp.style.display = 'none'; const { db, doc, onSnapshot, updateDoc } = window.FB;
     const set = (o) => updateDoc(doc(db, 'orders', id), o).catch(() => {});
     unsub && unsub(); let arrived = false;
     unsub = onSnapshot(doc(db, 'orders', id), (s) => {
@@ -75,14 +76,37 @@
       if (!arrived && now - last.t > 30000 && e !== last.eta) { last = { t: now, eta: e }; set({ etaMin: e, distanceM: Math.round(d) }); }
     }, () => {}, { enableHighAccuracy: true, maximumAge: 15000 });
   }
-  function finish(msg) { unsub && unsub(); unsub = null; if (wid !== null) { navigator.geolocation.clearWatch(wid); wid = null; } LS.removeItem('gh_pickup_order'); pickup = null; $('pkBar') && $('pkBar').remove(); if (msg) { bar(`<span>${msg}</span><button id="pkX" type="button" style="background:none;border:0;color:#fff;font-size:18px">✕</button>`, 'pkTrack'); $('pkX').onclick = () => $('pkTrack').remove(); setTimeout(() => $('pkTrack') && $('pkTrack').remove(), 12000); } else $('pkTrack') && $('pkTrack').remove(); }
-  addEventListener('gh-order', (e) => { if (pickup && e.detail && e.detail.id) { $('pkBar') && $('pkBar').remove(); track(e.detail.id); } });
+  function finish(msg) { const stp = $('pkStrip'); if (stp) stp.style.display = ''; unsub && unsub(); unsub = null; if (wid !== null) { navigator.geolocation.clearWatch(wid); wid = null; } LS.removeItem('gh_pickup_order'); pickup = null; $('pkBar') && $('pkBar').remove(); if (msg) { bar(`<span>${msg}</span><button id="pkX" type="button" style="background:none;border:0;color:#fff;font-size:18px">✕</button>`, 'pkTrack'); $('pkX').onclick = () => $('pkTrack').remove(); setTimeout(() => $('pkTrack') && $('pkTrack').remove(), 12000); } else $('pkTrack') && $('pkTrack').remove(); }
+  addEventListener('gh-order', (e) => { if (pickup && e.detail && e.detail.id) { $('pkBar') && $('pkBar').remove(); const cn = $('pkCartNote'); cn && cn.remove(); track(e.detail.id); pickup = null; } });
+  /* ---- ما نغطّيش السلة: الشريط يختفي لما أي شيت يتفتح، وملخص الاستلام يظهر جوه السلة ---- */
+  (function () { const st = document.createElement('style'); st.textContent = 'body:has(.sheet.open) #pkBar,body:has(.sheet.open) #pkTrack{display:none!important}body:has(#pkBar){padding-bottom:76px}body:has(#pkTrack){padding-bottom:190px}'; document.head.appendChild(st); })();
+  const METHOD = { cash: '💵 كاش', card: '💳 فيزا', wallet: '📲 تحويل' };
+  function refreshCart() {
+    const f = $('cartFooter'); if (!f || !f.children.length) return; const kind = pickup ? 'on' : 'ask', ex = $('pkCartNote'); if (ex && ex.dataset.k === kind) return; if (ex) ex.remove();
+    if (typeof currentBranch === 'undefined' || !currentBranch) return;
+    const seated = new URLSearchParams(location.search).get('table');
+    const d = document.createElement('div'); d.id = 'pkCartNote'; d.dataset.k = kind;
+    if (pickup) {
+      d.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;background:#C89B5E22;border:1px solid #C89B5E;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:12.5px;font-weight:800;direction:rtl';
+      d.innerHTML = `<span>${pickup.car ? '🚘 درايف ثرو' : '🚗 استلام'} · ${METHOD[pickup.method]} · وصول بعد ${pickup.eta} د</span><button type="button" id="pkEdit" style="background:none;border:0;color:inherit;text-decoration:underline;font:inherit;cursor:pointer">تغيير</button>`;
+      f.insertBefore(d, f.firstChild); $('pkEdit').onclick = () => { pickup = null; $('pkBar') && $('pkBar').remove(); d.remove(); openSheet(); };
+      const b = f.querySelector('.btn-primary'), t = pickup.car ? '🚘 إرسال طلب الدرايف ثرو' : '🚗 إرسال طلب الاستلام';
+      if (b && b.textContent.trim() !== t) b.textContent = t;
+    } else if (!seated) {
+      d.style.cssText = 'margin-bottom:10px';
+      d.innerHTML = '<button type="button" id="pkAsk" style="width:100%;padding:12px;border-radius:12px;border:1.5px dashed #C89B5E;background:none;color:inherit;font:inherit;font-weight:800;cursor:pointer;direction:rtl">🚗 هستلم من الفرع أو من العربية بدل الطاولة</button>';
+      f.insertBefore(d, f.firstChild); $('pkAsk').onclick = () => openSheet();
+    }
+  }
+  const cartObs = () => { const f = $('cartFooter'); if (!f) return setTimeout(cartObs, 600); new MutationObserver(refreshCart).observe(f, { childList: true }); refreshCart(); };
+  cartObs();
+
   function init() {
     const FB = window.FB; if (!FB || !FB.db || typeof currentBranch === 'undefined' || !currentBranch) return false;
     FB.getDoc(FB.doc(FB.db, 'settings', 'pickup')).then((s) => { if (s.exists()) cfg = Object.assign({}, DEFCFG, s.data()); }).catch(() => {});
     FB.getDoc(FB.doc(FB.db, 'settings', 'loyalty')).then((s) => { const ps = (s.exists() && s.data().places) || []; place = ps.find((p) => p.branchId === currentBranch.id) || null; }).catch(() => {});
     const saved = LS.getItem('gh_pickup_order'); if (saved) track(saved);
-    if (typeof currentTable !== 'undefined' && currentTable) return true; // قاعد على طاولة: مش محتاج استلام
+    if (new URLSearchParams(location.search).get('table')) return true; // فاتح من QR طاولة: مش محتاج استلام (الطاولة المتخزنة قديماً مبتمنعش الاستلام)
     const row = $('statusRow'); if (!row || !row.parentNode || $('pkStrip')) return true;
     const d = document.createElement('div'); d.id = 'pkStrip';
     d.style.cssText = 'display:flex;align-items:center;gap:10px;margin:10px 14px;padding:11px 14px;border-radius:16px;background:linear-gradient(135deg,#C89B5E,#E0BE85);color:#1F1611;font-weight:800;font-size:13px;cursor:pointer';
