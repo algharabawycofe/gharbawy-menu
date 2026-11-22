@@ -1,0 +1,63 @@
+// ⚠️ ده الملف "الإضافة" فقط (للولاء). استخدم واحد من اتنين:
+//   1) firestore.rules  = قواعد كاملة لكل المشروع (بتبدّل اللي عندك)
+//   2) الملف ده         = تضيفه جوه قواعدك الحالية من غير ما تمسحها
+// ماتستخدمش الاتنين مع بعض (دوال isStaff/isOwner هتتكرر).
+// ===== أضف الجزء ده جوه قواعد Firestore الحالية (match /databases/{database}/documents { ... }) =====
+// ماتستبدلش قواعدك الحالية، ضيف الدوال والـ match دول معاها.
+
+function isStaff() {
+  return request.auth != null
+    && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['super_admin','admin','branch_manager','captain'];
+}
+function isOwner() {
+  return request.auth != null
+    && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['super_admin','admin'];
+}
+
+// إعدادات الولاء: الكل يقرأ (العميل محتاجها)، الأدمن بس يكتب
+match /settings/loyalty {
+  allow read: if true;
+  allow write: if isOwner();
+}
+
+// العملاء: الـ id عشوائي ومتخمنش. العميل يقرأ كارته بس، والموظفين يشوفوا الكل
+match /loyalty_members/{id} {
+  allow get: if true;
+  allow list: if isStaff();
+  allow create: if request.resource.data.keys().hasOnly(['name','phone','stamps','redeemed','visits','joinedAt','lastVisit'])
+                && request.resource.data.stamps == 0
+                && request.resource.data.redeemed == 0
+                && request.resource.data.visits == 0
+                && request.resource.data.name is string && request.resource.data.name.size() <= 40
+                && request.resource.data.phone is string && request.resource.data.phone.size() <= 15;
+  allow update: if isStaff();
+  allow delete: if isStaff();
+}
+
+// سجل الأختام (للموظفين)
+match /loyalty_log/{id} {
+  allow read, create: if isStaff();
+}
+
+// قوالب الرسائل التلقائية: الكل يقرأ، الأدمن بس يكتب
+match /settings/loyalty_msgs {
+  allow read: if true;
+  allow write: if isOwner();
+}
+
+// رسائل الإدارة للعملاء (Broadcasts): الكل يقرأ، الأدمن بس يكتب
+match /loyalty_broadcasts/{id} {
+  allow read: if true;
+  allow create, update, delete: if isOwner();
+}
+
+// أجهزة Push (المرحلة 2): العميل يسجّل جهازه بس، والموظفين يشوفوا العدد
+match /loyalty_push_tokens/{id} {
+  allow create, update: if request.resource.data.keys().hasOnly(['memberId','token','url','at'])
+                        && request.resource.data.memberId == id
+                        && request.resource.data.token is string && request.resource.data.token.size() < 400;
+  allow read: if isStaff();
+  allow delete: if isStaff();
+}
