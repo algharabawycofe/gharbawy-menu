@@ -74,12 +74,13 @@
     <button id="saveSet" class="b gold full" type="button" style="margin-top:14px">حفظ الإعدادات</button>
   </div>
   <div class="box"><h2>QR كارت الولاء</h2><p class="mut">اطبعه جنب الكاشير. العميل يفتح صفحة الكارت مباشرة.</p>
-    <div class="qr" id="joinQr"></div><button class="b ghost full" id="copyJoin" type="button">نسخ اللينك</button></div>
+    <div class="qr" id="joinQr"></div><div class="row"><button class="b ghost" id="copyJoin" type="button">نسخ اللينك</button><button class="b ghost" id="dlJoin" type="button">⬇️ تحميل PNG</button><button class="b ghost" id="prJoin" type="button">🖨️ طباعة</button></div></div>
 </section>
 </div>
 </main>
 <script src="loyalty-qr.js"></script>
 <script src="loyalty-common.js"></script>
+<script src="qr-tools.js"></script>
 <script type="module" src="firebase-config.js"></script>
 <script type="module">
 const {$,esc,toast,phoneIntl,days,ago,dist,qrSvg,ready,msgs,fill,match}=L;
@@ -218,6 +219,9 @@ $('#saveSet').onclick=async()=>{
   const data={enabled:$('#sOn').value==='1',goal:Math.max(2,+$('#sGoal').value||8),radius:+$('#sRad').value||100,reward:$('#sRew').value.trim()||'مشروب مجاني',places:cfg.places||[],vapidKey:$('#sVapid').value.trim()};
   try{await setDoc(doc(db,'settings','loyalty'),data);toast('اتحفظ ✓')}catch(e){console.warn(e);toast('مفيش صلاحية كتابة — راجع قواعد Firestore')}
 };
+const joinCard=()=>({url:joinUrl(),company:'الغرباوي',title:'كارت الولاء 🎁',foot:'امسح الكود وخد كارت الولاء'});
+$('#dlJoin').onclick=async()=>{try{await QRT.download(joinCard(),'loyalty-card-qr.png');toast('اتحمّل ✓')}catch(e){console.warn(e);toast('معرفتش أحمّل')}};
+$('#prJoin').onclick=async()=>{try{await QRT.print([joinCard()])}catch(e){console.warn(e);toast('معرفتش أطبع')}};
 $('#copyJoin').onclick=async()=>{try{await navigator.clipboard.writeText(joinUrl());toast('اتنسخ ✓')}catch(e){prompt('انسخ:',joinUrl())}};
 
 /* ===== مركز الإشعارات ===== */

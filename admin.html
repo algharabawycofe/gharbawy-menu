@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة التحكم - الغرباوي</title>
-  <!-- ✅ مكتبة html2canvas لتحميل وطباعة الـ QR -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<script src="loyalty-qr.js"></script>
+<script src="qr-tools.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -75,20 +73,8 @@ tr:hover td{background:var(--subtle)}
 .qr-wrapper{background:#fff;padding:24px;border-radius:24px;box-shadow:0 10px 40px rgba(43,29,20,0.08);border:1px solid var(--border);text-align:center;position:relative;margin-bottom:16px}
 .qr-title-text{font-size:14px;font-weight:900;color:var(--dark);margin-bottom:16px;letter-spacing:1px}
 .qr-container{position:relative;display:inline-block;padding:16px;background:#fff;border-radius:20px;border:2px dashed var(--gold)}
-.qr-logo-overlay{
-  position:absolute;
-  top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  width:48px;              /* ✅ كان 60 */
-  height:48px;
-  background:#fff;
-  border-radius:50%;
-  padding:4px;             /* ✅ كان 6 */
-  box-shadow:0 2px 8px rgba(0,0,0,0.15);
-  border:2px solid var(--gold);
-  object-fit:contain;
-  z-index:10;
-}.danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
+.qr-logo-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:#fff;border-radius:50%;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:2px solid var(--gold);object-fit:contain;z-index:10}
+.danger-zone{border:2px solid var(--danger);background:rgba(179,58,58,.05);border-radius:16px;padding:20px;margin-top:16px}
 .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
 .pwd-box{background:rgba(200,155,94,.08);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:6px;font-size:11px;color:var(--muted);line-height:1.6}
 .section-header{font-size:15px;font-weight:900;margin:0 0 6px}
@@ -233,7 +219,7 @@ tr:hover td{background:var(--subtle)}
       <div id="page-items" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
           <h2 style="font-size:22px;font-weight:900;margin:0">المنتجات</h2>
-          <button class="btn btn-primary" onclick="openItemModal()">+ إضافة منتج</button>
+          <div style="display:flex;gap:8px"><button class="btn btn-ghost" onclick="openQuickMenu()">⚡ إضافة سريعة</button><button class="btn btn-primary" onclick="openItemModal()">+ إضافة منتج</button></div>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
           <table><thead><tr><th>#</th><th>صورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الحالة العامة</th><th>إجراءات</th></tr></thead><tbody id="itemsTable"></tbody></table>
@@ -427,6 +413,7 @@ tr:hover td{background:var(--subtle)}
   </div>
   <div style="font-size:11px;color:var(--muted);text-align:center;word-break:break-all;margin-bottom:14px" id="qrUrl"></div>
   <div style="display:flex;gap:8px;justify-content:center"><button class="btn btn-ghost" onclick="printQR()">🖨️ طباعة</button><button class="btn btn-primary" onclick="downloadQR()">⬇️ تحميل</button></div>
+  <div style="display:flex;justify-content:center;margin-top:8px"><button class="btn btn-ghost" onclick="printAllQR()">🖨️ طباعة كل طربيزات الفرع</button></div>
 </div></div>
 
 <div id="menuModal" class="modal-overlay"><div class="modal" style="width:520px">
@@ -824,79 +811,31 @@ async function deleteBranch(id){ if(!confirm('تأكيد حذف الفرع؟')) 
 
 let currentQRBranch = null;
 function showQR(branchId){
-  currentQRBranch = branches.find(x => x.id === branchId);
-  if(!currentQRBranch){ showToast('⚠️ الفرع غير موجود'); return; }
-  if(!currentQRBranch.code){ showToast('⚠️ الفرع ليس له كود — أضف كود أولاً'); return; }
-
-  $('qrTitle').innerText = '📱 QR — ' + currentQRBranch.nameAr;
-  $('qrType').value = 'branch';
-
-  const tables = currentQRBranch.tables || [];
-  $('qrTable').innerHTML = tables.length
-    ? tables.map(t => `<option value="${t.number}">طربيزة ${t.number}</option>`).join('')
-    : '<option value="">لا توجد طربيزات</option>';
-
-  $('qrTableSelectBox').style.display = 'none';
-
-  // ✅ افتح المودال الأول، بعدها ارسم (عشان html2canvas يشتغل صح)
-  $('qrModal').classList.add('open');
-  setTimeout(renderQRPreview, 60);
+  currentQRBranch = branches.find(x=>x.id===branchId); if(!currentQRBranch) return;
+  $('qrTitle').innerText='📱 QR — '+currentQRBranch.nameAr; $('qrType').value='branch';
+  const tables = currentQRBranch.tables||[]; $('qrTable').innerHTML = tables.map(t=>`<option value="${t.number}">طربيزة ${t.number}</option>`).join('') || '<option>لا توجد طربيزات</option>';
+  $('qrTableSelectBox').style.display='none'; renderQRPreview(); $('qrModal').classList.add('open');
 }
-
 function renderQRPreview(){
-  if(!currentQRBranch) return;
-
-  const type = $('qrType').value;
-  const baseUrl = 'https://algharabawycofe.github.io/gharbawy-menu/index.html';
-  let url = `${baseUrl}?branch=${encodeURIComponent(currentQRBranch.code)}`;
-
-  if(type === 'table'){
-    $('qrTableSelectBox').style.display = 'block';
-    const t = $('qrTable').value;
-    if(t) url += `&table=${encodeURIComponent(t)}`;
-  } else {
-    $('qrTableSelectBox').style.display = 'none';
-  }
-
-  $('qrUrl').innerText = url;
-
-  // ✅ امسح القديم + ارسم جديد
-  const box = $('qrCode');
-  box.innerHTML = '';
-
-  new QRCode(box, {
-    text: url,
-    width: 280,
-    height: 280,
-    colorDark: '#000000',   // ✅ أسود نقي = سكان أفضل بكتير
-    colorLight: '#FFFFFF',
-    correctLevel: QRCode.CorrectLevel.H
-  });
-
-  // ✅ اللوجو — اختياري + مع crossOrigin
-  if(companyInfo.logo){
-    const img = document.createElement('img');
-    img.src = companyInfo.logo;
-    img.className = 'qr-logo-overlay';
-    img.crossOrigin = 'anonymous';   // ⭐ مهم جداً لـ html2canvas
-    img.onerror = function(){ this.style.display = 'none'; };
-    box.appendChild(img);
-  }
+  if(!currentQRBranch) return; const type = $('qrType').value; let url = qrBase()+'index.html?branch='+currentQRBranch.code;
+  if(type==='table'){ $('qrTableSelectBox').style.display='block'; url += '&table='+$('qrTable').value; } else { $('qrTableSelectBox').style.display='none'; }
+  $('qrUrl').innerText = url; $('qrCode').innerHTML = QRT.svg(url); const sv = $('qrCode').firstChild; sv.style.cssText='width:250px;height:250px;display:block';
+  const img = document.createElement('img'); img.src = companyInfo.logo || 'logo-01.png'; img.className = 'qr-logo-overlay'; img.onerror = function(){ this.style.display = 'none'; }; $('qrCode').appendChild(img);
 }
-function printQR() {
-  const qrContainer = $('qrCodeContainer'); if(!qrContainer) { showToast('⚠️ خطأ في الطباعة'); return; }
-  const branchName = currentQRBranch.nameAr; const isTable = $('qrType').value === 'table'; const tableNum = isTable ? $('qrTable').value : null; const companyName = companyInfo.nameAr || 'الغرباوي'; const logoUrl = companyInfo.logo || 'logo-01.png';
-  html2canvas(qrContainer, { scale: 3, backgroundColor: '#ffffff' }).then(canvas => {
-      const qrDataUrl = canvas.toDataURL('image/png'); const printWindow = window.open('', '_blank');
-      printWindow.document.write(`<html dir="rtl"><head><title>طباعة QR</title><style>@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');body{font-family:'Cairo',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#FAF6F0;}.card{background:#fff;padding:40px;border-radius:32px;box-shadow:0 20px 60px rgba(43,29,20,0.1);text-align:center;border:1px solid #E8DED2;position:relative;overflow:hidden;width:380px;}.card::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#C89B5E,#2B1D14);}.logo{width:80px;height:80px;object-fit:contain;margin:0 auto 16px;display:block;}h1{font-size:28px;margin:0 0 4px;color:#2B1D14;font-weight:900;}h2{font-size:16px;margin:0 0 30px;color:#C89B5E;font-weight:700;letter-spacing:1px;}.qr-box{background:#fff;border:2px dashed #E8DED2;padding:16px;border-radius:24px;display:inline-block;margin-bottom:24px;}.qr-box img{display:block;width:240px;height:240px;}.footer-text{font-size:14px;color:#6F4E37;font-weight:700;}@media print{body{background:#fff;}.card{box-shadow:none;border:2px solid #E8DED2;}}</style></head><body><div class="card"><img src="${logoUrl}" class="logo" onerror="this.style.display='none'"><h1>${companyName}</h1><h2>${isTable ? 'طربيزة ' + tableNum : branchName}</h2><div class="qr-box"><img src="${qrDataUrl}"></div><div class="footer-text">امسح الكود لفتح القائمة الرقمية ☕</div></div><script>window.onload=function(){setTimeout(()=>{window.print();window.close();},800);}<\/script></body></html>`);
-      printWindow.document.close();
-  });
+function qrBase(){ return location.origin+location.pathname.replace(/[^/]*$/,''); }
+function qrCardOpts(table){
+  const b = currentQRBranch, t = table!==undefined ? table : ($('qrType').value==='table' ? $('qrTable').value : null);
+  return { url: qrBase()+'index.html?branch='+b.code+(t!==null?'&table='+t:''), company: companyInfo.nameAr || 'الغرباوي', title: t!==null ? 'طاولة '+t+' · '+b.nameAr : b.nameAr, logo: companyInfo.logo || 'logo-01.png' };
 }
-function downloadQR(){
-  const qrContainer = $('qrCodeContainer'); if(!qrContainer) return; showToast('⏳ جاري التحميل...');
-  html2canvas(qrContainer, { scale: 3, backgroundColor: '#ffffff' }).then(canvas => {
-    const link = document.createElement('a'); link.download = 'qr-' + currentQRBranch.code + (($('qrType').value==='table')?('-table-'+$('qrTable').value):'') + '.png'; link.href = canvas.toDataURL('image/png'); link.click(); showToast('✅ تم التحميل');
-  });
+async function printQR(){
+  if(!currentQRBranch) return; try{ showToast('⏳ جاري التجهيز...'); await QRT.print([qrCardOpts()]); }catch(e){ console.error(e); showToast('❌ مقدرتش أطبع: '+(e.message||'')); }
+}
+async function printAllQR(){
+  if(!currentQRBranch) return; const tb = currentQRBranch.tables||[]; if(!tb.length){ showToast('⚠️ الفرع مفيهوش طربيزات'); return; }
+  try{ showToast('⏳ بجهّز '+tb.length+' كارت...'); await QRT.print(tb.map(t=>qrCardOpts(String(t.number)))); }catch(e){ console.error(e); showToast('❌ '+(e.message||'خطأ')); }
+}
+async function downloadQR(){
+  if(!currentQRBranch) return; try{ showToast('⏳ جاري التحميل...'); const o = qrCardOpts(); await QRT.download(o, 'qr-'+currentQRBranch.code+($('qrType').value==='table'?'-table-'+$('qrTable').value:'')+'.png'); showToast('✅ تم التحميل'); }catch(e){ console.error(e); showToast('❌ مقدرتش أحمّل: '+(e.message||'')); }
 }
 
 function renderMenus(){
@@ -1604,5 +1543,6 @@ async function loadRatingsAdmin(){
 }
 
 </script>
+<script src="menu-quick.js"></script>
 </body>
 </html>

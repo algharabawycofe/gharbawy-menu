@@ -832,6 +832,7 @@ html.dark .toast{background:var(--gold); color:#1F1611}
     const profile = userSnap.data() || {};
     if (profile.active === false) return showNoPerm();
 
+    if (profile.role === "captain") { location.replace("captain.html"); return; }
     if (profile.role !== "branch_manager") {
       location.replace("admin.html");
       return;
@@ -1059,6 +1060,8 @@ html.dark .toast{background:var(--gold); color:#1F1611}
     if (o.status === "pending") {
       action = '<button class="btn btn-info btn-sm" data-action="start" data-id="' + esc(o.id) + '">▶️ بدء التحضير</button>';
     } else if (o.status === "preparing") {
+      action = '<button class="btn btn-info btn-sm" data-action="ready" data-id="' + esc(o.id) + '">🔔 جاهز</button> <button class="btn btn-success btn-sm" data-action="done" data-id="' + esc(o.id) + '">✅ تم التسليم</button>';
+    } else if (o.status === "ready") {
       action = '<button class="btn btn-success btn-sm" data-action="done" data-id="' + esc(o.id) + '">✅ تم التسليم</button>';
     }
 
@@ -1083,7 +1086,7 @@ html.dark .toast{background:var(--gold); color:#1F1611}
   function renderOrders() {
     const grid = $("orders-grid");
     let list = state.orders;
-    if (state.tab !== "all") list = list.filter(function (o) { return o.status === state.tab; });
+    if (state.tab !== "all") list = list.filter(function (o) { return o.status === state.tab || (state.tab === "preparing" && o.status === "ready"); });
 
     if (!list.length) {
       grid.innerHTML =
@@ -1100,7 +1103,8 @@ html.dark .toast{background:var(--gold); color:#1F1611}
   function renderBadges() {
     const counts = { pending: 0, preparing: 0, done: 0, all: state.orders.length };
     state.orders.forEach(function (o) {
-      if (counts[o.status] != null) counts[o.status]++;
+      if (o.status === "ready") counts.preparing++;
+      else if (counts[o.status] != null) counts[o.status]++;
     });
 
     $$("#order-tabs .tab").forEach(function (tab) {
@@ -1133,7 +1137,7 @@ html.dark .toast{background:var(--gold); color:#1F1611}
     try {
       const { db, doc, updateDoc } = window.FB;
       await updateDoc(doc(db, "orders", id), { status: next });
-      toast(next === "preparing" ? "بدأ التحضير — العميل هيتنبّه" : "تم التسليم — العميل هيتنبّه", "✅");
+      toast(next === "preparing" ? "بدأ التحضير — العميل هيتنبّه" : next === "ready" ? "الأوردر جاهز — الكابتن والعميل هيتنبّهوا" : "تم التسليم — العميل هيتنبّه", "✅");
     } catch (e) {
       order.status = prev;
       renderOrders();
@@ -1391,7 +1395,7 @@ html.dark .toast{background:var(--gold); color:#1F1611}
       const btn = e.target.closest("[data-action]");
       if (!btn) return;
       btn.disabled = true;
-      const ACTION = { start: "preparing", done: "done" };
+      const ACTION = { start: "preparing", ready: "ready", done: "done" };
       setOrderStatus(btn.dataset.id, ACTION[btn.dataset.action]).finally(function () {
         btn.disabled = false;
       });

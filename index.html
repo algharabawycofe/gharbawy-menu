@@ -683,6 +683,7 @@ html.dark .toast{background:var(--coffee-gold);color:#1F1611;}
 </div>
 
 <button id="callWaiterBtn" class="call-fab" onclick="callWaiter()" title="استدعاء الويتر">🛎️</button>
+<button id="billBtn" class="call-fab" onclick="callWaiter('bill')" title="اطلب الحساب" style="bottom:96px;font-size:24px">🧾</button>
 
 <script type="module" src="firebase-config.js"></script>
 <script>
@@ -816,7 +817,7 @@ function subscribeAll(){
 
   onSnapshot(doc(db, 'settings', 'features'), (snap) => {
     const show = snap.exists() && snap.data().callWaiter;
-    $('callWaiterBtn').style.display = show ? 'flex' : 'none';
+    $('callWaiterBtn').style.display = show ? 'flex' : 'none'; $('billBtn').style.display = show ? 'flex' : 'none';
   });
 
   // Branch — auto-pick (URL > localStorage > first active)
@@ -873,6 +874,11 @@ function subscribeOrders(){
         if(data.status === 'preparing'){
           playBell();
           toast(currentLang === 'ar' ? `🔥 طلبك على طربيزة ${currentTable} بيتحضر...` : `🔥 Your order is being prepared...`, '👨‍🍳');
+        } else if(data.status === 'ready'){
+          playBell();
+          toast(currentLang === 'ar' ? '🔔 طلبك جاهز وجايلك دلوقتي' : '🔔 Your order is ready', '☕');
+        } else if(data.status === 'cancelled'){
+          toast(currentLang === 'ar' ? `❌ الطلب اتلغى${data.cancelReason ? ': ' + data.cancelReason : ''}` : '❌ Your order was cancelled', '⚠️');
         } else if(data.status === 'done'){
           playBell();
           toast(currentLang === 'ar' ? `🎉 طلبك جاهز، جايلك حالاً!` : `🎉 Your order is ready!`, '☕');
@@ -1508,10 +1514,12 @@ async function submitOrder(){
     selections: c.selections || [],
     offerId: c.offerId || null // ✅ عشان الأدمن يعرف إن ده عرض
   }));
-  const tableNum = currentTable || 'غير محدد';
+  const extra = (window.GH_ORDER_EXTRA && window.GH_ORDER_EXTRA()) || {};
+  const tableNum = extra.type === 'pickup' ? 'استلام' : (currentTable || 'غير محدد');
 
   try{
     const ref = await addDoc(collection(db, 'orders'), {
+      ...extra,
       branchId: currentBranch.id,
       branchNameAr: currentBranch.nameAr,
       table: tableNum,
@@ -1530,6 +1538,7 @@ async function submitOrder(){
     closeCartModal();
     playBell();
     renderWaiterDisplay(itemsSnapshot, total, tableNum);
+    window.dispatchEvent(new CustomEvent('gh-order', { detail: { id: ref.id, table: tableNum, items: itemsSnapshot } }));
     toast(currentLang === 'ar' ? 'تم إرسال الطلب بنجاح' : 'Order sent successfully', '✅');
     updateStatusChips();
   }catch(e){
@@ -1561,6 +1570,10 @@ function updateStatusChips(){
       pills.push(`<button class="status-pill order" onclick="openCartModal()"><span class="pulse"></span>${label}</button>`);
     } else if(s === 'done'){
       pills.push(`<button class="status-pill order done">✓ ${currentLang === 'ar' ? 'تم التسليم' : 'Delivered'}</button>`);
+    } else if(s === 'ready'){
+      pills.push(`<button class="status-pill order done">🔔 ${currentLang === 'ar' ? 'جاهز' : 'Ready'}</button>`);
+    } else if(s === 'cancelled'){
+      pills.push(`<button class="status-pill order done">❌ ${currentLang === 'ar' ? 'اتلغى' : 'Cancelled'}</button>`);
     }
   }
 
@@ -1609,7 +1622,7 @@ function closeDisplay(){ $('displayScreen').classList.remove('show'); }
 /* =====================================================
    CALL WAITER
 ===================================================== */
-async function callWaiter(){
+async function callWaiter(kind){
   if(!currentBranch) return;
   const { db, collection, addDoc, doc, onSnapshot } = window.FB;
   const btn = $('callWaiterBtn');
@@ -1619,13 +1632,14 @@ async function callWaiter(){
       branchId: currentBranch.id,
       branchNameAr: currentBranch.nameAr,
       table: currentTable || 'غير محدد',
+      type: kind === 'bill' ? 'bill' : 'call',
       createdAt: new Date(),
       status: 'pending'
     });
     activeWaiterCall = { id: ref.id, at: Date.now(), status: 'pending' };
     localStorage.setItem('gharbaoui_active_call', JSON.stringify(activeWaiterCall));
-    btn.classList.add('pending');
-    toast(currentLang === 'ar' ? 'تم استدعاء الويتر، جاري الاستجابة...' : 'Waiter called...', '🛎️');
+    btn.classList.add('pending'); $('billBtn').classList.add('pending');
+    toast(kind === 'bill' ? (currentLang === 'ar' ? 'تم طلب الحساب، الكابتن جايلك 🧾' : 'Bill requested, your captain is coming 🧾') : (currentLang === 'ar' ? 'تم استدعاء الويتر، جاري الاستجابة...' : 'Waiter called...'), kind === 'bill' ? '🧾' : '🛎️');
     updateStatusChips();
 
     const unsub = onSnapshot(doc(db, 'waiter_calls', ref.id), (snap) => {
@@ -1678,7 +1692,7 @@ async function callWaiter(){
       const d = snap.data();
       if(d.status === 'done' || d.responded === true){
         activeWaiterCall.status = 'coming';
-        $('callWaiterBtn').classList.remove('pending');
+        $('callWaiterBtn').classList.remove('pending'); $('billBtn').classList.remove('pending');
         updateStatusChips();
         setTimeout(() => {
           if(activeWaiterCall && activeWaiterCall.status === 'coming'){
@@ -1688,7 +1702,7 @@ async function callWaiter(){
           }
         }, 30000);
       } else {
-        $('callWaiterBtn').classList.add('pending');
+        $('callWaiterBtn').classList.add('pending'); $('billBtn').classList.add('pending');
       }
       updateStatusChips();
     });
@@ -3135,6 +3149,8 @@ async function submitRating(){
 })();
 
 </script>
+<script src="reorder.js"></script>
+<script src="pickup.js"></script>
 <script src="loyalty-hook.js"></script>
 </body>
 </html>
