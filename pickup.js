@@ -52,7 +52,8 @@
     };
   }
   /* بعد إرسال الطلب: متابعة الحالة + حساب الوصول لايف */
-  function track(id) {
+  async function track(id) {
+    await (window.FB.guestReady || Promise.resolve(null));
     orderId = id; LS.setItem('gh_pickup_order', id); const stp = $('pkStrip'); if (stp) stp.style.display = 'none'; const { db, doc, onSnapshot, updateDoc } = window.FB;
     const set = (o) => updateDoc(doc(db, 'orders', id), o).catch(() => {});
     unsub && unsub(); let arrived = false;
@@ -68,8 +69,8 @@
       bar(`<div style="width:100%;display:grid;gap:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span>${line}</span><span style="font-size:11px;opacity:.8">${pay}</span></div><div style="font-size:12px;opacity:.85">${arrived ? 'وصلت ✓' : 'متوقع وصولك بعد ' + esc(o.etaMin ?? '؟') + ' د'}</div>${walletBox}<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${arrived ? '' : '<button id="pkArr" type="button" style="background:#C89B5E;color:#1F1611;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-weight:900">🚗 وصلت</button>'}${canCancel}</div></div>`, 'pkTrack');
       const b = $('pkArr'); if (b) b.onclick = () => { const bay = o.mode === 'drive' ? (prompt('إنت واقف فين؟ (رقم الركنة أو علامة، اختياري)', '') || '').trim().slice(0, 20) : ''; set(Object.assign({ arrived: true, arrivedAt: Date.now() }, bay ? { bay } : {})); };
       const rg = $('pkRefGo'); if (rg) rg.onclick = () => { const v = $('pkRef').value.trim(); if (v.length < 3) { $('pkRef').style.outline = '2px solid #B33A3A'; return; } set({ paymentRef: v.slice(0, 20), paymentSentAt: Date.now() }); };
-      const cb = $('pkCan'); if (cb) cb.onclick = () => { if (!confirm('تلغي الطلب؟')) return; updateDoc(doc(db, 'orders', id), { status: 'cancelled', cancelledBy: 'customer', cancelReason: 'العميل ألغى الطلب', cancelledAt: Date.now() }).catch(() => alert('الطلب بدأ تحضيره ومش هينفع يتلغي من هنا. كلّم الفرع.')); };
-    });
+      const cb = $('pkCan'); if (cb) cb.onclick = () => { if (!confirm('تلغي الطلب؟')) return; updateDoc(doc(db, 'orders', id), { status: 'cancelled', cancelledBy: 'customer', cancelReason: 'العميل ألغى الطلب', cancelledAt: Date.now() }).catch(() => alert('الطلب بدأ تحضيره بالفعل ومش هينفع يتلغي من هنا. كلّم الفرع.')); };
+    }, (err) => { console.warn('pickup watch denied', err && err.code); finish('⚠️ الطلب ده اتعمل قبل تحديث النظام — اسأل الفرع عن حالته'); });
     if (place && navigator.geolocation && wid === null) wid = navigator.geolocation.watchPosition((p) => {
       const d = dist(p.coords.latitude, p.coords.longitude, place.lat, place.lng), e = etaFrom(d), now = Date.now();
       if (d <= 80 && !arrived) return set({ arrived: true, arrivedAt: now });

@@ -47,6 +47,7 @@ service cloud.firestore {
     // ---------- الإعدادات ----------
     match /settings/features      { allow read: if true; allow write: if isOwner(); }
     match /settings/loyalty       { allow read: if true; allow write: if isOwner(); }
+    match /settings/pickup        { allow read: if true; allow write: if isOwner(); }
     match /settings/loyalty_msgs  { allow read: if true; allow write: if isOwner(); }
     match /settings/{other}       { allow read, write: if isOwner(); }
 
@@ -62,24 +63,47 @@ service cloud.firestore {
     // ---------- الأوردرات ----------
     // العميل بيعمل أوردر وبيتابع حالته (من غير تسجيل دخول)، والفرع/الأدمن بيغيّروا الحالة
     match /orders/{id} {
-      allow read: if true;
-      allow create: if request.resource.data.status == 'pending'
+      // ملكية موثّقة: الأوردر مربوط بـ guestUid = هوية تسجيل الدخول المجهول للعميل.
+      // أوردرات قديمة من غير guestUid: fail-closed — مش مقروءة من أي عميل (الموظفين بس).
+      function isGuestOwner() {
+        return request.auth != null && resource.data.guestUid == request.auth.uid;
+      }
+      allow get: if isStaff() || isGuestOwner();
+      allow list: if isStaff();
+      allow create: if request.auth != null
+                    && request.resource.data.guestUid == request.auth.uid
+                    && request.resource.data.status == 'pending'
                     && request.resource.data.items is list
                     && request.resource.data.total is number
                     && request.resource.data.branchId is string;
       allow update: if isOwner()
         || (sameBranchAny(resource.data.branchId)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','cancelReason','cancelledBy']))
-        || (resource.data.get('type', '') == 'pickup'
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['arrived','arrivedAt','etaMin','distanceM']));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','cancelReason','cancelledBy','cancelledAt','wasted','paymentStatus','paidAt','paidBy']))
+        || (isGuestOwner()
+            && resource.data.get('type', '') == 'pickup'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['arrived','arrivedAt','etaMin','distanceM','bay']))
+        || (isGuestOwner()
+            && resource.data.get('type', '') == 'pickup'
+            && resource.data.get('payment', '') == 'wallet'
+            && resource.data.get('paymentStatus', '') != 'paid'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['paymentRef','paymentSentAt']))
+        || (isGuestOwner()
+            && resource.data.status == 'pending'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','cancelReason','cancelledBy','cancelledAt'])
+            && request.resource.data.status == 'cancelled'
+            && request.resource.data.cancelledBy == 'customer');
       allow delete: if isOwner();
     }
 
     // ---------- نداء الويتر ----------
     match /waiter_calls/{id} {
-      allow get: if true;
+      // نفس نموذج الملكية: النداء مربوط بصاحبه، والليست للموظفين
+      allow get: if isStaff()
+        || (request.auth != null && resource.data.guestUid == request.auth.uid);
       allow list: if isOwner() || sameBranchAny(resource.data.branchId);
-      allow create: if request.resource.data.status == 'pending'
+      allow create: if request.auth != null
+                    && request.resource.data.guestUid == request.auth.uid
+                    && request.resource.data.status == 'pending'
                     && request.resource.data.branchId is string;
       allow update: if isOwner()
         || (sameBranchAny(resource.data.branchId)
@@ -99,9 +123,31 @@ service cloud.firestore {
     }
     match /item_ratings/{id} {
       allow read: if true;
-      allow create, update: if request.resource.data.stars is number
-                            && request.resource.data.stars >= 0 && request.resource.data.stars <= 5
-                            && request.resource.data.deviceId is string;
+      // الهوية = uid تسجيل الدخول المجهول، مش deviceId معرّف ذاتياً
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.stars is number
+                    && request.resource.data.stars >= 0 && request.resource.data.stars <= 5;
+      allow update: if request.auth != null
+                    && resource.data.uid == request.auth.uid
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stars','orderId','updatedAt']);
+      allow delete: if isOwner();
+    }
+
+    // ---------- الهالك (أوردرات اتحضّرت واتلغت) ----------
+    match /waste_log/{id} {
+      allow create: if isStaff() && request.resource.data.branchId is string
+                    && (isOwner() || sameBranchAny(request.resource.data.branchId));
+      allow read: if isOwner() || (isBranchMgr() && resource.data.branchId == profile().get('branchId', ''));
+      allow update, delete: if isOwner();
+    }
+
+    // ---------- عملاء "ماجاش" (الـ id هاش للموبايل، مفيش قراءة جماعية) ----------
+    match /noshow/{id} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isStaff() && request.resource.data.keys().hasOnly(['count','last','branchId'])
+                            && request.resource.data.count is number;
       allow delete: if isOwner();
     }
 

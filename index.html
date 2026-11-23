@@ -687,7 +687,7 @@ html.dark .toast{background:var(--coffee-gold);color:#1F1611;}
 <button id="callWaiterBtn" class="call-fab" onclick="callWaiter()" title="استدعاء الويتر">🛎️</button>
 <button id="billBtn" class="call-fab" onclick="callWaiter('bill')" title="اطلب الحساب" style="bottom:96px;font-size:24px">🧾</button>
 
-<script type="module" src="firebase-config.js"></script>
+<script type="module" src="firebase-config.js?v=3"></script>
 <script>
 /* =====================================================
    STATE
@@ -861,40 +861,36 @@ function subscribeAll(){
 }
 
 function subscribeOrders(){
-  if(unsubOrders){ unsubOrders(); unsubOrders = null; }
-  if(!currentBranch || !currentTable) return;
-  const { db, collection, query, where, onSnapshot } = window.FB;
-
-  const q = query(
-    collection(db, 'orders'),
-    where('branchId', '==', currentBranch.id),
-    where('table', '==', currentTable)
-  );
-
-  unsubOrders = onSnapshot(q, (snap) => {
-    snap.docChanges().forEach(ch => {
-      const data = ch.doc.data();
-      const id = ch.doc.id;
-      watchedOrders[id] = { id, ...data };
-      const mine = myOrders.find(o => o.id === id);
-      if(mine && ch.type === 'modified'){
-        if(data.status === 'preparing'){
-          playBell();
-          toast(currentLang === 'ar' ? `🔥 طلبك على طربيزة ${currentTable} بيتحضر...` : `🔥 Your order is being prepared...`, '👨‍🍳');
-        } else if(data.status === 'ready'){
-          playBell();
-          toast(currentLang === 'ar' ? '🔔 طلبك جاهز وجايلك دلوقتي' : '🔔 Your order is ready', '☕');
-        } else if(data.status === 'cancelled'){
-          toast(currentLang === 'ar' ? `❌ الطلب اتلغى${data.cancelReason ? ': ' + data.cancelReason : ''}` : '❌ Your order was cancelled', '⚠️');
-        } else if(data.status === 'done'){
-          playBell();
-          toast(currentLang === 'ar' ? `🎉 طلبك جاهز، جايلك حالاً!` : `🎉 Your order is ready!`, '☕');
-          setTimeout(() => maybeAskRating(id), 1500);
-        }
-      }
-    });
+  if(unsubOrders){ (Array.isArray(unsubOrders) ? unsubOrders : [unsubOrders]).forEach(u => u && u()); unsubOrders = null; }
+  if(!currentBranch) return;
+  const { db, doc, onSnapshot } = window.FB;
+  // بعد تشديد القواعد (list للموظفين فقط) العميل يتابع أوردراته هو فقط بالـ ID
+  const cutoff = Date.now() - 12*60*60*1000;
+  const mine = (myOrders || []).filter(o => o.at > cutoff);
+  unsubOrders = mine.map(o => onSnapshot(doc(db, 'orders', o.id), (snap) => {
+    if(!snap.exists()) return;
+    void 0;
+    const data = snap.data();
+    const id = snap.id;
+    watchedOrders[id] = { id, ...data };
+    if(data.status === 'preparing'){
+      playBell();
+      toast(currentLang === 'ar' ? `🔥 طلبك على طربيزة ${o.table} بيتحضر...` : `🔥 Your order is being prepared...`, '👨‍🍳');
+    } else if(data.status === 'ready'){
+      playBell();
+      toast(currentLang === 'ar' ? '🔔 طلبك جاهز وجايلك دلوقتي' : '🔔 Your order is ready', '☕');
+    } else if(data.status === 'cancelled'){
+      toast(currentLang === 'ar' ? `❌ الطلب اتلغى${data.cancelReason ? ': ' + data.cancelReason : ''}` : '❌ Your order was cancelled', '⚠️');
+    } else if(data.status === 'done'){
+      playBell();
+      toast(currentLang === 'ar' ? `🎉 طلبك جاهز، جايلك حالاً!` : `🎉 Your order is ready!`, '☕');
+      setTimeout(() => maybeAskRating(id), 1500);
+    }
     updateStatusChips();
-  });
+  }, (err) => {
+    // أوردر قديم من غير ملكية (قبل تفعيل تسجيل الدخول المجهول) — القواعد بتمنع قراءته، نتجاهله بهدوء
+    console.warn('order watch denied', o.id, err && err.code);
+  }));
 }
 
 /* =====================================================
@@ -1527,6 +1523,7 @@ async function submitOrder(){
   try{
     const ref = await addDoc(collection(db, 'orders'), {
       ...extra,
+      guestUid: await window.FB.guestReady,
       branchId: currentBranch.id,
       branchNameAr: currentBranch.nameAr,
       table: tableNum,
@@ -1636,6 +1633,7 @@ async function callWaiter(kind){
   playBell();
   try{
     const ref = await addDoc(collection(db, 'waiter_calls'), {
+      guestUid: await window.FB.guestReady,
       branchId: currentBranch.id,
       branchNameAr: currentBranch.nameAr,
       table: currentTable || 'غير محدد',
@@ -1669,7 +1667,7 @@ async function callWaiter(kind){
           }
         }, 30000);
       }
-    });
+    }, (err) => { console.warn('waiter call watch denied', err && err.code); });
   }catch(e){
     console.error(e);
     btn.classList.remove('pending');
@@ -1711,6 +1709,12 @@ async function callWaiter(kind){
       } else {
         $('callWaiterBtn').classList.add('pending'); $('billBtn').classList.add('pending');
       }
+      updateStatusChips();
+    }, (err) => {
+      // نداء قديم من غير ملكية — القواعد بتمنع قراءته، نمسحه محلياً بهدوء
+      console.warn('waiter call watch denied', err && err.code);
+      activeWaiterCall = null;
+      localStorage.removeItem('gharbaoui_active_call');
       updateStatusChips();
     });
   });
@@ -2242,7 +2246,8 @@ async function submitRating(){
     W.__orderSubmitting = true;
 
     return Promise.resolve()
-      .then(function () { return FB.addDoc(FB.collection(FB.db, "orders"), orderDoc); })
+      .then(function () { return (window.FB.guestReady || Promise.resolve(null)); })
+      .then(function (uid) { orderDoc.guestUid = uid; return FB.addDoc(FB.collection(FB.db, "orders"), orderDoc); })
       .then(function (ref) {
         try {
           if (typeof myOrders !== "undefined" && Array.isArray(myOrders)) {
@@ -2867,12 +2872,14 @@ async function submitRating(){
     if (!(stars >= 1 && stars <= 5)) return;
 
     var key = String(item.id);
-    FB.setDoc(FB.doc(FB.db, "item_ratings", state.device + "_" + key), {
+    var uid = (FB.auth && FB.auth.currentUser) ? FB.auth.currentUser.uid : null;
+    if (!uid) { toast(t("جرّب تاني بعد لحظة", "Try again in a moment"), "⚠️"); return; }
+    FB.setDoc(FB.doc(FB.db, "item_ratings", uid + "_" + key), {
       itemId: Number(item.id),
       itemName: item.nameAr || item.nameEn || "",
       branchId: branch.id,
       branchNameAr: branch.nameAr || "",
-      deviceId: state.device,
+      uid: uid,
       orderId: null,
       stars: stars,
       updatedAt: FB.serverTimestamp ? FB.serverTimestamp() : new Date(),
@@ -3084,14 +3091,16 @@ async function submitRating(){
         var key = String(it.id);
         var n = Number(itemStars[key]) || 0;
         if (!n) return;
-        var docId = state.device + "_" + key;
+        var uid2 = (FB.auth && FB.auth.currentUser) ? FB.auth.currentUser.uid : null;
+        if (!uid2) return;
+        var docId = uid2 + "_" + key;
         jobs.push(
           FB.setDoc(FB.doc(FB.db, "item_ratings", docId), {
             itemId: Number(it.id),
             itemName: it.nameAr || it.nameEn || "",
             branchId: branch ? branch.id : null,
             branchNameAr: branch ? branch.nameAr : "",
-            deviceId: state.device,
+            uid: uid2,
             orderId: orderId,
             stars: n,
             updatedAt: FB.serverTimestamp ? FB.serverTimestamp() : new Date(),
@@ -3165,7 +3174,7 @@ async function submitRating(){
 </script>
 <script src="reorder.js"></script>
 <script src="retain.js"></script>
-<script src="pickup.js"></script>
+<script src="pickup.js?v=3"></script>
 <script src="loyalty-hook.js"></script>
 </body>
 </html>

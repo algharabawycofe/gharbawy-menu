@@ -14,7 +14,7 @@
      - بتنضّف الكاش القديم وبتحل محل الـ SW القديم فوراً.
    ========================================================= */
 
-const VERSION = "gharbawy-v2";
+const VERSION = "gharbawy-v3";
 const STATIC_CACHE = VERSION + "-static";
 const RUNTIME_CACHE = VERSION + "-runtime";
 
