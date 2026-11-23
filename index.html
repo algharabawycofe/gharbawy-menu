@@ -1004,7 +1004,7 @@ function renderMenu(){
     return `
       <div class="menu-card ${available ? '' : 'out'}" onclick="openItemSheet(${item.id})">
         <div class="card-img-wrap">
-          <img class="card-img" src="${item.image || ''}" loading="lazy" onerror="this.style.display='none';">
+          <img class="card-img" src="${menuImgOf(item)}" data-f="${item.image || ''}" loading="lazy" onerror="if(this.dataset.f){this.src=this.dataset.f;this.dataset.f='';}else{this.style.display='none';}">
           <button class="card-fav ${fav ? 'active' : ''}" onclick="toggleFavorite(${item.id}, event)" aria-label="مفضلة">${fav ? '❤️' : '🤍'}</button>
           ${inCartQty > 0 ? `<div class="card-qty-badge">${inCartQty}</div>` : ''}
           ${available ? '' : `<div class="card-out-label">${currentLang === 'ar' ? 'نفد' : 'Sold out'}</div>`}
@@ -1075,7 +1075,7 @@ function buildSlider(){
       type: 'item',
       titleAr: item.nameAr, titleEn: item.nameEn || item.nameAr,
       descAr: item.descAr || 'جرب طعمنا المميز النهاردة', descEn: item.descEn || 'Try our signature taste',
-      image: item.image,
+      image: menuImgOf(item),
       price: getItemPrice(item),
       targetItemId: item.id,
       offerId: null, // ✅ الصنف العادي مش عرض
@@ -1313,7 +1313,7 @@ function renderItemSheet(){
 
   $('itemBody').innerHTML = `
     <div class="item-hero">
-      <img src="${item.image || ''}" onerror="this.style.display='none';">
+      <img src="${menuImgOf(item)}" data-f="${item.image || ''}" onerror="if(this.dataset.f){this.src=this.dataset.f;this.dataset.f='';}else{this.style.display='none';}">
       <button class="card-fav ${fav ? 'active' : ''}" style="position:absolute;top:12px;inset-inline-start:12px;" onclick="toggleFavorite(${item.id}, event)">${fav ? '❤️' : '🤍'}</button>
     </div>
     <h2 class="item-name">${name}</h2>
@@ -3172,6 +3172,7 @@ async function submitRating(){
 })();
 
 </script>
+<script src="menu-images.js"></script>
 <script src="reorder.js"></script>
 <script src="retain.js"></script>
 <script src="pickup.js?v=3"></script>
