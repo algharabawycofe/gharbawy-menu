@@ -962,7 +962,9 @@ function renderCategories(){
   const allLabel = currentLang === 'ar' ? 'الكل' : 'All';
   const favLabel = currentLang === 'ar' ? '❤️ المفضلة' : '❤️ Favorites';
   let html = `<button class="cat-chip ${activeCategory === 'all' ? 'active' : ''}" onclick="setCategory('all')">${allLabel} <span class="count">${items.length}</span></button>`;
-  cats.forEach(c => {
+  const visibleCats = cats.filter(c => items.some(i => i.categoryId === c.id));
+  if (activeCategory !== 'all' && activeCategory !== 'favorites' && !visibleCats.some(c => c.id === activeCategory)) activeCategory = 'all';
+  visibleCats.forEach(c => {
     const n = items.filter(i => i.categoryId === c.id).length;
     const name = currentLang === 'ar' ? c.nameAr : (c.nameEn || c.nameAr);
     html += `<button class="cat-chip ${activeCategory === c.id ? 'active' : ''}" onclick="setCategory('${c.id}')">${name} <span class="count">${n}</span></button>`;
@@ -1049,11 +1051,11 @@ function buildSlider(){
       if(o.itemId) targetItem = allItems.find(i => i.id === Number(o.itemId));
       if(!targetItem && o.nameAr) targetItem = allItems.find(i => i.nameAr === o.nameAr || i.nameEn === o.nameEn);
 
-      let image = o.image || (targetItem ? targetItem.image : null);
+      let image = offerImgOf(o) || (targetItem ? menuImgOf(targetItem) : null);
       // If no image, use a random item's image as fallback
       if(!image){
         const candidates = getBranchItems().filter(i => i.image);
-        if(candidates.length) image = candidates[Math.floor(Math.random() * candidates.length)].image;
+        if(candidates.length) image = menuImgOf(candidates[Math.floor(Math.random() * candidates.length)]);
       }
 
       return {
@@ -2393,7 +2395,7 @@ async function submitRating(){
 
     var price = Number(offer.price) || 0;
     var original = bundleOriginal(bundle);
-    var img = offer.image || (slide && slide.image) || bundle[0].item.image || "";
+    var img = offerImgOf(offer) || (slide && slide.image) || menuImgOf(bundle[0].item) || "";
     var title = isAr()
       ? (offer.titleAr || offer.nameAr || nameOf(bundle[0].item))
       : (offer.titleEn || offer.titleAr || nameOf(bundle[0].item));
